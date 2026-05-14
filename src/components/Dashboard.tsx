@@ -5,15 +5,15 @@ import { ErrorBanner, LoadingRows } from './StateViews'
 import { Badge, Box, Card, DataTable, Eyebrow, PageTitle, Stack, TableCell, TableRow, Typography } from './Ui'
 
 function priorityBadge(p: string) {
-  if (p === 'CRITIC') return <Badge tone="error">â›” CRITIC</Badge>
-  if (p === 'RIDICAT') return <Badge tone="warning">ðŸŸ¡ RIDICAT</Badge>
-  return <Badge tone="success">ðŸŸ¢ NORMAL</Badge>
+  if (p === 'CRITIC') return <Badge tone="error">⛔ CRITIC</Badge>
+  if (p === 'RIDICAT') return <Badge tone="warning">🟡 RIDICAT</Badge>
+  return <Badge tone="success">🟢 NORMAL</Badge>
 }
 
 function statusBadge(s: string) {
-  if (s === 'LIVRAT') return <Badge tone="success">âœ… LIVRAT</Badge>
-  if (s === 'IN LIVRARE') return <Badge tone="warning">ðŸŸ¡ IN LIVRARE</Badge>
-  if (s === 'BLOCAJE ACTIVE') return <Badge tone="error">â›” BLOCAJE ACTIVE</Badge>
+  if (s === 'LIVRAT') return <Badge tone="success">✅ LIVRAT</Badge>
+  if (s === 'IN LIVRARE') return <Badge tone="warning">🟡 IN LIVRARE</Badge>
+  if (s === 'BLOCAJE ACTIVE') return <Badge tone="error">⛔ BLOCAJE ACTIVE</Badge>
   return <Badge>{s}</Badge>
 }
 
@@ -75,13 +75,13 @@ export default function Dashboard() {
     for (const p of ['WP1000-08', 'WP1000-09', 'WP1000-10']) {
       const items = sa.data?.filter(s => s.proiect === p) ?? []
       const blocati = items.filter(s => s[deptKey] === 'Blocat').length
-      const inLucru = items.filter(s => s[deptKey] === 'ÃŽn lucru').length
+      const inLucru = items.filter(s => s[deptKey] === 'În lucru').length
       const finalizati = items.filter(s => s[deptKey] === 'Finalizat').length
       const total = items.filter(s => s[deptKey] !== 'N/A').length
-      if (blocati > 0) { row[p] = `â›” ${blocati}`; totalBlocaje += blocati }
-      else if (inLucru > 0) { row[p] = `ðŸ”„ ${inLucru}`; saActive += inLucru }
-      else if (finalizati === total && total > 0) row[p] = `âœ… ${finalizati}/${total}`
-      else row[p] = `â€“`
+      if (blocati > 0) { row[p] = `⛔ ${blocati}`; totalBlocaje += blocati }
+      else if (inLucru > 0) { row[p] = `🔄 ${inLucru}`; saActive += inLucru }
+      else if (finalizati === total && total > 0) row[p] = `✅ ${finalizati}/${total}`
+      else row[p] = `–`
     }
     row.totalBlocaje = totalBlocaje
     row.saActive = saActive
@@ -122,7 +122,7 @@ export default function Dashboard() {
               <TableCell>{priorityBadge(p.prioritate)}</TableCell>
               <TableCell sx={{ minWidth: 160 }}><ProgressBar value={Number(p.progres)} /></TableCell>
               <TableCell>{statusBadge(p.status)}</TableCell>
-              <TableCell sx={{ textAlign: 'center' }}>{p.blocaje_active > 0 ? <Badge tone="error">{p.blocaje_active}</Badge> : <Typography variant="body2" sx={{ color: 'var(--color-ink-tertiary)' }}>â€“</Typography>}</TableCell>
+              <TableCell sx={{ textAlign: 'center' }}>{p.blocaje_active > 0 ? <Badge tone="error">{p.blocaje_active}</Badge> : <Typography variant="body2" sx={{ color: 'var(--color-ink-tertiary)' }}>–</Typography>}</TableCell>
             </TableRow>
           ))}
         </DataTable>
@@ -138,13 +138,13 @@ export default function Dashboard() {
               <TableRow key={String(row.departament)}>
                 <TableCell sx={{ fontWeight: 500 }}>{row.departament}</TableCell>
                 {['WP1000-08','WP1000-09','WP1000-10'].map(p => {
-                  const v = String(row[p] ?? 'â€“')
-                  const bg = v.startsWith('â›”') ? 'rgba(239,68,68,0.1)' : v.startsWith('ðŸ”„') ? 'rgba(94,106,210,0.1)' : v.startsWith('âœ…') ? 'rgba(39,166,68,0.08)' : 'transparent'
-                  const color = v.startsWith('â›”') ? '#f87171' : v.startsWith('ðŸ”„') ? '#818cf8' : v.startsWith('âœ…') ? '#4ade80' : 'var(--color-ink-tertiary)'
+                  const v = String(row[p] ?? '–')
+                  const bg = v.startsWith('⛔') ? 'rgba(239,68,68,0.1)' : v.startsWith('🔄') ? 'rgba(94,106,210,0.1)' : v.startsWith('✅') ? 'rgba(39,166,68,0.08)' : 'transparent'
+                  const color = v.startsWith('⛔') ? '#f87171' : v.startsWith('🔄') ? '#818cf8' : v.startsWith('✅') ? '#4ade80' : 'var(--color-ink-tertiary)'
                   return <TableCell key={p}><Box component="span" sx={{ fontSize: 12, fontFamily: 'var(--font-mono)', bgcolor: bg, color, p: '2px 6px', borderRadius: 'var(--radius-xs)', display: 'inline-block' }}>{v}</Box></TableCell>
                 })}
-                <TableCell sx={{ textAlign: 'center' }}>{Number(row.totalBlocaje) > 0 ? <Badge tone="error">{row.totalBlocaje}</Badge> : <Typography variant="body2" sx={{ color: 'var(--color-ink-tertiary)' }}>â€“</Typography>}</TableCell>
-                <TableCell sx={{ textAlign: 'center' }}>{Number(row.saActive) > 0 ? <Badge tone="info">{row.saActive}</Badge> : <Typography variant="body2" sx={{ color: 'var(--color-ink-tertiary)' }}>â€“</Typography>}</TableCell>
+                <TableCell sx={{ textAlign: 'center' }}>{Number(row.totalBlocaje) > 0 ? <Badge tone="error">{row.totalBlocaje}</Badge> : <Typography variant="body2" sx={{ color: 'var(--color-ink-tertiary)' }}>–</Typography>}</TableCell>
+                <TableCell sx={{ textAlign: 'center' }}>{Number(row.saActive) > 0 ? <Badge tone="info">{row.saActive}</Badge> : <Typography variant="body2" sx={{ color: 'var(--color-ink-tertiary)' }}>–</Typography>}</TableCell>
               </TableRow>
             ))}
           </DataTable>

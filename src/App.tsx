@@ -48,7 +48,7 @@ function NavButton({ path, label, admin }: { path: string; label: string; admin:
         '&:hover': { bgcolor: 'var(--color-surface-2)' },
       }}
     >
-      {admin ? `âš™ ${label}` : label}
+      {admin ? `⚙ ${label}` : label}
     </Button>
   )
 }
@@ -137,7 +137,7 @@ function AppShell({ session, profile }: { session: Session | null; profile: Prof
             <>
               <StatusPill demo label="DEMO MODE" />
               <SmallButton onClick={toggle} mono>{lang === 'ro' ? 'EN' : 'RO'}</SmallButton>
-              <SmallButton onClick={() => { exitDemo(); navigate('/login') }}>âœ• Exit Demo</SmallButton>
+              <SmallButton onClick={() => { exitDemo(); navigate('/login') }}>✕ Exit Demo</SmallButton>
             </>
           ) : (
             <>

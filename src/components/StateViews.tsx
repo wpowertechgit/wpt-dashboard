@@ -37,7 +37,7 @@ export function ErrorBanner({ message }: { message: string }) {
       }}
     >
       <Typography variant="body2" sx={{ fontSize: 13, color: 'inherit' }}>
-        â›” {message}
+        ⛔ {message}
       </Typography>
     </Box>
   )

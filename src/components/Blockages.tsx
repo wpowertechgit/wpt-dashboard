@@ -12,7 +12,7 @@ function impactBadge(i: string) {
   return <Badge>MEDIU</Badge>
 }
 function statusBadge(s: string) {
-  return s === 'Deschis' ? <Badge tone="error">â›” Deschis</Badge> : <Badge tone="success">âœ… Rezolvat</Badge>
+  return s === 'Deschis' ? <Badge tone="error">⛔ Deschis</Badge> : <Badge tone="success">✅ Rezolvat</Badge>
 }
 
 const BLANK = { id: '', data_deschidere: '', proiect: '', subansamblu: '', departament: 'SUDAT', descriere: '', responsabil: '', impact: 'MEDIU', status: 'Deschis', data_rezolvare: '', zile_deschis: 0, observatii: '' }
@@ -47,29 +47,29 @@ export default function Blocaje() {
     <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1.5, mb: 1.5 }}>
       <AppField label="ID Blocare *" required value={form.id} onChange={e => setF('id', e.target.value)} placeholder="BLK-005" />
       <AppField label="Data Deschidere" value={form.data_deschidere} onChange={e => setF('data_deschidere', e.target.value)} placeholder="12-Mai-25" />
-      <AppSelect label="Proiect" value={form.proiect} onChange={e => setF('proiect', e.target.value)} options={[{ value: '', label: 'â€” SelectaÈ›i â€”' }, 'WP1000-08','WP1000-09','WP1000-10']} />
+      <AppSelect label="Proiect" value={form.proiect} onChange={e => setF('proiect', e.target.value)} options={[{ value: '', label: '— Selectați —' }, 'WP1000-08','WP1000-09','WP1000-10']} />
       <AppField label="Subansamblu" value={form.subansamblu} onChange={e => setF('subansamblu', e.target.value)} />
       <AppSelect label="Departament" value={form.departament} onChange={e => setF('departament', e.target.value)} options={['LASER','ROLAT','SUDAT','ASAMBLAT','VOPSIT']} />
       <AppField label="Responsabil" value={form.responsabil} onChange={e => setF('responsabil', e.target.value)} />
       <AppField label="Descriere Blocaj *" required value={form.descriere} onChange={e => setF('descriere', e.target.value)} sx={{ gridColumn: '1 / -1' }} />
       <AppSelect label="Impact" value={form.impact} onChange={e => setF('impact', e.target.value)} options={['MEDIU','INALT','CRITIC']} />
-      <AppField label="ObservaÈ›ii" value={form.observatii} onChange={e => setF('observatii', e.target.value)} />
+      <AppField label="Observații" value={form.observatii} onChange={e => setF('observatii', e.target.value)} />
     </Box>
   )
 
   return (
     <Stack gap={4}>
-      <PageTitle eyebrow={b.eyebrow} title={b.title} subtitle={b.subtitle} action={<ActionButton variant={showForm ? 'outlined' : 'contained'} onClick={() => setShowForm(s => !s)}>{showForm ? `âœ• ${t.common.cancel}` : b.newBtn}</ActionButton>} />
+      <PageTitle eyebrow={b.eyebrow} title={b.title} subtitle={b.subtitle} action={<ActionButton variant={showForm ? 'outlined' : 'contained'} onClick={() => setShowForm(s => !s)}>{showForm ? `✕ ${t.common.cancel}` : b.newBtn}</ActionButton>} />
       {error && <ErrorBanner message={error} />}
       {showForm && <Card sx={{ borderLeft: '3px solid var(--color-danger)' }}><Eyebrow sx={{ mb: 2 }}>{b.formTitle}</Eyebrow><Stack component="form" onSubmit={submit}>{formFields}<ActionButton type="submit" disabled={saving} sx={{ alignSelf: 'flex-start' }}>{saving ? t.common.saving : b.saveBtn}</ActionButton></Stack></Card>}
 
       <Stack direction="row" gap={1.5}>
-        {[{ val: open.length, label: 'Blocaje Deschise', sub: 'necesitÄƒ acÈ›iune', color: '#f87171' }, { val: resolved.length, label: 'Rezolvate', sub: 'Ã®nchise', color: '#4ade80' }].map(({ val, label, sub, color }) => (
+        {[{ val: open.length, label: 'Blocaje Deschise', sub: 'necesită acțiune', color: '#f87171' }, { val: resolved.length, label: 'Rezolvate', sub: 'închise', color: '#4ade80' }].map(({ val, label, sub, color }) => (
           <Card key={label} sx={{ p: '14px 20px' }}><Stack direction="row" alignItems="center" gap={1.5}><Typography variant="h4" fontWeight={700} sx={{ fontSize: 28, color, fontFamily: 'var(--font-display)' }}>{val}</Typography><Box><Typography variant="body2" sx={{ fontSize: 12, fontWeight: 500 }}>{label}</Typography><Typography variant="body2" sx={{ fontSize: 11, color: 'var(--color-ink-subtle)' }}>{sub}</Typography></Box></Stack></Card>
         ))}
       </Stack>
 
-      <BlockageTable title={b.activeTitle} counter={<Badge tone="error">{open.length} {b.openCount}</Badge>} loading={loading} rows={open} empty="âœ… Niciun blocaj activ" onResolve={resolveBlockage} labels={b} />
+      <BlockageTable title={b.activeTitle} counter={<Badge tone="error">{open.length} {b.openCount}</Badge>} loading={loading} rows={open} empty="✅ Niciun blocaj activ" onResolve={resolveBlockage} labels={b} />
       <BlockageTable title={b.resolvedTitle} counter={<Badge tone="success">{resolved.length} {b.closedCount}</Badge>} loading={loading} rows={resolved} empty="Niciun blocaj rezolvat" labels={b} resolved />
     </Stack>
   )

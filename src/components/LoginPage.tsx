@@ -43,7 +43,7 @@ export default function LoginPage() {
             sx={{ height: 'clamp(72px, 10vw, 140px)', width: 'auto', mx: 'auto', mb: 3.5, display: 'block' }}
           />
           <Typography variant="body2" sx={{ fontSize: 13, color: 'var(--color-ink-subtle)' }}>
-            OMS Â· Operational Management System
+            OMS · Operational Management System
           </Typography>
         </Box>
 
@@ -52,7 +52,7 @@ export default function LoginPage() {
             Autentificare
           </Typography>
           <Typography variant="body2" sx={{ fontSize: 13, color: 'var(--color-ink-subtle)', mb: 3 }}>
-            IntroduceÈ›i credenÈ›ialele primite de la administrator.
+            Introduceți credențialele primite de la administrator.
           </Typography>
 
           <Stack component="form" onSubmit={handleSubmit} gap={1.75}>
@@ -65,11 +65,11 @@ export default function LoginPage() {
               required
             />
             <AppField
-              label="ParolÄƒ"
+              label="Parolă"
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+              placeholder="••••••••"
               required
             />
 
@@ -82,7 +82,7 @@ export default function LoginPage() {
             )}
 
             <ActionButton type="submit" disabled={loading} sx={{ width: '100%', mt: 0.5, bgcolor: loading ? 'var(--color-surface-3)' : 'var(--color-primary)', cursor: loading ? 'not-allowed' : 'pointer' }}>
-              {loading ? 'Se proceseazÄƒ...' : 'Autentificare'}
+              {loading ? 'Se procesează...' : 'Autentificare'}
             </ActionButton>
           </Stack>
         </Card>
@@ -96,7 +96,7 @@ export default function LoginPage() {
             '&:hover': { borderColor: 'var(--color-primary)', color: 'var(--color-primary)', bgcolor: 'transparent' },
           }}
         >
-          â–¶ Demo version
+          ▶ Demo version
         </ActionButton>
       </Stack>
     </Box>

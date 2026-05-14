@@ -36,7 +36,7 @@ export default function Admin() {
   async function createUser(e: { preventDefault(): void }) {
     e.preventDefault()
     if (!supabaseAdmin) {
-      setCreateError('Service key not configured â€” add VITE_SUPABASE_SERVICE_KEY to .env.local')
+      setCreateError('Service key not configured — add VITE_SUPABASE_SERVICE_KEY to .env.local')
       return
     }
     setSaving(true)
@@ -69,10 +69,10 @@ export default function Admin() {
 
   return (
     <Stack gap={4}>
-      <PageTitle eyebrow={a.eyebrow} title={a.title} subtitle={`${a.subtitle} Â· ${profiles?.length ?? 'â€¦'} ${a.users}`} action={<ActionButton variant={showForm ? 'outlined' : 'contained'} onClick={() => { setShowForm(s => !s); setCreateError(null); setCreateSuccess(null) }}>{showForm ? `âœ• ${t.common.cancel}` : a.newBtn}</ActionButton>} />
+      <PageTitle eyebrow={a.eyebrow} title={a.title} subtitle={`${a.subtitle} · ${profiles?.length ?? '…'} ${a.users}`} action={<ActionButton variant={showForm ? 'outlined' : 'contained'} onClick={() => { setShowForm(s => !s); setCreateError(null); setCreateSuccess(null) }}>{showForm ? `✕ ${t.common.cancel}` : a.newBtn}</ActionButton>} />
       {error && <ErrorBanner message={error} />}
       {saveError && <ErrorBanner message={saveError} />}
-      {createSuccess && <Box sx={{ bgcolor: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)', borderRadius: 'var(--radius-md)', p: '10px 16px' }}><Typography variant="body2" sx={{ fontSize: 13, color: '#4ade80' }}>âœ… {createSuccess}</Typography></Box>}
+      {createSuccess && <Box sx={{ bgcolor: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)', borderRadius: 'var(--radius-md)', p: '10px 16px' }}><Typography variant="body2" sx={{ fontSize: 13, color: '#4ade80' }}>✅ {createSuccess}</Typography></Box>}
 
       {showForm && (
         <Card sx={{ borderLeft: '3px solid var(--color-primary)' }}>
@@ -83,7 +83,7 @@ export default function Admin() {
               <AppField label={`${a.email} *`} required type="email" value={form.email} onChange={e => setF('email', e.target.value)} placeholder="ion.popescu@wpowertech.ro" />
               <AppField label={`${a.password} *`} required type="password" value={form.password} onChange={e => setF('password', e.target.value)} placeholder="min. 6 caractere" inputProps={{ minLength: 6 }} />
               <AppField label={a.fullName} value={form.full_name} onChange={e => setF('full_name', e.target.value)} placeholder="Ion Popescu" />
-              <AppSelect label={a.departament} value={form.departament} onChange={e => setF('departament', e.target.value)} options={DEPTS.map(d => ({ value: d, label: d || 'â€” SelectaÈ›i â€”' }))} />
+              <AppSelect label={a.departament} value={form.departament} onChange={e => setF('departament', e.target.value)} options={DEPTS.map(d => ({ value: d, label: d || '— Selectați —' }))} />
               <AppSelect label={a.rol} value={form.role} onChange={e => setF('role', e.target.value)} options={[{ value: 'worker', label: 'Worker' }, { value: 'admin', label: 'Admin' }]} />
             </Box>
             <ActionButton type="submit" disabled={saving} sx={{ alignSelf: 'flex-start', opacity: saving ? 0.7 : 1 }}>{saving ? a.creating : a.createBtn}</ActionButton>
@@ -98,18 +98,18 @@ export default function Admin() {
             editId === p.id ? (
               <TableRow key={p.id} sx={{ bgcolor: 'rgba(94,106,210,0.06)' }}>
                 <TableCell colSpan={2} sx={{ fontSize: 13, color: 'var(--color-ink-muted)' }}>{p.full_name || p.email}</TableCell>
-                <TableCell><AppSelect value={editDept} onChange={e => setEditDept(e.target.value)} options={DEPTS.map(d => ({ value: d, label: d || 'â€” FÄƒrÄƒ â€”' }))} /></TableCell>
+                <TableCell><AppSelect value={editDept} onChange={e => setEditDept(e.target.value)} options={DEPTS.map(d => ({ value: d, label: d || '— Fără —' }))} /></TableCell>
                 <TableCell><AppSelect value={editRole} onChange={e => setEditRole(e.target.value)} options={ROLES} /></TableCell>
                 <TableCell />
-                <TableCell><Stack direction="row" gap={0.75}><ActionButton onClick={() => saveEdit(p.id)} sx={{ px: 1.25, py: 0.5, fontSize: 11 }}>{t.common.save}</ActionButton><ActionButton variant="outlined" onClick={() => setEditId(null)} sx={{ px: 1, py: 0.5, fontSize: 11 }}>âœ•</ActionButton></Stack></TableCell>
+                <TableCell><Stack direction="row" gap={0.75}><ActionButton onClick={() => saveEdit(p.id)} sx={{ px: 1.25, py: 0.5, fontSize: 11 }}>{t.common.save}</ActionButton><ActionButton variant="outlined" onClick={() => setEditId(null)} sx={{ px: 1, py: 0.5, fontSize: 11 }}>✕</ActionButton></Stack></TableCell>
               </TableRow>
             ) : (
               <TableRow key={p.id}>
-                <TableCell sx={{ fontWeight: 500, fontSize: 13 }}>{p.full_name || <Typography variant="body2" sx={{ color: 'var(--color-ink-tertiary)' }}>â€”</Typography>}</TableCell>
+                <TableCell sx={{ fontWeight: 500, fontSize: 13 }}>{p.full_name || <Typography variant="body2" sx={{ color: 'var(--color-ink-tertiary)' }}>—</Typography>}</TableCell>
                 <TableCell sx={{ fontSize: 12, color: 'var(--color-ink-muted)', fontFamily: 'var(--font-mono)' }}>{p.email}</TableCell>
-                <TableCell>{p.departament ? <Badge>{p.departament}</Badge> : <Typography variant="body2" sx={{ color: 'var(--color-ink-tertiary)' }}>â€”</Typography>}</TableCell>
+                <TableCell>{p.departament ? <Badge>{p.departament}</Badge> : <Typography variant="body2" sx={{ color: 'var(--color-ink-tertiary)' }}>—</Typography>}</TableCell>
                 <TableCell>{roleBadge(p.role)}</TableCell>
-                <TableCell sx={{ fontSize: 12, color: 'var(--color-ink-tertiary)' }}>{p.created_at ? new Date(p.created_at).toLocaleDateString('ro-RO') : 'â€”'}</TableCell>
+                <TableCell sx={{ fontSize: 12, color: 'var(--color-ink-tertiary)' }}>{p.created_at ? new Date(p.created_at).toLocaleDateString('ro-RO') : '—'}</TableCell>
                 <TableCell><ActionButton variant="outlined" onClick={() => { setEditId(p.id); setEditRole(p.role); setEditDept(p.departament ?? '') }} sx={{ px: 1, py: 0.375, fontSize: 11 }}>{t.common.edit}</ActionButton></TableCell>
               </TableRow>
             )

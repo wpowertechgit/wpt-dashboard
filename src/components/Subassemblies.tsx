@@ -9,21 +9,21 @@ type FilterStatus = 'ALL' | 'FINALIZAT' | 'IN LUCRU' | 'BLOCAT'
 
 function statusChip(s: string) {
   if (s === 'Finalizat') return <Badge tone="success">Finalizat</Badge>
-  if (s === 'ÃŽn lucru') return <Badge tone="info">ÃŽn lucru</Badge>
+  if (s === 'În lucru') return <Badge tone="info">În lucru</Badge>
   if (s === 'Blocat') return <Badge tone="error">Blocat</Badge>
   if (s === 'N/A') return <Badge>N/A</Badge>
-  return <Badge>{s || 'NeÃ®nceput'}</Badge>
+  return <Badge>{s || 'Neînceput'}</Badge>
 }
 
 function globalChip(s: string) {
-  if (s.includes('FINALIZAT')) return <Badge tone="success">âœ… Finalizat</Badge>
-  if (s.includes('BLOCAT')) return <Badge tone="error">â›” Blocat</Badge>
-  if (s.includes('IN LUCRU')) return <Badge tone="info">ðŸ”„ ÃŽn Lucru</Badge>
+  if (s.includes('FINALIZAT')) return <Badge tone="success">✅ Finalizat</Badge>
+  if (s.includes('BLOCAT')) return <Badge tone="error">⛔ Blocat</Badge>
+  if (s.includes('IN LUCRU')) return <Badge tone="info">🔄 În Lucru</Badge>
   return <Badge>{s}</Badge>
 }
 
 const DEPT_COLS = ['laser','rolat','sudat','asamblat','vopsit'] as const
-const STATUS_OPTIONS = ['Finalizat', 'ÃŽn lucru', 'Blocat', 'NeÃ®nceput', 'N/A']
+const STATUS_OPTIONS = ['Finalizat', 'În lucru', 'Blocat', 'Neînceput', 'N/A']
 
 export default function Subansambluri() {
   const { t } = useLang()
@@ -67,7 +67,7 @@ export default function Subansambluri() {
 
   return (
     <Stack gap={3}>
-      <PageTitle eyebrow={s.eyebrow} title={s.title} subtitle={`LASER â†’ ROLAT â†’ SUDAT â†’ ASAMBLAT â†’ VOPSIT Â· ${filtered.length} ${t.common.records}`} />
+      <PageTitle eyebrow={s.eyebrow} title={s.title} subtitle={`LASER → ROLAT → SUDAT → ASAMBLAT → VOPSIT · ${filtered.length} ${t.common.records}`} />
       {error && <ErrorBanner message={error} />}
 
       <Stack direction="row" alignItems="center" gap={1.5} flexWrap="wrap">
@@ -84,7 +84,7 @@ export default function Subansambluri() {
                 <TableRow key={sa.id} sx={{ bgcolor: 'rgba(94,106,210,0.06)' }}>
                   <TableCell colSpan={2}><Typography variant="body2" sx={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--color-primary)' }}>{sa.proiect} #{sa.nr}</Typography></TableCell>
                   <TableCell sx={{ fontWeight: 500 }}>{sa.nume}</TableCell>
-                  <TableCell><AppSelect value={String(editRow?.status_global ?? sa.status_global)} onChange={e => setEditRow(r => ({ ...r!, status_global: e.target.value }))} options={['âœ… FINALIZAT','ðŸ”„ IN LUCRU','â›” BLOCAT']} /></TableCell>
+                  <TableCell><AppSelect value={String(editRow?.status_global ?? sa.status_global)} onChange={e => setEditRow(r => ({ ...r!, status_global: e.target.value }))} options={['✅ FINALIZAT','🔄 IN LUCRU','⛔ BLOCAT']} /></TableCell>
                   <TableCell><AppField value={String(editRow?.progres ?? sa.progres)} onChange={e => setEditRow(r => ({ ...r!, progres: e.target.value }))} sx={{ width: 70 }} /></TableCell>
                   {DEPT_COLS.map(col => (
                     <TableCell key={col} sx={{ textAlign: 'center' }}><AppSelect value={String(editRow?.[col] ?? sa[col])} onChange={e => setEditRow(r => ({ ...r!, [col]: e.target.value }))} options={STATUS_OPTIONS} sx={{ minWidth: 110 }} /></TableCell>
@@ -93,7 +93,7 @@ export default function Subansambluri() {
                   <TableCell>
                     <Stack direction="row" gap={0.75}>
                       <ActionButton onClick={saveEdit} disabled={saving} sx={{ px: 1.25, py: 0.5, fontSize: 11 }}>{saving ? '...' : t.common.save}</ActionButton>
-                      <ActionButton variant="outlined" onClick={() => { setEditId(null); setEditRow(null) }} sx={{ px: 1, py: 0.5, fontSize: 11 }}>âœ•</ActionButton>
+                      <ActionButton variant="outlined" onClick={() => { setEditId(null); setEditRow(null) }} sx={{ px: 1, py: 0.5, fontSize: 11 }}>✕</ActionButton>
                     </Stack>
                   </TableCell>
                 </TableRow>
@@ -103,7 +103,7 @@ export default function Subansambluri() {
                   <TableCell sx={{ color: 'var(--color-ink-tertiary)', fontFamily: 'var(--font-mono)', fontSize: 12 }}>{sa.nr}</TableCell>
                   <TableCell>
                     <Typography variant="body2" sx={{ fontWeight: 500, fontSize: 13 }}>{sa.nume}</Typography>
-                    {sa.conditionat_de && <Typography variant="body2" sx={{ fontSize: 11, color: 'var(--color-primary)', mt: 0.25 }}>ðŸ”µ {sa.conditionat_de}</Typography>}
+                    {sa.conditionat_de && <Typography variant="body2" sx={{ fontSize: 11, color: 'var(--color-primary)', mt: 0.25 }}>🔵 {sa.conditionat_de}</Typography>}
                   </TableCell>
                   <TableCell>{globalChip(sa.status_global)}</TableCell>
                   <TableCell sx={{ minWidth: 90 }}>

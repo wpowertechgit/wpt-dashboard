@@ -16,18 +16,20 @@ export const theme = createTheme({
   palette: {
     mode: 'dark',
     background: {
-      default: 'var(--color-canvas)',
-      paper: 'var(--color-surface-1)',
+      default: '#010102',
+      paper: '#0f1011',
     },
     primary: {
-      main: 'var(--color-primary)',
-      contrastText: 'var(--color-on-primary)',
+      main: '#5e6ad2',
+      light: '#828fff',
+      dark: '#5e69d1',
+      contrastText: '#ffffff',
     },
     text: {
-      primary: 'var(--color-ink)',
-      secondary: 'var(--color-ink-subtle)',
+      primary: '#f7f8f8',
+      secondary: '#8a8f98',
     },
-    divider: 'var(--color-hairline)',
+    divider: '#23252a',
   },
   shape: {
     borderRadius: 0,

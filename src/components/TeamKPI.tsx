@@ -52,7 +52,7 @@ export default function KPIEchipe() {
 
   return (
     <Stack gap={4}>
-      <PageTitle eyebrow={k.eyebrow} title={k.title} subtitle={k.subtitle} action={<ActionButton variant={showForm ? 'outlined' : 'contained'} onClick={() => setShowForm(s => !s)}>{showForm ? `âœ• ${t.common.cancel}` : k.newBtn}</ActionButton>} />
+      <PageTitle eyebrow={k.eyebrow} title={k.title} subtitle={k.subtitle} action={<ActionButton variant={showForm ? 'outlined' : 'contained'} onClick={() => setShowForm(s => !s)}>{showForm ? `✕ ${t.common.cancel}` : k.newBtn}</ActionButton>} />
       {error && <ErrorBanner message={error} />}
 
       {latestWeek && (
@@ -74,7 +74,7 @@ export default function KPIEchipe() {
                       </Box>
                     ))}
                   </Box>
-                  {row.sa_blocate > 0 && <Box sx={{ bgcolor: 'rgba(239,68,68,0.1)', borderRadius: 'var(--radius-xs)', p: '4px 8px', textAlign: 'center' }}><Typography variant="body2" sx={{ fontSize: 11, color: '#f87171' }}>â›” {row.sa_blocate} {k.blocate}</Typography></Box>}
+                  {row.sa_blocate > 0 && <Box sx={{ bgcolor: 'rgba(239,68,68,0.1)', borderRadius: 'var(--radius-xs)', p: '4px 8px', textAlign: 'center' }}><Typography variant="body2" sx={{ fontSize: 11, color: '#f87171' }}>⛔ {row.sa_blocate} {k.blocate}</Typography></Box>}
                 </Stack>
               </Card>
             ))}
@@ -112,8 +112,8 @@ export default function KPIEchipe() {
               <TableCell><Box component="span" sx={{ display: 'inline-block', p: '2px 8px', borderRadius: 'var(--radius-xs)', bgcolor: `${DEPT_COLORS[row.echipa]}18`, color: DEPT_COLORS[row.echipa], fontSize: 11, fontWeight: 600 }}>{row.echipa}</Box></TableCell>
               <TableCell sx={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{row.sa_intrare}</TableCell>
               <TableCell sx={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{row.sa_iesire}</TableCell>
-              <TableCell>{row.sa_blocate > 0 ? <Badge tone="error">{row.sa_blocate}</Badge> : <Typography variant="body2" sx={{ color: 'var(--color-ink-tertiary)' }}>â€“</Typography>}</TableCell>
-              <TableCell>{row.sa_intarziate > 0 ? <Badge tone="warning">{row.sa_intarziate}</Badge> : <Typography variant="body2" sx={{ color: 'var(--color-ink-tertiary)' }}>â€“</Typography>}</TableCell>
+              <TableCell>{row.sa_blocate > 0 ? <Badge tone="error">{row.sa_blocate}</Badge> : <Typography variant="body2" sx={{ color: 'var(--color-ink-tertiary)' }}>–</Typography>}</TableCell>
+              <TableCell>{row.sa_intarziate > 0 ? <Badge tone="warning">{row.sa_intarziate}</Badge> : <Typography variant="body2" sx={{ color: 'var(--color-ink-tertiary)' }}>–</Typography>}</TableCell>
               <TableCell><MiniProgress value={Number(row.eficienta)} /></TableCell>
               <TableCell sx={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: Number(row.lead_time) > 20 ? '#fbbf24' : 'var(--color-ink-muted)' }}>{row.lead_time}h</TableCell>
               <TableCell><MiniProgress value={Number(row.calitate)} /></TableCell>
