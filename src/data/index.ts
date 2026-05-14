@@ -1,0 +1,318 @@
+export const PROIECTE = [
+  {
+    id: 'WP1000-08',
+    client: 'Client Alpha',
+    responsabil: 'Ion Popescu',
+    prioritate: 'NORMAL',
+    dataStart: '15-Ian-24',
+    dataTarget: '31-Iul-24',
+    totalSA: 82,
+    finalizateSA: 82,
+    progres: 100.0,
+    blocajeActive: 0,
+    status: 'LIVRAT',
+  },
+  {
+    id: 'WP1000-09',
+    client: 'Client Beta',
+    responsabil: 'Maria Ionescu',
+    prioritate: 'RIDICAT',
+    dataStart: '01-Apr-24',
+    dataTarget: '30-Nov-24',
+    totalSA: 82,
+    finalizateSA: 80,
+    progres: 97.6,
+    blocajeActive: 0,
+    status: 'IN LIVRARE',
+  },
+  {
+    id: 'WP1000-10',
+    client: 'Client Gamma',
+    responsabil: 'Andrei Marin',
+    prioritate: 'CRITIC',
+    dataStart: '15-Iun-24',
+    dataTarget: '31-Mar-25',
+    totalSA: 82,
+    finalizateSA: 67,
+    progres: 81.7,
+    blocajeActive: 3,
+    status: 'BLOCAJE ACTIVE',
+  },
+]
+
+export type SubansambluStatus = 'Finalizat' | 'În lucru' | 'Blocat' | 'Neînceput' | 'N/A'
+
+export interface Subansamblu {
+  proiect: string
+  nr: number
+  nume: string
+  prio: string
+  statusGlobal: string
+  progres: string
+  blocat: boolean
+  intarziat: boolean
+  laser: SubansambluStatus
+  rolat: SubansambluStatus
+  sudat: SubansambluStatus
+  asamblat: SubansambluStatus
+  vopsit: SubansambluStatus
+  comentarii: string
+  conditionatDe?: string
+}
+
+export const SUBANSAMBLURI: Subansamblu[] = [
+  // WP1000-08 (all finished)
+  ...['Structura metalica','Scara metalica','Compactor iesire','Compactor intrare','Reactor superior','Reactor inferior','Suport reactor inferior','Filtru Gudroane','Ventori scrubber','Rezervor metalic (racitor)','Barbutoare','Filtre','Sistem de tevi','Snec reactor superior','Snec reactor inferior','Snec compactor intrare','Snec compactor iesire','Presetupe','Turn de racire'].map((n, i) => ({
+    proiect: 'WP1000-08',
+    nr: i + 1,
+    nume: n,
+    prio: '🟢',
+    statusGlobal: '✅ FINALIZAT',
+    progres: '100%',
+    blocat: false,
+    intarziat: false,
+    laser: 'Finalizat' as SubansambluStatus,
+    rolat: (['Scara metalica','Suport reactor inferior','Ventori scrubber','Barbutoare','Filtre','Sistem de tevi','Snec reactor superior','Snec reactor inferior','Snec compactor intrare','Snec compactor iesire','Presetupe'].includes(n) ? 'N/A' : 'Finalizat') as SubansambluStatus,
+    sudat: 'Finalizat' as SubansambluStatus,
+    asamblat: 'Finalizat' as SubansambluStatus,
+    vopsit: (n === 'Sistem de tevi' ? 'N/A' : 'Finalizat') as SubansambluStatus,
+    comentarii: 'OK',
+  })),
+  // WP1000-09 (18 finished, 1 in progress)
+  ...['Structura metalica','Scara metalica','Compactor iesire','Compactor intrare','Reactor superior','Reactor inferior','Suport reactor inferior','Filtru Gudroane','Ventori scrubber','Rezervor metalic (racitor)','Barbutoare','Filtre','Sistem de tevi','Snec reactor superior','Snec reactor inferior','Snec compactor intrare','Snec compactor iesire','Presetupe'].map((n, i) => ({
+    proiect: 'WP1000-09',
+    nr: i + 1,
+    nume: n,
+    prio: '🟡',
+    statusGlobal: '✅ FINALIZAT',
+    progres: '100%',
+    blocat: false,
+    intarziat: false,
+    laser: 'Finalizat' as SubansambluStatus,
+    rolat: (['Scara metalica','Suport reactor inferior','Ventori scrubber','Barbutoare','Filtre','Sistem de tevi','Snec reactor superior','Snec reactor inferior','Snec compactor intrare','Snec compactor iesire','Presetupe'].includes(n) ? 'N/A' : 'Finalizat') as SubansambluStatus,
+    sudat: 'Finalizat' as SubansambluStatus,
+    asamblat: 'Finalizat' as SubansambluStatus,
+    vopsit: (n === 'Sistem de tevi' ? 'N/A' : 'Finalizat') as SubansambluStatus,
+    comentarii: 'OK',
+  })),
+  {
+    proiect: 'WP1000-09', nr: 19, nume: 'Turn de racire', prio: '🟡',
+    statusGlobal: '🔄 IN LUCRU', progres: '60%', blocat: false, intarziat: false,
+    laser: 'Finalizat', rolat: 'Finalizat', sudat: 'Finalizat', asamblat: 'În lucru', vopsit: 'Neînceput',
+    comentarii: 'In lucru - asamblare',
+  },
+  // WP1000-10
+  ...['Structura metalica','Scara metalica','Compactor iesire','Compactor intrare','Reactor superior','Reactor inferior','Suport reactor inferior','Filtru Gudroane'].map((n, i) => ({
+    proiect: 'WP1000-10',
+    nr: i + 1,
+    nume: n,
+    prio: '🔴',
+    statusGlobal: '✅ FINALIZAT',
+    progres: '100%',
+    blocat: false,
+    intarziat: false,
+    laser: 'Finalizat' as SubansambluStatus,
+    rolat: (['Scara metalica','Suport reactor inferior'].includes(n) ? 'N/A' : 'Finalizat') as SubansambluStatus,
+    sudat: 'Finalizat' as SubansambluStatus,
+    asamblat: 'Finalizat' as SubansambluStatus,
+    vopsit: 'Finalizat' as SubansambluStatus,
+    comentarii: 'OK',
+  })),
+  { proiect: 'WP1000-10', nr: 9, nume: 'Ventori scrubber', prio: '🔴', statusGlobal: '⛔ BLOCAT', progres: '25%', blocat: true, intarziat: false, laser: 'Finalizat', rolat: 'N/A', sudat: 'Blocat', asamblat: 'Neînceput', vopsit: 'Neînceput', comentarii: 'BLOCAT – discutie tehnica necesara', conditionatDe: 'Dupa: Reactor superior (SA#5)' },
+  { proiect: 'WP1000-10', nr: 10, nume: 'Rezervor metalic (racitor)', prio: '🔴', statusGlobal: '⛔ BLOCAT', progres: '60%', blocat: true, intarziat: false, laser: 'Finalizat', rolat: 'Finalizat', sudat: 'Finalizat', asamblat: 'Blocat', vopsit: 'Neînceput', comentarii: 'LIPSA componente – asteptam aprovizionare', conditionatDe: 'Dupa: Structura metalica (SA#1)' },
+  { proiect: 'WP1000-10', nr: 11, nume: 'Barbutoare', prio: '🔴', statusGlobal: '🔄 IN LUCRU', progres: '75%', blocat: false, intarziat: false, laser: 'Finalizat', rolat: 'N/A', sudat: 'Finalizat', asamblat: 'Finalizat', vopsit: 'În lucru', comentarii: 'OK – la vopsit' },
+  { proiect: 'WP1000-10', nr: 12, nume: 'Filtre', prio: '🔴', statusGlobal: '🔄 IN LUCRU', progres: '75%', blocat: false, intarziat: false, laser: 'Finalizat', rolat: 'N/A', sudat: 'Finalizat', asamblat: 'Finalizat', vopsit: 'În lucru', comentarii: 'OK – la vopsit' },
+  { proiect: 'WP1000-10', nr: 13, nume: 'Sistem de tevi', prio: '🔴', statusGlobal: '⛔ BLOCAT', progres: '67%', blocat: true, intarziat: false, laser: 'Finalizat', rolat: 'N/A', sudat: 'Finalizat', asamblat: 'Blocat', vopsit: 'N/A', comentarii: 'BLOCAT – lipsa teava pompa de vid' },
+  { proiect: 'WP1000-10', nr: 14, nume: 'Snec reactor superior', prio: '🔴', statusGlobal: '🔄 IN LUCRU', progres: '75%', blocat: false, intarziat: false, laser: 'Finalizat', rolat: 'N/A', sudat: 'Finalizat', asamblat: 'Finalizat', vopsit: 'În lucru', comentarii: 'OK – la vopsit' },
+  { proiect: 'WP1000-10', nr: 15, nume: 'Snec reactor inferior', prio: '🔴', statusGlobal: '🔄 IN LUCRU', progres: '75%', blocat: false, intarziat: false, laser: 'Finalizat', rolat: 'N/A', sudat: 'Finalizat', asamblat: 'Finalizat', vopsit: 'În lucru', comentarii: 'OK – la vopsit' },
+  { proiect: 'WP1000-10', nr: 16, nume: 'Snec compactor intrare', prio: '🔴', statusGlobal: '🔄 IN LUCRU', progres: '75%', blocat: false, intarziat: false, laser: 'Finalizat', rolat: 'N/A', sudat: 'Finalizat', asamblat: 'Finalizat', vopsit: 'În lucru', comentarii: 'OK – la vopsit' },
+  { proiect: 'WP1000-10', nr: 17, nume: 'Snec compactor iesire', prio: '🔴', statusGlobal: '🔄 IN LUCRU', progres: '75%', blocat: false, intarziat: false, laser: 'Finalizat', rolat: 'N/A', sudat: 'Finalizat', asamblat: 'Finalizat', vopsit: 'În lucru', comentarii: 'OK – la vopsit' },
+  { proiect: 'WP1000-10', nr: 18, nume: 'Presetupe', prio: '🔴', statusGlobal: '🔄 IN LUCRU', progres: '75%', blocat: false, intarziat: false, laser: 'Finalizat', rolat: 'N/A', sudat: 'Finalizat', asamblat: 'Finalizat', vopsit: 'În lucru', comentarii: 'OK – la vopsit' },
+  { proiect: 'WP1000-10', nr: 19, nume: 'Turn de racire', prio: '🔴', statusGlobal: '🔄 IN LUCRU', progres: '60%', blocat: false, intarziat: false, laser: 'Finalizat', rolat: 'Finalizat', sudat: 'Finalizat', asamblat: 'În lucru', vopsit: 'Neînceput', comentarii: 'In lucru – asamblare', conditionatDe: 'Dupa: Filtru Gudroane (SA#8)' },
+]
+
+export const BLOCAJE = [
+  {
+    id: 'BLK-001',
+    dataDeschisDare: '28-Apr-25',
+    proiect: 'WP1000-10',
+    subansamblu: 'Ventori scrubber',
+    departament: 'SUDAT',
+    descriere: 'Discutie tehnica: configuratie neconfirmata cu proiectantul',
+    responsabil: 'Andrei Marin',
+    impact: 'INALT',
+    status: 'Deschis',
+    dataRezolvare: '',
+    zileDeschis: 381,
+    observatii: 'Sudat blocat complet pe aceasta piesa',
+  },
+  {
+    id: 'BLK-002',
+    dataDeschisDare: '30-Apr-25',
+    proiect: 'WP1000-10',
+    subansamblu: 'Rezervor metalic (racitor)',
+    departament: 'ASAMBLAT',
+    descriere: 'Lipsa componente de aprovizionat – fitinguri speciale',
+    responsabil: 'Ion Popescu',
+    impact: 'CRITIC',
+    status: 'Deschis',
+    dataRezolvare: '',
+    zileDeschis: 379,
+    observatii: 'Blocheaza montajul final',
+  },
+  {
+    id: 'BLK-003',
+    dataDeschisDare: '02-Mai-25',
+    proiect: 'WP1000-10',
+    subansamblu: 'Sistem de tevi',
+    departament: 'ASAMBLAT',
+    descriere: 'Lipsa teava pompa de vid – comanda in curs',
+    responsabil: 'Maria Ionescu',
+    impact: 'MEDIU',
+    status: 'Deschis',
+    dataRezolvare: '',
+    zileDeschis: 377,
+    observatii: 'ETA livrare: 5 zile',
+  },
+  {
+    id: 'BLK-004',
+    dataDeschisDare: '15-Apr-25',
+    proiect: 'WP1000-09',
+    subansamblu: 'Ventori scrubber',
+    departament: 'FINALIZAT',
+    descriere: 'Discutie rezolvata – configuratie confirmata',
+    responsabil: 'Ion Popescu',
+    impact: 'MEDIU',
+    status: 'Rezolvat',
+    dataRezolvare: '20-Apr-25',
+    zileDeschis: 5,
+    observatii: 'Rezolvat in 5 zile',
+  },
+]
+
+export const PDCA = [
+  {
+    id: 'PDCA-001',
+    sursa: 'BLK-001',
+    dataDeschis: '28-Apr-25',
+    proiect: 'WP1000-10',
+    problema: 'Configuratie scrubber nevalidata – risc blocare sudura',
+    contramasura: 'Convocare sedinta tehnica urgenta cu proiectant si sef sudura',
+    responsabil: 'Andrei Marin',
+    termen: '14-Mai-25',
+    status: 'Deschis',
+    rezultat: '',
+    actiuneUrmatoare: '',
+    prioritate: 'INALT',
+    zileRamas: 'DEPASIT',
+  },
+  {
+    id: 'PDCA-002',
+    sursa: 'BLK-002',
+    dataDeschis: '30-Apr-25',
+    proiect: 'WP1000-10',
+    problema: 'Componente lipsa blocheaza asamblarea racitorului',
+    contramasura: 'Aprovizionare urgenta; verificare stoc intern si furnizori alternativi',
+    responsabil: 'Ion Popescu',
+    termen: '12-Mai-25',
+    status: 'Deschis',
+    rezultat: '',
+    actiuneUrmatoare: '',
+    prioritate: 'CRITIC',
+    zileRamas: 'DEPASIT',
+  },
+  {
+    id: 'PDCA-003',
+    sursa: 'BLK-003',
+    dataDeschis: '02-Mai-25',
+    proiect: 'WP1000-10',
+    problema: 'Teava pompa de vid lipsa – blocheaza asamblarea',
+    contramasura: 'Comanda plasata; confirmare ETA cu furnizor; plan alternativ',
+    responsabil: 'Maria Ionescu',
+    termen: '16-Mai-25',
+    status: 'Deschis',
+    rezultat: '',
+    actiuneUrmatoare: '',
+    prioritate: 'MEDIU',
+    zileRamas: 'DEPASIT',
+  },
+  {
+    id: 'PDCA-004',
+    sursa: 'OBS-01',
+    dataDeschis: '22-Apr-25',
+    proiect: 'WP1000-10',
+    problema: '7 subansambluri la vopsit simultan – risc suprasolicitare dept',
+    contramasura: 'Planificare secventiala vopsit; prioritizare dupa WP10 livr. target',
+    responsabil: 'Andrei Marin',
+    termen: '20-Mai-25',
+    status: 'In analiza',
+    rezultat: '',
+    actiuneUrmatoare: '',
+    prioritate: 'MEDIU',
+    zileRamas: 'DEPASIT',
+  },
+  {
+    id: 'PDCA-005',
+    sursa: 'KPI-W17',
+    dataDeschis: '25-Apr-25',
+    proiect: 'TOATE',
+    problema: 'Lead time laser crescut cu 20% saptamana 17',
+    contramasura: 'Analiza cauze; verificare intretinere echipament laser; revizuire planificare',
+    responsabil: 'Ion Popescu',
+    termen: '18-Mai-25',
+    status: 'Deschis',
+    rezultat: '',
+    actiuneUrmatoare: '',
+    prioritate: 'SCAZUT',
+    zileRamas: 'DEPASIT',
+  },
+]
+
+export const FLUX_ZILNIC = [
+  { data: '06-Mai-25', proiect: 'WP1000-10', subansamblu: 'Barbutoare', deptOrigine: 'SUDAT', deptDestinatie: 'ASAMBLAT', echipa: 'Echipa Sudat A', validatDe: 'Mihai Lungu', ora: '', observatii: 'Predare OK' },
+  { data: '06-Mai-25', proiect: 'WP1000-10', subansamblu: 'Filtre', deptOrigine: 'SUDAT', deptDestinatie: 'ASAMBLAT', echipa: 'Echipa Sudat A', validatDe: 'Mihai Lungu', ora: '', observatii: 'Predare OK' },
+  { data: '07-Mai-25', proiect: 'WP1000-10', subansamblu: 'Snec reactor superior', deptOrigine: 'ASAMBLAT', deptDestinatie: 'VOPSIT', echipa: 'Echipa Asamblare', validatDe: 'Radu Dinu', ora: '', observatii: 'Finalizat asamblare' },
+  { data: '07-Mai-25', proiect: 'WP1000-10', subansamblu: 'Snec reactor inferior', deptOrigine: 'ASAMBLAT', deptDestinatie: 'VOPSIT', echipa: 'Echipa Asamblare', validatDe: 'Radu Dinu', ora: '', observatii: 'Finalizat asamblare' },
+  { data: '08-Mai-25', proiect: 'WP1000-09', subansamblu: 'Turn de racire', deptOrigine: 'ROLAT', deptDestinatie: 'SUDAT', echipa: 'Echipa Rolat', validatDe: 'Vasile Pop', ora: '', observatii: 'Rolat complet' },
+  { data: '08-Mai-25', proiect: 'WP1000-10', subansamblu: 'Presetupe', deptOrigine: 'ASAMBLAT', deptDestinatie: 'VOPSIT', echipa: 'Echipa Asamblare', validatDe: 'Radu Dinu', ora: '', observatii: 'Finalizat asamblare' },
+  { data: '09-Mai-25', proiect: 'WP1000-10', subansamblu: 'Turn de racire', deptOrigine: 'SUDAT', deptDestinatie: 'ASAMBLAT', echipa: 'Echipa Sudat B', validatDe: 'Gelu Soare', ora: '', observatii: 'Sudura finalizata' },
+  { data: '09-Mai-25', proiect: 'WP1000-10', subansamblu: 'Snec compactor intrare', deptOrigine: 'ASAMBLAT', deptDestinatie: 'VOPSIT', echipa: 'Echipa Asamblare', validatDe: 'Radu Dinu', ora: '', observatii: 'Finalizat' },
+  { data: '09-Mai-25', proiect: 'WP1000-10', subansamblu: 'Snec compactor iesire', deptOrigine: 'ASAMBLAT', deptDestinatie: 'VOPSIT', echipa: 'Echipa Asamblare', validatDe: 'Radu Dinu', ora: '', observatii: 'Finalizat' },
+]
+
+export const KPI_ECHIPE = [
+  { saptamana: 'S-17 (Apr 28)', echipa: 'LASER', saIntrare: 8, saIesire: 7, saBlocate: 0, saIntarziate: 0, eficienta: 87, leadTime: 14.0, calitate: 96 },
+  { saptamana: 'S-17 (Apr 28)', echipa: 'ROLAT', saIntrare: 4, saIesire: 4, saBlocate: 0, saIntarziate: 0, eficienta: 100, leadTime: 18.0, calitate: 100 },
+  { saptamana: 'S-17 (Apr 28)', echipa: 'SUDAT', saIntrare: 7, saIesire: 5, saBlocate: 2, saIntarziate: 0, eficienta: 71, leadTime: 24.0, calitate: 88 },
+  { saptamana: 'S-17 (Apr 28)', echipa: 'ASAMBLAT', saIntrare: 6, saIesire: 5, saBlocate: 1, saIntarziate: 0, eficienta: 83, leadTime: 16.0, calitate: 95 },
+  { saptamana: 'S-17 (Apr 28)', echipa: 'VOPSIT', saIntrare: 5, saIesire: 5, saBlocate: 0, saIntarziate: 0, eficienta: 100, leadTime: 20.0, calitate: 97 },
+  { saptamana: 'S-18 (Mai 5)', echipa: 'LASER', saIntrare: 9, saIesire: 9, saBlocate: 0, saIntarziate: 0, eficienta: 100, leadTime: 12.0, calitate: 98 },
+  { saptamana: 'S-18 (Mai 5)', echipa: 'ROLAT', saIntrare: 3, saIesire: 3, saBlocate: 0, saIntarziate: 0, eficienta: 100, leadTime: 20.0, calitate: 100 },
+  { saptamana: 'S-18 (Mai 5)', echipa: 'SUDAT', saIntrare: 8, saIesire: 6, saBlocate: 1, saIntarziate: 0, eficienta: 75, leadTime: 22.0, calitate: 90 },
+  { saptamana: 'S-18 (Mai 5)', echipa: 'ASAMBLAT', saIntrare: 7, saIesire: 6, saBlocate: 1, saIntarziate: 0, eficienta: 86, leadTime: 15.0, calitate: 96 },
+  { saptamana: 'S-18 (Mai 5)', echipa: 'VOPSIT', saIntrare: 6, saIesire: 6, saBlocate: 0, saIntarziate: 0, eficienta: 100, leadTime: 18.0, calitate: 98 },
+  { saptamana: 'S-19 (Mai 12)', echipa: 'LASER', saIntrare: 10, saIesire: 8, saBlocate: 0, saIntarziate: 0, eficienta: 80, leadTime: 13.0, calitate: 97 },
+  { saptamana: 'S-19 (Mai 12)', echipa: 'ROLAT', saIntrare: 2, saIesire: 2, saBlocate: 0, saIntarziate: 0, eficienta: 100, leadTime: 17.0, calitate: 100 },
+  { saptamana: 'S-19 (Mai 12)', echipa: 'SUDAT', saIntrare: 9, saIesire: 7, saBlocate: 2, saIntarziate: 0, eficienta: 78, leadTime: 20.0, calitate: 91 },
+  { saptamana: 'S-19 (Mai 12)', echipa: 'ASAMBLAT', saIntrare: 8, saIesire: 5, saBlocate: 3, saIntarziate: 0, eficienta: 63, leadTime: 18.0, calitate: 93 },
+  { saptamana: 'S-19 (Mai 12)', echipa: 'VOPSIT', saIntrare: 9, saIesire: 9, saBlocate: 0, saIntarziate: 0, eficienta: 100, leadTime: 16.0, calitate: 100 },
+]
+
+export const DASHBOARD_STATS = {
+  totalSA: 57,
+  finalizateSA: 45,
+  inLucruSA: 9,
+  blocateSA: 3,
+  progresGlobal: 78.9,
+  proiecteActive: 3,
+  intarziate: 0,
+  dataRaport: '11 Mai 2026',
+}
+
+export const HEATMAP = [
+  { departament: 'LASER', wp08: '✅ 19/19', wp09: '✅ 19/19', wp10: '✅ 19/19', totalBlocaje: 0, saActive: 0 },
+  { departament: 'ROLAT', wp08: '✅ 7/7', wp09: '✅ 7/7', wp10: '✅ 7/7', totalBlocaje: 0, saActive: 0 },
+  { departament: 'SUDAT', wp08: '✅ 19/19', wp09: '✅ 19/19', wp10: '⛔ 1', totalBlocaje: 1, saActive: 0 },
+  { departament: 'ASAMBLAT', wp08: '✅ 19/19', wp09: '🔄 1', wp10: '⛔ 2', totalBlocaje: 2, saActive: 2 },
+  { departament: 'VOPSIT', wp08: '✅ 18/18', wp09: '✅ 17/18', wp10: '🔄 7', totalBlocaje: 0, saActive: 7 },
+]
