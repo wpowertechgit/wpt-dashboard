@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { useLang } from '../lib/i18n'
 import { useQuery } from '../lib/useQuery'
 import { fetchBlocaje, insertBlocaj, updateBlocaj } from '../lib/api'
+import { formatDateLabel } from '../lib/dateUtils'
 import { ErrorBanner, EmptyState, LoadingRows } from './StateViews'
 import { ActionButton, AppField, AppSelect, Badge, Box, Card, DataTable, Eyebrow, PageTitle, Stack, TableCell, TableRow, Typography } from './Ui'
 
@@ -38,7 +39,7 @@ export default function Blocaje() {
   }
 
   async function resolveBlockage(id: string) {
-    const today = new Date().toLocaleDateString('ro-RO', { day: '2-digit', month: 'short', year: '2-digit' }).replace(/ /g, '-')
+    const today = new Date().toISOString().slice(0, 10)
     await updateBlocaj(id, { status: 'Rezolvat', data_rezolvare: today })
     refetch()
   }
@@ -46,7 +47,7 @@ export default function Blocaje() {
   const formFields = (
     <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1.5, mb: 1.5 }}>
       <AppField label="ID Blocare *" required value={form.id} onChange={e => setF('id', e.target.value)} placeholder="BLK-005" />
-      <AppField label="Data Deschidere" value={form.data_deschidere} onChange={e => setF('data_deschidere', e.target.value)} placeholder="12-Mai-25" />
+      <AppField label="Data Deschidere" type="date" value={form.data_deschidere} onChange={e => setF('data_deschidere', e.target.value)} />
       <AppSelect label="Proiect" value={form.proiect} onChange={e => setF('proiect', e.target.value)} options={[{ value: '', label: '— Selectați —' }, 'WP1000-08','WP1000-09','WP1000-10']} />
       <AppField label="Subansamblu" value={form.subansamblu} onChange={e => setF('subansamblu', e.target.value)} />
       <AppSelect label="Departament" value={form.departament} onChange={e => setF('departament', e.target.value)} options={['LASER','ROLAT','SUDAT','ASAMBLAT','VOPSIT']} />
@@ -83,7 +84,7 @@ function BlockageTable({ title, counter, loading, rows, empty, labels, resolved,
         {loading ? <LoadingRows cols={11} /> : rows.length === 0 ? <EmptyState label={empty} /> : rows.map(b => (
           <TableRow key={b.id} sx={!resolved ? { bgcolor: 'rgba(239,68,68,0.03)' } : undefined}>
             <TableCell><Typography variant="body2" sx={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: resolved ? 'var(--color-primary)' : '#f87171' }}>{b.id}</Typography></TableCell>
-            <TableCell sx={{ fontSize: 12, color: 'var(--color-ink-muted)', whiteSpace: 'nowrap' }}>{b.data_deschidere}</TableCell>
+            <TableCell sx={{ fontSize: 12, color: 'var(--color-ink-muted)', whiteSpace: 'nowrap' }}>{formatDateLabel(b.data_deschidere)}</TableCell>
             <TableCell><Typography variant="body2" sx={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--color-primary)' }}>{b.proiect}</Typography></TableCell>
             <TableCell sx={{ fontWeight: 500 }}>{b.subansamblu}</TableCell>
             <TableCell><Badge>{b.departament}</Badge></TableCell>
@@ -91,7 +92,7 @@ function BlockageTable({ title, counter, loading, rows, empty, labels, resolved,
             <TableCell sx={{ fontSize: 12, color: 'var(--color-ink-muted)', whiteSpace: 'nowrap' }}>{b.responsabil}</TableCell>
             <TableCell>{impactBadge(b.impact)}</TableCell>
             {resolved ? <TableCell>{statusBadge(b.status)}</TableCell> : <TableCell><Typography variant="body2" sx={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: b.zile_deschis > 30 ? '#f87171' : 'var(--color-ink-muted)' }}>{b.zile_deschis}z</Typography></TableCell>}
-            {resolved ? <TableCell sx={{ fontSize: 12, color: '#4ade80' }}>{b.data_rezolvare}</TableCell> : <TableCell sx={{ fontSize: 12, color: 'var(--color-ink-subtle)' }}>{b.observatii}</TableCell>}
+            {resolved ? <TableCell sx={{ fontSize: 12, color: '#4ade80' }}>{formatDateLabel(b.data_rezolvare)}</TableCell> : <TableCell sx={{ fontSize: 12, color: 'var(--color-ink-subtle)' }}>{b.observatii}</TableCell>}
             <TableCell>{resolved ? <Typography variant="body2" sx={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--color-ink-muted)' }}>{b.zile_deschis}z</Typography> : <ActionButton variant="outlined" onClick={() => onResolve?.(b.id)} sx={{ bgcolor: 'rgba(39,166,68,0.1)', borderColor: 'rgba(39,166,68,0.2)', color: '#4ade80', fontSize: 11, px: 1, py: 0.375, whiteSpace: 'nowrap' }}>{labels.resolveBtn}</ActionButton>}</TableCell>
           </TableRow>
         ))}

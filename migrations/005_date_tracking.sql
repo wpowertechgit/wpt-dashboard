@@ -1,0 +1,12 @@
+ALTER TABLE public.proiecte
+  ADD COLUMN IF NOT EXISTS data_done TEXT;
+
+ALTER TABLE public.subansambluri
+  ADD COLUMN IF NOT EXISTS data_start TEXT,
+  ADD COLUMN IF NOT EXISTS data_due TEXT,
+  ADD COLUMN IF NOT EXISTS data_done TEXT,
+  ADD COLUMN IF NOT EXISTS laser_done TEXT,
+  ADD COLUMN IF NOT EXISTS rolat_done TEXT,
+  ADD COLUMN IF NOT EXISTS sudat_done TEXT,
+  ADD COLUMN IF NOT EXISTS asamblat_done TEXT,
+  ADD COLUMN IF NOT EXISTS vopsit_done TEXT;

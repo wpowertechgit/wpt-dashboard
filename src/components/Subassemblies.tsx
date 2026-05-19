@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useLang } from '../lib/i18n'
 import { useQuery } from '../lib/useQuery'
 import { fetchSubansambluri, upsertSubansamblu } from '../lib/api'
+import { daysBetween, formatDateLabel } from '../lib/dateUtils'
 import { ErrorBanner, EmptyState, LoadingRows } from './StateViews'
 import { ActionButton, AppField, AppSelect, Badge, Box, Card, DataTable, PageTitle, Stack, TableCell, TableRow, Typography } from './Ui'
 
@@ -23,7 +24,26 @@ function globalChip(s: string) {
 }
 
 const DEPT_COLS = ['laser','rolat','sudat','asamblat','vopsit'] as const
+const DEPT_DONE_COLS = ['laser_done','rolat_done','sudat_done','asamblat_done','vopsit_done'] as const
 const STATUS_OPTIONS = ['Finalizat', 'În lucru', 'Blocat', 'Neînceput', 'N/A']
+
+function timelineSummary(sa: Record<string, any>) {
+  return [
+    ['S', formatDateLabel(sa.data_start)],
+    ['D', formatDateLabel(sa.data_due)],
+    ['F', formatDateLabel(sa.data_done)],
+  ]
+}
+
+function deptDateSummary(sa: Record<string, any>) {
+  return [
+    ['L', formatDateLabel(sa.laser_done)],
+    ['R', formatDateLabel(sa.rolat_done)],
+    ['S', formatDateLabel(sa.sudat_done)],
+    ['A', formatDateLabel(sa.asamblat_done)],
+    ['V', formatDateLabel(sa.vopsit_done)],
+  ]
+}
 
 export default function Subansambluri() {
   const { t } = useLang()
@@ -77,23 +97,36 @@ export default function Subansambluri() {
       </Stack>
 
       <Card sx={{ p: 0, overflow: 'hidden' }}>
-        <DataTable sx={{ overflowX: 'auto' }} head={<TableRow><TableCell>{s.colProiect}</TableCell><TableCell>{s.colNr}</TableCell><TableCell>{s.colNume}</TableCell><TableCell>{s.colStatus}</TableCell><TableCell>{s.colProgres}</TableCell><TableCell sx={{ textAlign: 'center' }}>LASER</TableCell><TableCell sx={{ textAlign: 'center' }}>ROLAT</TableCell><TableCell sx={{ textAlign: 'center' }}>SUDAT</TableCell><TableCell sx={{ textAlign: 'center' }}>ASAMBLAT</TableCell><TableCell sx={{ textAlign: 'center' }}>VOPSIT</TableCell><TableCell>{s.colComentarii}</TableCell><TableCell /></TableRow>}>
-          {loading ? <LoadingRows cols={12} /> : filtered.length === 0 ? <EmptyState label={s.empty} /> :
+        <DataTable sx={{ overflowX: 'auto' }} head={<TableRow><TableCell>{s.colProiect}</TableCell><TableCell>{s.colNr}</TableCell><TableCell>{s.colNume}</TableCell><TableCell>{s.colStatus}</TableCell><TableCell>{s.colProgres}</TableCell><TableCell>{s.colTimeline}</TableCell><TableCell>{s.colDeptDates}</TableCell><TableCell sx={{ textAlign: 'center' }}>LASER</TableCell><TableCell sx={{ textAlign: 'center' }}>ROLAT</TableCell><TableCell sx={{ textAlign: 'center' }}>SUDAT</TableCell><TableCell sx={{ textAlign: 'center' }}>ASAMBLAT</TableCell><TableCell sx={{ textAlign: 'center' }}>VOPSIT</TableCell><TableCell>{s.colComentarii}</TableCell><TableCell /></TableRow>}>
+          {loading ? <LoadingRows cols={14} /> : filtered.length === 0 ? <EmptyState label={s.empty} /> :
             filtered.map(sa => (
               editId === sa.id ? (
                 <TableRow key={sa.id} sx={{ bgcolor: 'rgba(94,106,210,0.06)' }}>
-                  <TableCell colSpan={2}><Typography variant="body2" sx={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--color-primary)' }}>{sa.proiect} #{sa.nr}</Typography></TableCell>
-                  <TableCell sx={{ fontWeight: 500 }}>{sa.nume}</TableCell>
-                  <TableCell><AppSelect value={String(editRow?.status_global ?? sa.status_global)} onChange={e => setEditRow(r => ({ ...r!, status_global: e.target.value }))} options={['✅ FINALIZAT','🔄 IN LUCRU','⛔ BLOCAT']} /></TableCell>
-                  <TableCell><AppField value={String(editRow?.progres ?? sa.progres)} onChange={e => setEditRow(r => ({ ...r!, progres: e.target.value }))} sx={{ width: 70 }} /></TableCell>
-                  {DEPT_COLS.map(col => (
-                    <TableCell key={col} sx={{ textAlign: 'center' }}><AppSelect value={String(editRow?.[col] ?? sa[col])} onChange={e => setEditRow(r => ({ ...r!, [col]: e.target.value }))} options={STATUS_OPTIONS} sx={{ minWidth: 110 }} /></TableCell>
-                  ))}
-                  <TableCell><AppField value={String(editRow?.comentarii ?? sa.comentarii ?? '')} onChange={e => setEditRow(r => ({ ...r!, comentarii: e.target.value }))} sx={{ width: 140 }} /></TableCell>
-                  <TableCell>
-                    <Stack direction="row" gap={0.75}>
-                      <ActionButton onClick={saveEdit} disabled={saving} sx={{ px: 1.25, py: 0.5, fontSize: 11 }}>{saving ? '...' : t.common.save}</ActionButton>
-                      <ActionButton variant="outlined" onClick={() => { setEditId(null); setEditRow(null) }} sx={{ px: 1, py: 0.5, fontSize: 11 }}>✕</ActionButton>
+                  <TableCell colSpan={14} sx={{ p: 2 }}>
+                    <Stack gap={1.5}>
+                      <Typography variant="body2" sx={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--color-primary)' }}>{sa.proiect} #{sa.nr} · {sa.nume}</Typography>
+                      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(120px, 1fr))', gap: 1.25 }}>
+                        <AppSelect label="Status Global" value={String(editRow?.status_global ?? sa.status_global)} onChange={e => setEditRow(r => ({ ...r!, status_global: e.target.value }))} options={['✅ FINALIZAT','🔄 IN LUCRU','⛔ BLOCAT']} />
+                        <AppField label="Progres" value={String(editRow?.progres ?? sa.progres)} onChange={e => setEditRow(r => ({ ...r!, progres: e.target.value }))} />
+                        <AppField label="Start" type="date" value={String(editRow?.data_start ?? sa.data_start ?? '')} onChange={e => setEditRow(r => ({ ...r!, data_start: e.target.value }))} />
+                        <AppField label="Due" type="date" value={String(editRow?.data_due ?? sa.data_due ?? '')} onChange={e => setEditRow(r => ({ ...r!, data_due: e.target.value }))} />
+                        <AppField label="Done" type="date" value={String(editRow?.data_done ?? sa.data_done ?? '')} onChange={e => setEditRow(r => ({ ...r!, data_done: e.target.value }))} />
+                        <AppField label="Laser Done" type="date" value={String(editRow?.laser_done ?? sa.laser_done ?? '')} onChange={e => setEditRow(r => ({ ...r!, laser_done: e.target.value }))} />
+                        <AppField label="Rolat Done" type="date" value={String(editRow?.rolat_done ?? sa.rolat_done ?? '')} onChange={e => setEditRow(r => ({ ...r!, rolat_done: e.target.value }))} />
+                        <AppField label="Sudat Done" type="date" value={String(editRow?.sudat_done ?? sa.sudat_done ?? '')} onChange={e => setEditRow(r => ({ ...r!, sudat_done: e.target.value }))} />
+                        <AppField label="Asamblat Done" type="date" value={String(editRow?.asamblat_done ?? sa.asamblat_done ?? '')} onChange={e => setEditRow(r => ({ ...r!, asamblat_done: e.target.value }))} />
+                        <AppField label="Vopsit Done" type="date" value={String(editRow?.vopsit_done ?? sa.vopsit_done ?? '')} onChange={e => setEditRow(r => ({ ...r!, vopsit_done: e.target.value }))} />
+                      </Box>
+                      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(120px, 1fr))', gap: 1.25 }}>
+                        {DEPT_COLS.map(col => (
+                          <AppSelect key={col} label={col.toUpperCase()} value={String(editRow?.[col] ?? sa[col])} onChange={e => setEditRow(r => ({ ...r!, [col]: e.target.value }))} options={STATUS_OPTIONS} />
+                        ))}
+                      </Box>
+                      <AppField label={s.colComentarii} value={String(editRow?.comentarii ?? sa.comentarii ?? '')} onChange={e => setEditRow(r => ({ ...r!, comentarii: e.target.value }))} />
+                      <Stack direction="row" gap={0.75}>
+                        <ActionButton onClick={saveEdit} disabled={saving} sx={{ px: 1.25, py: 0.5, fontSize: 11 }}>{saving ? '...' : t.common.save}</ActionButton>
+                        <ActionButton variant="outlined" onClick={() => { setEditId(null); setEditRow(null) }} sx={{ px: 1, py: 0.5, fontSize: 11 }}>✕</ActionButton>
+                      </Stack>
                     </Stack>
                   </TableCell>
                 </TableRow>
@@ -114,10 +147,29 @@ export default function Subansambluri() {
                       <Typography variant="body2" sx={{ fontSize: 11, color: 'var(--color-ink-muted)' }}>{sa.progres}</Typography>
                     </Stack>
                   </TableCell>
+                  <TableCell sx={{ minWidth: 110 }}>
+                    <Stack gap={0.25}>
+                      {timelineSummary(sa).map(([label, value]) => (
+                        <Typography key={label} variant="body2" sx={{ fontSize: 10, color: 'var(--color-ink-muted)' }}>{label}: {value}</Typography>
+                      ))}
+                      {daysBetween(sa.data_start, sa.data_done) !== null && (
+                        <Typography variant="body2" sx={{ fontSize: 10, color: 'var(--color-primary)', fontWeight: 600 }}>
+                          LT: {daysBetween(sa.data_start, sa.data_done)}d
+                        </Typography>
+                      )}
+                    </Stack>
+                  </TableCell>
+                  <TableCell sx={{ minWidth: 120 }}>
+                    <Stack gap={0.25}>
+                      {deptDateSummary(sa).map(([label, value]) => (
+                        <Typography key={label} variant="body2" sx={{ fontSize: 10, color: 'var(--color-ink-subtle)' }}>{label}: {value}</Typography>
+                      ))}
+                    </Stack>
+                  </TableCell>
                   {DEPT_COLS.map(col => <TableCell key={col} sx={{ textAlign: 'center' }}>{statusChip(sa[col])}</TableCell>)}
                   <TableCell sx={{ fontSize: 12, color: sa.blocat ? '#f87171' : 'var(--color-ink-muted)', maxWidth: 180 }}>{sa.comentarii}</TableCell>
                   <TableCell>
-                    <ActionButton variant="outlined" onClick={() => { setEditId(sa.id); setEditRow({ status_global: sa.status_global, progres: sa.progres, blocat: sa.blocat, laser: sa.laser, rolat: sa.rolat, sudat: sa.sudat, asamblat: sa.asamblat, vopsit: sa.vopsit, comentarii: sa.comentarii ?? '' }) }} sx={{ px: 1, py: 0.375, fontSize: 11 }}>
+                    <ActionButton variant="outlined" onClick={() => { setEditId(sa.id); setEditRow({ status_global: sa.status_global, progres: sa.progres, blocat: sa.blocat, laser: sa.laser, rolat: sa.rolat, sudat: sa.sudat, asamblat: sa.asamblat, vopsit: sa.vopsit, data_start: sa.data_start ?? '', data_due: sa.data_due ?? '', data_done: sa.data_done ?? '', laser_done: sa.laser_done ?? '', rolat_done: sa.rolat_done ?? '', sudat_done: sa.sudat_done ?? '', asamblat_done: sa.asamblat_done ?? '', vopsit_done: sa.vopsit_done ?? '', comentarii: sa.comentarii ?? '' }) }} sx={{ px: 1, py: 0.375, fontSize: 11 }}>
                       {t.common.edit}
                     </ActionButton>
                   </TableCell>

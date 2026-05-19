@@ -2,3 +2,5 @@ node_modules
 dist
 .env.local
 .env
+tmp
+~$WastePowertech_OMS_1.xlsx

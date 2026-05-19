@@ -2,9 +2,9 @@
 
 export const DEMO = {
   proiecte: [
-    { id: 'WP1000-08', client: 'Client Alpha', responsabil: 'Ion Popescu', prioritate: 'NORMAL', data_start: '15-Ian-24', data_target: '31-Iul-24', total_sa: 82, finalizate_sa: 82, progres: 100.0, blocaje_active: 0, status: 'LIVRAT', buget_ore: 1640, ore_consumate: 1598 },
-    { id: 'WP1000-09', client: 'Client Beta', responsabil: 'Maria Ionescu', prioritate: 'RIDICAT', data_start: '01-Apr-24', data_target: '30-Nov-24', total_sa: 82, finalizate_sa: 80, progres: 97.6, blocaje_active: 0, status: 'IN LIVRARE', buget_ore: 1640, ore_consumate: 1601 },
-    { id: 'WP1000-10', client: 'Client Gamma', responsabil: 'Andrei Marin', prioritate: 'CRITIC', data_start: '15-Iun-24', data_target: '31-Mar-25', total_sa: 82, finalizate_sa: 67, progres: 81.7, blocaje_active: 3, status: 'BLOCAJE ACTIVE', buget_ore: 1640, ore_consumate: 1340 },
+    { id: 'WP1000-08', client: 'Client Alpha', responsabil: 'Ion Popescu', prioritate: 'NORMAL', data_start: '15-Ian-24', data_target: '31-Iul-24', data_done: '2024-07-29', total_sa: 82, finalizate_sa: 82, progres: 100.0, blocaje_active: 0, status: 'LIVRAT', buget_ore: 1640, ore_consumate: 1598 },
+    { id: 'WP1000-09', client: 'Client Beta', responsabil: 'Maria Ionescu', prioritate: 'RIDICAT', data_start: '01-Apr-24', data_target: '30-Nov-24', data_done: '', total_sa: 82, finalizate_sa: 80, progres: 97.6, blocaje_active: 0, status: 'IN LIVRARE', buget_ore: 1640, ore_consumate: 1601 },
+    { id: 'WP1000-10', client: 'Client Gamma', responsabil: 'Andrei Marin', prioritate: 'CRITIC', data_start: '15-Iun-24', data_target: '31-Mar-25', data_done: '', total_sa: 82, finalizate_sa: 67, progres: 81.7, blocaje_active: 3, status: 'BLOCAJE ACTIVE', buget_ore: 1640, ore_consumate: 1340 },
   ],
 
   subansambluri: [
@@ -15,17 +15,21 @@ export const DEMO = {
       prio: '🟢', status_global: '✅ FINALIZAT', progres: '100%', blocat: false, intarziat: false,
       laser: 'Finalizat', rolat: [2,9,11,12,13,17,18,14,15,16].includes(i+1) ? 'N/A' : 'Finalizat',
       sudat: 'Finalizat', asamblat: 'Finalizat', vopsit: i+1 === 13 ? 'N/A' : 'Finalizat',
-      comentarii: 'OK', conditionat_de: null,
-    })),
+	      data_start: '2024-01-15', data_due: '2024-02-15', data_done: '2024-02-12',
+	      laser_done: '2024-01-18', rolat_done: [2,9,11,12,13,17,18,14,15,16].includes(i+1) ? '' : '2024-01-22', sudat_done: '2024-01-28', asamblat_done: '2024-02-05', vopsit_done: i+1 === 13 ? '' : '2024-02-12',
+	      comentarii: 'OK', conditionat_de: null,
+	    })),
     // WP1000-09
     ...Array.from({ length: 18 }, (_, i) => ({
       id: 100 + i + 1, proiect: 'WP1000-09', nr: i + 1,
       nume: ['Structura metalica','Scara metalica','Compactor iesire','Compactor intrare','Reactor superior','Reactor inferior','Suport reactor inferior','Filtru Gudroane','Ventori scrubber','Rezervor metalic (racitor)','Barbutoare','Filtre','Sistem de tevi','Snec reactor superior','Snec reactor inferior','Snec compactor intrare','Snec compactor iesire','Presetupe'][i],
       prio: '🟡', status_global: '✅ FINALIZAT', progres: '100%', blocat: false, intarziat: false,
       laser: 'Finalizat', rolat: 'N/A', sudat: 'Finalizat', asamblat: 'Finalizat', vopsit: 'Finalizat',
-      comentarii: 'OK', conditionat_de: null,
-    })),
-    { id: 119, proiect: 'WP1000-09', nr: 19, nume: 'Turn de racire', prio: '🟡', status_global: '🔄 IN LUCRU', progres: '60%', blocat: false, intarziat: false, laser: 'Finalizat', rolat: 'Finalizat', sudat: 'Finalizat', asamblat: 'În lucru', vopsit: 'Neînceput', comentarii: 'In lucru - asamblare', conditionat_de: null },
+	      data_start: '2024-04-01', data_due: '2024-05-10', data_done: '2024-05-07',
+	      laser_done: '2024-04-04', rolat_done: '', sudat_done: '2024-04-15', asamblat_done: '2024-04-24', vopsit_done: '2024-05-07',
+	      comentarii: 'OK', conditionat_de: null,
+	    })),
+	    { id: 119, proiect: 'WP1000-09', nr: 19, nume: 'Turn de racire', prio: '🟡', status_global: '🔄 IN LUCRU', progres: '60%', blocat: false, intarziat: false, laser: 'Finalizat', rolat: 'Finalizat', sudat: 'Finalizat', asamblat: 'În lucru', vopsit: 'Neînceput', data_start: '2024-10-01', data_due: '2024-11-20', data_done: '', laser_done: '2024-10-06', rolat_done: '2024-10-14', sudat_done: '2024-10-22', asamblat_done: '', vopsit_done: '', comentarii: 'In lucru - asamblare', conditionat_de: null },
     // WP1000-10
     { id: 201, proiect: 'WP1000-10', nr: 1, nume: 'Structura metalica', prio: '🔴', status_global: '✅ FINALIZAT', progres: '100%', blocat: false, intarziat: false, laser: 'Finalizat', rolat: 'N/A', sudat: 'Finalizat', asamblat: 'Finalizat', vopsit: 'Finalizat', comentarii: 'OK', conditionat_de: null },
     { id: 202, proiect: 'WP1000-10', nr: 2, nume: 'Scara metalica', prio: '🔴', status_global: '✅ FINALIZAT', progres: '100%', blocat: false, intarziat: false, laser: 'Finalizat', rolat: 'N/A', sudat: 'Finalizat', asamblat: 'Finalizat', vopsit: 'Finalizat', comentarii: 'OK', conditionat_de: null },

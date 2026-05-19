@@ -18,6 +18,10 @@ import {
 import type { ButtonProps, ChipProps, SxProps, TextFieldProps, Theme } from '@mui/material'
 
 export type BadgeTone = 'success' | 'warning' | 'error' | 'info' | 'default'
+export type FlagCode = 'ro' | 'en'
+
+const UK_FLAG = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 12'%3E%3Crect width='18' height='12' fill='%23012169'/%3E%3Cpath d='M0 0l18 12M18 0L0 12' stroke='%23fff' stroke-width='2.6'/%3E%3Cpath d='M0 0l18 12M18 0L0 12' stroke='%23C8102E' stroke-width='1.3'/%3E%3Cpath d='M9 0v12M0 6h18' stroke='%23fff' stroke-width='4'/%3E%3Cpath d='M9 0v12M0 6h18' stroke='%23C8102E' stroke-width='2.2'/%3E%3C/svg%3E")`
+const RO_FLAG = 'linear-gradient(90deg, #002b7f 0 33.33%, #fcd116 33.33% 66.66%, #ce1126 66.66% 100%)'
 
 export function Badge({ children, tone = 'default', sx }: { children: ReactNode; tone?: BadgeTone; sx?: SxProps<Theme> }) {
   return (
@@ -48,6 +52,28 @@ export function Badge({ children, tone = 'default', sx }: { children: ReactNode;
                   : '#818cf8',
         '& .MuiChip-label': { px: 1 },
         ...sx,
+      }}
+    />
+  )
+}
+
+export function LanguageFlag({ code }: { code: FlagCode }) {
+  return (
+    <Box
+      component="span"
+      aria-hidden="true"
+      sx={{
+        width: 18,
+        height: 12,
+        display: 'inline-block',
+        borderRadius: '2px',
+        border: '1px solid rgba(255,255,255,0.14)',
+        boxShadow: '0 0 0 1px rgba(0,0,0,0.25) inset',
+        backgroundImage: code === 'ro' ? RO_FLAG : UK_FLAG,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        verticalAlign: 'middle',
       }}
     />
   )
@@ -122,6 +148,10 @@ export function AppField(props: TextFieldProps) {
       variant="outlined"
       slotProps={{
         ...props.slotProps,
+        input: {
+          notched: false,
+          ...props.slotProps?.input,
+        },
         inputLabel: {
           shrink: true,
           ...props.slotProps?.inputLabel,

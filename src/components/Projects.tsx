@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useLang } from '../lib/i18n'
 import { useQuery } from '../lib/useQuery'
 import { fetchProiecte, insertProiect } from '../lib/api'
+import { formatDateLabel } from '../lib/dateUtils'
+import { DEFAULT_SUBASSEMBLY_NAMES } from '../lib/projectDefaults'
 import { ErrorBanner, LoadingRows } from './StateViews'
 import { ActionButton, AppField, AppSelect, Badge, Box, Card, DataTable, Eyebrow, PageTitle, Stack, TableCell, TableRow, Typography } from './Ui'
 
@@ -32,7 +34,7 @@ function ProgressBar({ value }: { value: number }) {
   )
 }
 
-const BLANK = { id: '', client: '', responsabil: '', data_start: '', data_target: '', total_sa: 0, buget_ore: 0, prioritate: 'NORMAL', status: 'IN PRODUCTIE' }
+const BLANK = { id: '', client: '', responsabil: '', data_start: '', data_target: '', data_done: '', total_sa: DEFAULT_SUBASSEMBLY_NAMES.length, buget_ore: 0, prioritate: 'NORMAL', status: 'IN PRODUCTIE' }
 
 export default function Proiecte() {
   const { t } = useLang()
@@ -81,8 +83,9 @@ export default function Proiecte() {
               <AppField label={`${p.idProiect} *`} required value={form.id} onChange={e => setF('id', e.target.value)} placeholder="WP1000-11" />
               <AppField label={`${p.client} *`} required value={form.client} onChange={e => setF('client', e.target.value)} />
               <AppField label={p.responsabil} value={form.responsabil} onChange={e => setF('responsabil', e.target.value)} />
-              <AppField label={p.dataStart} value={form.data_start} onChange={e => setF('data_start', e.target.value)} placeholder="01-Ian-25" />
-              <AppField label={p.dataTarget} value={form.data_target} onChange={e => setF('data_target', e.target.value)} placeholder="30-Iun-25" />
+              <AppField label={p.dataStart} type="date" value={form.data_start} onChange={e => setF('data_start', e.target.value)} />
+              <AppField label={p.dataTarget} type="date" value={form.data_target} onChange={e => setF('data_target', e.target.value)} />
+              <AppField label={p.dataDone} type="date" value={form.data_done} onChange={e => setF('data_done', e.target.value)} />
               <AppField label={p.totalSA} type="number" value={form.total_sa} onChange={e => setF('total_sa', Number(e.target.value))} inputProps={{ min: 0 }} />
               <AppField label={p.bugetOre} type="number" value={form.buget_ore} onChange={e => setF('buget_ore', Number(e.target.value))} inputProps={{ min: 0 }} />
               <AppSelect label={p.prioritate} value={form.prioritate} onChange={e => setF('prioritate', e.target.value)} options={['NORMAL', 'RIDICAT', 'CRITIC']} />
@@ -110,8 +113,9 @@ export default function Proiecte() {
             <Stack gap={1.25}>
               {[
                 { label: 'Responsabil', val: p.responsabil },
-                { label: 'Data Start', val: p.data_start, mono: true },
-                { label: 'Target', val: p.data_target, mono: true, warn: p.status !== 'LIVRAT' },
+                { label: 'Data Start', val: formatDateLabel(p.data_start), mono: true },
+                { label: 'Target', val: formatDateLabel(p.data_target), mono: true, warn: p.status !== 'LIVRAT' },
+                { label: 'Done', val: formatDateLabel(p.data_done), mono: true },
               ].map(({ label, val, mono, warn }) => (
                 <Stack key={label} direction="row" justifyContent="space-between">
                   <Typography variant="body2" sx={{ fontSize: 12, color: 'var(--color-ink-subtle)' }}>{label}</Typography>
@@ -142,15 +146,16 @@ export default function Proiecte() {
 
       <Card sx={{ p: 0, overflow: 'hidden' }}>
         <Box sx={{ p: '20px 24px 16px', borderBottom: '1px solid var(--color-hairline)' }}><Eyebrow>{p.tabelar}</Eyebrow></Box>
-        <DataTable head={<TableRow><TableCell>{p.colId}</TableCell><TableCell>{p.colClient}</TableCell><TableCell>{p.colResponsabil}</TableCell><TableCell>{p.colPrioritate}</TableCell><TableCell>{p.colStart}</TableCell><TableCell>{p.colTarget}</TableCell><TableCell>{p.colSATotal}</TableCell><TableCell>{p.colSAFinal}</TableCell><TableCell sx={{ minWidth: 180 }}>{p.colProgres}</TableCell><TableCell>{p.colBlocaje}</TableCell><TableCell>{p.colStatus}</TableCell></TableRow>}>
-          {loading ? <LoadingRows cols={11} /> : data?.map(p => (
+        <DataTable head={<TableRow><TableCell>{p.colId}</TableCell><TableCell>{p.colClient}</TableCell><TableCell>{p.colResponsabil}</TableCell><TableCell>{p.colPrioritate}</TableCell><TableCell>{p.colStart}</TableCell><TableCell>{p.colTarget}</TableCell><TableCell>{p.colDone}</TableCell><TableCell>{p.colSATotal}</TableCell><TableCell>{p.colSAFinal}</TableCell><TableCell sx={{ minWidth: 180 }}>{p.colProgres}</TableCell><TableCell>{p.colBlocaje}</TableCell><TableCell>{p.colStatus}</TableCell></TableRow>}>
+          {loading ? <LoadingRows cols={12} /> : data?.map(p => (
             <TableRow key={p.id}>
               <TableCell><Typography variant="body2" sx={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--color-primary)', fontWeight: 600 }}>{p.id}</Typography></TableCell>
               <TableCell sx={{ fontWeight: 500 }}>{p.client}</TableCell>
               <TableCell sx={{ color: 'var(--color-ink-muted)' }}>{p.responsabil}</TableCell>
               <TableCell>{priorityBadge(p.prioritate)}</TableCell>
-              <TableCell sx={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--color-ink-muted)' }}>{p.data_start}</TableCell>
-              <TableCell sx={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: p.status !== 'LIVRAT' ? '#fbbf24' : 'var(--color-ink-muted)' }}>{p.data_target}</TableCell>
+              <TableCell sx={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--color-ink-muted)' }}>{formatDateLabel(p.data_start)}</TableCell>
+              <TableCell sx={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: p.status !== 'LIVRAT' ? '#fbbf24' : 'var(--color-ink-muted)' }}>{formatDateLabel(p.data_target)}</TableCell>
+              <TableCell sx={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--color-ink-muted)' }}>{formatDateLabel(p.data_done)}</TableCell>
               <TableCell sx={{ textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: 12 }}>{p.total_sa}</TableCell>
               <TableCell sx={{ textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: 12 }}>{p.finalizate_sa}</TableCell>
               <TableCell sx={{ minWidth: 180 }}><ProgressBar value={Number(p.progres)} /></TableCell>

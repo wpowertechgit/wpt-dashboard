@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useLang } from '../lib/i18n'
 import { useQuery } from '../lib/useQuery'
 import { fetchFluxZilnic, insertFluxZilnic } from '../lib/api'
+import { formatDateLabel } from '../lib/dateUtils'
 import { ErrorBanner, EmptyState, LoadingRows } from './StateViews'
 import { ActionButton, AppField, AppSelect, Badge, Box, Card, DataTable, Eyebrow, PageTitle, Stack, TableCell, TableRow, Typography } from './Ui'
 
@@ -67,7 +68,7 @@ export default function FluxZilnic() {
           <Eyebrow sx={{ mb: 2 }}>{f.formTitle}</Eyebrow>
           <Stack component="form" onSubmit={submit} gap={1.5}>
             <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1.5 }}>
-              <AppField label={f.data} value={form.data} onChange={e => setF('data', e.target.value)} placeholder="12-Mai-25" />
+              <AppField label={f.data} type="date" value={form.data} onChange={e => setF('data', e.target.value)} />
               <AppSelect label={f.proiect} value={form.proiect} onChange={e => setF('proiect', e.target.value)} options={[{ value: '', label: '— Selectați —' }, 'WP1000-08','WP1000-09','WP1000-10']} />
               <AppField label={f.subansamblu} required value={form.subansamblu} onChange={e => setF('subansamblu', e.target.value)} />
               <AppSelect label={f.deLa} value={form.dept_origine} onChange={e => setF('dept_origine', e.target.value)} options={DEPTS} />
@@ -91,7 +92,7 @@ export default function FluxZilnic() {
 function FlowTable({ title, count, rows, loading, labels }: { title?: string | null; count?: number; rows: any[]; loading?: boolean; labels: any }) {
   return (
     <Card sx={{ p: 0, overflow: 'hidden' }}>
-      {title && <Stack direction="row" alignItems="center" gap={1} sx={{ p: '16px 24px', borderBottom: '1px solid var(--color-hairline)' }}><Typography variant="body2" sx={{ fontSize: 13, fontWeight: 600 }}>{title}</Typography><Badge>{count} {labels.miscari}</Badge></Stack>}
+      {title && <Stack direction="row" alignItems="center" gap={1} sx={{ p: '16px 24px', borderBottom: '1px solid var(--color-hairline)' }}><Typography variant="body2" sx={{ fontSize: 13, fontWeight: 600 }}>{formatDateLabel(title)}</Typography><Badge>{count} {labels.miscari}</Badge></Stack>}
       <DataTable head={<TableRow><TableCell>{labels.colProiect}</TableCell><TableCell>{labels.colSubansamblu}</TableCell><TableCell>{labels.colDeLa}</TableCell><TableCell /><TableCell>{labels.colLa}</TableCell><TableCell>{labels.colEchipa}</TableCell><TableCell>{labels.colValidat}</TableCell><TableCell>{labels.colObs}</TableCell></TableRow>}>
         {loading ? <LoadingRows cols={8} /> : rows.map((fl, i) => (
           <TableRow key={i}>

@@ -1,6 +1,16 @@
 import { supabase } from './supabase'
 import { isDemoMode } from './demo'
 import { DEMO } from '../data/demo'
+import { buildDefaultSubassemblies, stripEmptyDateFields, withDefaultProjectTotals } from './projectDefaults'
+
+function friendlySupabaseError(error: { message?: string } | null | undefined) {
+  const message = error?.message ?? 'Unknown database error'
+  if (message.includes('schema cache') || message.includes("Could not find the '")) {
+    return new Error('Database schema is behind the app. Run the latest migration, then try again.')
+  }
+
+  return error instanceof Error ? error : new Error(message)
+}
 
 export async function fetchProiecte() {
   if (isDemoMode()) return DEMO.proiecte
@@ -11,8 +21,21 @@ export async function fetchProiecte() {
 
 export async function insertProiect(row: Record<string, unknown>) {
   if (isDemoMode()) return
-  const { error } = await supabase.from('proiecte').insert(row)
-  if (error) throw error
+  const projectRow = stripEmptyDateFields(withDefaultProjectTotals(row))
+  const { error: projectError } = await supabase.from('proiecte').insert(projectRow)
+  if (projectError) throw friendlySupabaseError(projectError)
+
+  const projectId = projectRow.id
+  if (typeof projectId !== 'string' || !projectId) return
+
+  const { error: subassemblyError } = await supabase
+    .from('subansambluri')
+    .insert(buildDefaultSubassemblies(projectId))
+
+  if (!subassemblyError) return
+
+  await supabase.from('proiecte').delete().eq('id', projectId)
+  throw friendlySupabaseError(subassemblyError)
 }
 
 export async function fetchSubansambluri(proiect?: string) {

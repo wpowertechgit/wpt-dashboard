@@ -1,0 +1,155 @@
+- generic [ref=e3]:
+  - navigation [ref=e4]:
+    - link "Waste Powertech" [ref=e5] [cursor=pointer]:
+      - /url: /dashboard
+      - img "Waste Powertech" [ref=e6]
+    - generic [ref=e7]:
+      - link "Tablou de Bord" [ref=e8] [cursor=pointer]:
+        - /url: /dashboard
+      - link "Proiecte" [ref=e9] [cursor=pointer]:
+        - /url: /projects
+      - link "Subansambluri" [ref=e10] [cursor=pointer]:
+        - /url: /subassemblies
+      - link "Calendar" [ref=e11] [cursor=pointer]:
+        - /url: /planning
+      - link "Blocaje" [ref=e12] [cursor=pointer]:
+        - /url: /blockages
+      - link "PDCA" [ref=e13] [cursor=pointer]:
+        - /url: /pdca
+      - link "Flux Zilnic" [ref=e14] [cursor=pointer]:
+        - /url: /daily-flow
+      - link "KPI Echipe" [ref=e15] [cursor=pointer]:
+        - /url: /kpi
+    - generic [ref=e16]:
+      - paragraph [ref=e19]: DEMO MODE
+      - button [ref=e20] [cursor=pointer]
+      - button "✕ Exit Demo" [ref=e22] [cursor=pointer]
+  - main [ref=e23]:
+    - generic [ref=e24]:
+      - generic [ref=e25]:
+        - generic [ref=e26]:
+          - generic [ref=e27]: Registru Blocaje
+          - heading "Blocaje" [level=4] [ref=e28]
+          - paragraph [ref=e29]: Orice blocare se înregistrează IMEDIAT. Fiecare blocare generează un PDCA.
+        - button "+ Blocaj Nou" [ref=e30] [cursor=pointer]
+      - generic [ref=e31]:
+        - generic [ref=e33]:
+          - heading "3" [level=4] [ref=e34]
+          - generic [ref=e35]:
+            - paragraph [ref=e36]: Blocaje Deschise
+            - paragraph [ref=e37]: necesită acțiune
+        - generic [ref=e39]:
+          - heading "1" [level=4] [ref=e40]
+          - generic [ref=e41]:
+            - paragraph [ref=e42]: Rezolvate
+            - paragraph [ref=e43]: închise
+      - generic [ref=e44]:
+        - generic [ref=e45]:
+          - generic [ref=e46]: Blocaje Active
+          - generic [ref=e49]: 3 deschise
+        - table [ref=e51]:
+          - rowgroup [ref=e52]:
+            - row "ID Data Proiect Subansamblu Dept Descriere Responsabil Impact Zile Observații" [ref=e53]:
+              - columnheader "ID" [ref=e54]
+              - columnheader "Data" [ref=e55]
+              - columnheader "Proiect" [ref=e56]
+              - columnheader "Subansamblu" [ref=e57]
+              - columnheader "Dept" [ref=e58]
+              - columnheader "Descriere" [ref=e59]
+              - columnheader "Responsabil" [ref=e60]
+              - columnheader "Impact" [ref=e61]
+              - columnheader "Zile" [ref=e62]
+              - columnheader "Observații" [ref=e63]
+              - columnheader [ref=e64]
+          - rowgroup [ref=e65]:
+            - 'row "BLK-001 28 Apr 2025 WP1000-10 Ventori scrubber SUDAT Discutie tehnica: configuratie neconfirmata cu proiectantul Andrei Marin INALT 16z Sudat blocat complet pe aceasta piesa ✅ Rezolvat" [ref=e66]':
+              - cell "BLK-001" [ref=e67]:
+                - paragraph [ref=e68]: BLK-001
+              - cell "28 Apr 2025" [ref=e69]
+              - cell "WP1000-10" [ref=e70]:
+                - paragraph [ref=e71]: WP1000-10
+              - cell "Ventori scrubber" [ref=e72]
+              - cell "SUDAT" [ref=e73]:
+                - generic [ref=e75]: SUDAT
+              - 'cell "Discutie tehnica: configuratie neconfirmata cu proiectantul" [ref=e76]'
+              - cell "Andrei Marin" [ref=e77]
+              - cell "INALT" [ref=e78]:
+                - generic [ref=e80]: INALT
+              - cell "16z" [ref=e81]:
+                - paragraph [ref=e82]: 16z
+              - cell "Sudat blocat complet pe aceasta piesa" [ref=e83]
+              - cell "✅ Rezolvat" [ref=e84]:
+                - button "✅ Rezolvat" [ref=e85] [cursor=pointer]
+            - row "BLK-002 30 Apr 2025 WP1000-10 Rezervor metalic (racitor) ASAMBLAT Lipsa componente de aprovizionat – fitinguri speciale Ion Popescu CRITIC 14z Blocheaza montajul final ✅ Rezolvat" [ref=e86]:
+              - cell "BLK-002" [ref=e87]:
+                - paragraph [ref=e88]: BLK-002
+              - cell "30 Apr 2025" [ref=e89]
+              - cell "WP1000-10" [ref=e90]:
+                - paragraph [ref=e91]: WP1000-10
+              - cell "Rezervor metalic (racitor)" [ref=e92]
+              - cell "ASAMBLAT" [ref=e93]:
+                - generic [ref=e95]: ASAMBLAT
+              - cell "Lipsa componente de aprovizionat – fitinguri speciale" [ref=e96]
+              - cell "Ion Popescu" [ref=e97]
+              - cell "CRITIC" [ref=e98]:
+                - generic [ref=e100]: CRITIC
+              - cell "14z" [ref=e101]:
+                - paragraph [ref=e102]: 14z
+              - cell "Blocheaza montajul final" [ref=e103]
+              - cell "✅ Rezolvat" [ref=e104]:
+                - button "✅ Rezolvat" [ref=e105] [cursor=pointer]
+            - 'row "BLK-003 02 May 2025 WP1000-10 Sistem de tevi ASAMBLAT Lipsa teava pompa de vid – comanda in curs Maria Ionescu MEDIU 12z ETA livrare: 5 zile ✅ Rezolvat" [ref=e106]':
+              - cell "BLK-003" [ref=e107]:
+                - paragraph [ref=e108]: BLK-003
+              - cell "02 May 2025" [ref=e109]
+              - cell "WP1000-10" [ref=e110]:
+                - paragraph [ref=e111]: WP1000-10
+              - cell "Sistem de tevi" [ref=e112]
+              - cell "ASAMBLAT" [ref=e113]:
+                - generic [ref=e115]: ASAMBLAT
+              - cell "Lipsa teava pompa de vid – comanda in curs" [ref=e116]
+              - cell "Maria Ionescu" [ref=e117]
+              - cell "MEDIU" [ref=e118]:
+                - generic [ref=e120]: MEDIU
+              - cell "12z" [ref=e121]:
+                - paragraph [ref=e122]: 12z
+              - 'cell "ETA livrare: 5 zile" [ref=e123]'
+              - cell "✅ Rezolvat" [ref=e124]:
+                - button "✅ Rezolvat" [ref=e125] [cursor=pointer]
+      - generic [ref=e126]:
+        - generic [ref=e127]:
+          - generic [ref=e128]: Blocaje Rezolvate
+          - generic [ref=e131]: 1 închise
+        - table [ref=e133]:
+          - rowgroup [ref=e134]:
+            - row "ID Data Proiect Subansamblu Dept Descriere Responsabil Impact Status Rezolvat Zile" [ref=e135]:
+              - columnheader "ID" [ref=e136]
+              - columnheader "Data" [ref=e137]
+              - columnheader "Proiect" [ref=e138]
+              - columnheader "Subansamblu" [ref=e139]
+              - columnheader "Dept" [ref=e140]
+              - columnheader "Descriere" [ref=e141]
+              - columnheader "Responsabil" [ref=e142]
+              - columnheader "Impact" [ref=e143]
+              - columnheader "Status" [ref=e144]
+              - columnheader "Rezolvat" [ref=e145]
+              - columnheader "Zile" [ref=e146]
+          - rowgroup [ref=e147]:
+            - row "BLK-004 15 Apr 2025 WP1000-09 Ventori scrubber SUDAT Discutie rezolvata – configuratie confirmata Ion Popescu MEDIU ✅ Rezolvat 20 Apr 2025 5z" [ref=e148]:
+              - cell "BLK-004" [ref=e149]:
+                - paragraph [ref=e150]: BLK-004
+              - cell "15 Apr 2025" [ref=e151]
+              - cell "WP1000-09" [ref=e152]:
+                - paragraph [ref=e153]: WP1000-09
+              - cell "Ventori scrubber" [ref=e154]
+              - cell "SUDAT" [ref=e155]:
+                - generic [ref=e157]: SUDAT
+              - cell "Discutie rezolvata – configuratie confirmata" [ref=e158]
+              - cell "Ion Popescu" [ref=e159]
+              - cell "MEDIU" [ref=e160]:
+                - generic [ref=e162]: MEDIU
+              - cell "✅ Rezolvat" [ref=e163]:
+                - generic [ref=e165]: ✅ Rezolvat
+              - cell "20 Apr 2025" [ref=e166]
+              - cell "5z" [ref=e167]:
+                - paragraph [ref=e168]: 5z

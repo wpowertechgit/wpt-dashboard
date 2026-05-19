@@ -1,0 +1,29 @@
+- generic [ref=e4]:
+  - button [ref=e6] [cursor=pointer]
+  - generic [ref=e8]:
+    - generic "Waste Powertech" [ref=e9]
+    - paragraph [ref=e10]: OMS · Operational Management System
+  - generic [ref=e11]:
+    - heading "Autentificare" [level=5] [ref=e12]
+    - paragraph [ref=e13]: Introduceți credențialele primite de la administrator.
+    - generic [ref=e14]:
+      - generic [ref=e15]:
+        - generic [ref=e16]:
+          - text: Email
+          - generic [ref=e17]: "*"
+        - generic [ref=e18]:
+          - textbox "Email" [ref=e19]:
+            - /placeholder: nume@wpowertech.ro
+          - group:
+            - generic: Email *
+      - generic [ref=e20]:
+        - generic [ref=e21]:
+          - text: Parolă
+          - generic [ref=e22]: "*"
+        - generic [ref=e23]:
+          - textbox "Parolă" [ref=e24]:
+            - /placeholder: ••••••••
+          - group:
+            - generic: Parolă *
+      - button "Autentificare" [ref=e25] [cursor=pointer]
+  - button "Versiune demo" [ref=e26] [cursor=pointer]

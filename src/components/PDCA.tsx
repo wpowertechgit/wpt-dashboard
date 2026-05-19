@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useLang } from '../lib/i18n'
 import { useQuery } from '../lib/useQuery'
 import { fetchPDCA, insertPDCA, updatePDCA } from '../lib/api'
+import { formatDateLabel } from '../lib/dateUtils'
 import { ErrorBanner, EmptyState, LoadingRows } from './StateViews'
 import { ActionButton, AppField, AppSelect, Badge, Box, Card, DataTable, Eyebrow, PageTitle, Stack, TableCell, TableRow, Typography } from './Ui'
 
@@ -69,10 +70,10 @@ export default function PDCA_View() {
             <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1.5 }}>
               <AppField label="ID PDCA *" required value={form.id} onChange={e => setF('id', e.target.value)} placeholder="PDCA-006" />
               <AppField label="Sursă" value={form.sursa} onChange={e => setF('sursa', e.target.value)} placeholder="BLK-001" />
-              <AppField label="Data Deschis" value={form.data_deschis} onChange={e => setF('data_deschis', e.target.value)} placeholder="12-Mai-25" />
+              <AppField label="Data Deschis" type="date" value={form.data_deschis} onChange={e => setF('data_deschis', e.target.value)} />
               <AppSelect label="Proiect" value={form.proiect} onChange={e => setF('proiect', e.target.value)} options={[{ value: '', label: '— Selectați —' }, 'WP1000-08','WP1000-09','WP1000-10','TOATE']} />
               <AppField label="Responsabil" value={form.responsabil} onChange={e => setF('responsabil', e.target.value)} />
-              <AppField label="Termen" value={form.termen} onChange={e => setF('termen', e.target.value)} placeholder="20-Mai-25" />
+              <AppField label="Termen" type="date" value={form.termen} onChange={e => setF('termen', e.target.value)} />
               <AppField label="Problemă (Plan) *" required value={form.problema} onChange={e => setF('problema', e.target.value)} sx={{ gridColumn: '1 / -1' }} />
               <AppField label="Contramasură (Do)" value={form.contramasura} onChange={e => setF('contramasura', e.target.value)} sx={{ gridColumn: '1 / -1' }} />
               <AppSelect label="Prioritate" value={form.prioritate} onChange={e => setF('prioritate', e.target.value)} options={['SCAZUT','MEDIU','INALT','CRITIC']} />
@@ -92,12 +93,12 @@ export default function PDCA_View() {
             <TableRow key={p.id} sx={p.zile_ramas === 'DEPASIT' ? { bgcolor: 'rgba(239,68,68,0.03)' } : undefined}>
               <TableCell><Typography variant="body2" sx={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--color-primary)' }}>{p.id}</Typography></TableCell>
               <TableCell><Typography variant="body2" sx={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--color-ink-subtle)' }}>{p.sursa}</Typography></TableCell>
-              <TableCell sx={{ fontSize: 12, color: 'var(--color-ink-muted)', whiteSpace: 'nowrap' }}>{p.data_deschis}</TableCell>
+              <TableCell sx={{ fontSize: 12, color: 'var(--color-ink-muted)', whiteSpace: 'nowrap' }}>{formatDateLabel(p.data_deschis)}</TableCell>
               <TableCell><Typography variant="body2" sx={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--color-primary)' }}>{p.proiect}</Typography></TableCell>
               <TableCell sx={{ fontSize: 12, maxWidth: 240 }}>{p.problema}</TableCell>
               <TableCell sx={{ fontSize: 12, color: 'var(--color-ink-muted)', maxWidth: 260 }}>{p.contramasura}</TableCell>
               <TableCell sx={{ fontSize: 12, color: 'var(--color-ink-muted)', whiteSpace: 'nowrap' }}>{p.responsabil}</TableCell>
-              <TableCell sx={{ fontSize: 12, color: 'var(--color-ink-muted)', whiteSpace: 'nowrap' }}>{p.termen}</TableCell>
+              <TableCell sx={{ fontSize: 12, color: 'var(--color-ink-muted)', whiteSpace: 'nowrap' }}>{formatDateLabel(p.termen)}</TableCell>
               <TableCell>{statusBadge(p.status)}</TableCell>
               <TableCell>{priorityBadge(p.prioritate)}</TableCell>
               <TableCell>{p.zile_ramas === 'DEPASIT' ? <Badge tone="error">⛔ DEPĂȘIT</Badge> : <Typography variant="body2" sx={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--color-ink-muted)' }}>{p.zile_ramas}</Typography>}</TableCell>

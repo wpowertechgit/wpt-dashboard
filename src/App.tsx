@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import type { ReactNode } from 'react'
 import { Routes, Route, NavLink, Navigate, useNavigate } from 'react-router-dom'
 import type { Session } from '@supabase/supabase-js'
@@ -15,6 +15,8 @@ import DailyFlow from './components/DailyFlow'
 import TeamKPI from './components/TeamKPI'
 import Projects from './components/Projects'
 import Admin from './components/Admin'
+import PlanningCalendar from './components/PlanningCalendar'
+import { LanguageFlag } from './components/Ui'
 
 interface Profile {
   id: string
@@ -91,22 +93,22 @@ function StatusPill({ demo, label }: { demo?: boolean; label: string }) {
   )
 }
 
-function AppShell({ session, profile }: { session: Session | null; profile: Profile | null }) {
+function AppShell({ session, profile, demoMode, onExitDemo }: { session: Session | null; profile: Profile | null; demoMode: boolean; onExitDemo: () => void }) {
   const { t, lang, toggle } = useLang()
   const navigate = useNavigate()
-  const demoMode = isDemoMode()
   const isAdmin = profile?.role === 'admin'
 
-  const BASE_ROUTES = [
+  const baseRoutes = [
     { path: '/dashboard', label: t.nav.dashboard },
     { path: '/projects', label: t.nav.proiecte },
     { path: '/subassemblies', label: t.nav.subansambluri },
+    { path: '/planning', label: t.nav.planning },
     { path: '/blockages', label: t.nav.blocaje },
     { path: '/pdca', label: t.nav.pdca },
     { path: '/daily-flow', label: t.nav.flux },
     { path: '/kpi', label: t.nav.kpi },
   ]
-  const routes = isAdmin ? [...BASE_ROUTES, { path: '/admin', label: t.nav.admin }] : BASE_ROUTES
+  const routes = isAdmin ? [...baseRoutes, { path: '/admin', label: t.nav.admin }] : baseRoutes
 
   return (
     <Stack sx={{ minHeight: '100vh', bgcolor: 'var(--color-canvas)' }}>
@@ -136,13 +138,13 @@ function AppShell({ session, profile }: { session: Session | null; profile: Prof
           {demoMode ? (
             <>
               <StatusPill demo label="DEMO MODE" />
-              <SmallButton onClick={toggle} mono>{lang === 'ro' ? 'EN' : 'RO'}</SmallButton>
-              <SmallButton onClick={() => { exitDemo(); navigate('/login') }}>✕ Exit Demo</SmallButton>
+              <SmallButton onClick={toggle}><LanguageFlag code={lang === 'ro' ? 'en' : 'ro'} /></SmallButton>
+              <SmallButton onClick={() => { onExitDemo(); navigate('/login', { replace: true }) }}>✕ Exit Demo</SmallButton>
             </>
           ) : (
             <>
               <StatusPill label={t.status.active} />
-              <SmallButton onClick={toggle} mono>{lang === 'ro' ? 'EN' : 'RO'}</SmallButton>
+              <SmallButton onClick={toggle}><LanguageFlag code={lang === 'ro' ? 'en' : 'ro'} /></SmallButton>
               <Stack direction="row" alignItems="center" gap={1} sx={{ borderLeft: '1px solid var(--color-hairline)', pl: 1.25 }}>
                 <Box sx={{ textAlign: 'right' }}>
                   <Typography variant="body2" sx={{ fontSize: 12, color: 'var(--color-ink-subtle)', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -163,6 +165,7 @@ function AppShell({ session, profile }: { session: Session | null; profile: Prof
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/subassemblies" element={<Subassemblies />} />
+          <Route path="/planning" element={<PlanningCalendar />} />
           <Route path="/blockages" element={<Blockages />} />
           <Route path="/pdca" element={<PDCA />} />
           <Route path="/daily-flow" element={<DailyFlow />} />
@@ -178,7 +181,12 @@ function AppShell({ session, profile }: { session: Session | null; profile: Prof
 export default function App() {
   const [session, setSession] = useState<Session | null | undefined>(undefined)
   const [profile, setProfile] = useState<Profile | null>(null)
-  const demoMode = isDemoMode()
+  const [demoMode, setDemoMode] = useState<boolean>(() => isDemoMode())
+
+  const handleExitDemo = useCallback(() => {
+    exitDemo()
+    setDemoMode(false)
+  }, [])
 
   useEffect(() => {
     if (demoMode) return
@@ -201,7 +209,7 @@ export default function App() {
     else if (error) console.error('Profile load failed:', error.message)
   }
 
-  if (demoMode) return <AppShell session={null} profile={null} />
+  if (demoMode) return <AppShell session={null} profile={null} demoMode={demoMode} onExitDemo={handleExitDemo} />
 
   if (session === undefined) {
     return (
@@ -219,5 +227,5 @@ export default function App() {
     )
   }
 
-  return <AppShell session={session} profile={profile} />
+  return <AppShell session={session} profile={profile} demoMode={demoMode} onExitDemo={handleExitDemo} />
 }
