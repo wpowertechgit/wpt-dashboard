@@ -1,8 +1,11 @@
 import { useState } from 'react'
 import { useLang } from '../lib/i18n'
 import { useQuery } from '../lib/useQuery'
-import { fetchSubansambluri, upsertSubansamblu } from '../lib/api'
+import { fetchSubansambluri, updateSubansamblu } from '../lib/api'
 import { daysBetween, formatDateLabel } from '../lib/dateUtils'
+import { normalizeDepartmentStatus, normalizeGlobalStatus } from '../lib/subassemblyStatus'
+import { usePermissions } from '../lib/permissionsContext'
+import { pageInfo } from '../lib/pageInfo'
 import { ErrorBanner, EmptyState, LoadingRows } from './StateViews'
 import { ActionButton, AppField, AppSelect, Badge, Box, Card, DataTable, PageTitle, Stack, TableCell, TableRow, Typography } from './Ui'
 
@@ -24,7 +27,6 @@ function globalChip(s: string) {
 }
 
 const DEPT_COLS = ['laser','rolat','sudat','asamblat','vopsit'] as const
-const DEPT_DONE_COLS = ['laser_done','rolat_done','sudat_done','asamblat_done','vopsit_done'] as const
 const STATUS_OPTIONS = ['Finalizat', 'În lucru', 'Blocat', 'Neînceput', 'N/A']
 
 function timelineSummary(sa: Record<string, any>) {
@@ -46,7 +48,8 @@ function deptDateSummary(sa: Record<string, any>) {
 }
 
 export default function Subansambluri() {
-  const { t } = useLang()
+  const { t, lang } = useLang()
+  const { canWrite } = usePermissions()
   const s = t.subansambluri
   const [filterProiect, setFilterProiect] = useState('ALL')
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('ALL')
@@ -71,7 +74,7 @@ export default function Subansambluri() {
     if (!editRow || editId === null) return
     setSaving(true)
     try {
-      await upsertSubansamblu({ id: editId, ...editRow })
+      await updateSubansamblu(editId, editRow)
       setEditId(null); setEditRow(null)
       refetch()
     } finally { setSaving(false) }
@@ -87,7 +90,7 @@ export default function Subansambluri() {
 
   return (
     <Stack gap={3}>
-      <PageTitle eyebrow={s.eyebrow} title={s.title} subtitle={`LASER → ROLAT → SUDAT → ASAMBLAT → VOPSIT · ${filtered.length} ${t.common.records}`} />
+      <PageTitle eyebrow={s.eyebrow} title={s.title} subtitle={`LASER → ROLAT → SUDAT → ASAMBLAT → VOPSIT · ${filtered.length} ${t.common.records}`} info={pageInfo(lang, 'subassemblies')} />
       {error && <ErrorBanner message={error} />}
 
       <Stack direction="row" alignItems="center" gap={1.5} flexWrap="wrap">
@@ -100,13 +103,13 @@ export default function Subansambluri() {
         <DataTable sx={{ overflowX: 'auto' }} head={<TableRow><TableCell>{s.colProiect}</TableCell><TableCell>{s.colNr}</TableCell><TableCell>{s.colNume}</TableCell><TableCell>{s.colStatus}</TableCell><TableCell>{s.colProgres}</TableCell><TableCell>{s.colTimeline}</TableCell><TableCell>{s.colDeptDates}</TableCell><TableCell sx={{ textAlign: 'center' }}>LASER</TableCell><TableCell sx={{ textAlign: 'center' }}>ROLAT</TableCell><TableCell sx={{ textAlign: 'center' }}>SUDAT</TableCell><TableCell sx={{ textAlign: 'center' }}>ASAMBLAT</TableCell><TableCell sx={{ textAlign: 'center' }}>VOPSIT</TableCell><TableCell>{s.colComentarii}</TableCell><TableCell /></TableRow>}>
           {loading ? <LoadingRows cols={14} /> : filtered.length === 0 ? <EmptyState label={s.empty} /> :
             filtered.map(sa => (
-              editId === sa.id ? (
+	              canWrite && editId === sa.id ? (
                 <TableRow key={sa.id} sx={{ bgcolor: 'rgba(94,106,210,0.06)' }}>
                   <TableCell colSpan={14} sx={{ p: 2 }}>
                     <Stack gap={1.5}>
                       <Typography variant="body2" sx={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--color-primary)' }}>{sa.proiect} #{sa.nr} · {sa.nume}</Typography>
                       <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(120px, 1fr))', gap: 1.25 }}>
-                        <AppSelect label="Status Global" value={String(editRow?.status_global ?? sa.status_global)} onChange={e => setEditRow(r => ({ ...r!, status_global: e.target.value }))} options={['✅ FINALIZAT','🔄 IN LUCRU','⛔ BLOCAT']} />
+                        <AppSelect label="Status Global" value={normalizeGlobalStatus(String(editRow?.status_global ?? sa.status_global ?? ''))} onChange={e => setEditRow(r => ({ ...r!, status_global: e.target.value }))} options={['✅ FINALIZAT','🔄 IN LUCRU','⛔ BLOCAT']} />
                         <AppField label="Progres" value={String(editRow?.progres ?? sa.progres)} onChange={e => setEditRow(r => ({ ...r!, progres: e.target.value }))} />
                         <AppField label="Start" type="date" value={String(editRow?.data_start ?? sa.data_start ?? '')} onChange={e => setEditRow(r => ({ ...r!, data_start: e.target.value }))} />
                         <AppField label="Due" type="date" value={String(editRow?.data_due ?? sa.data_due ?? '')} onChange={e => setEditRow(r => ({ ...r!, data_due: e.target.value }))} />
@@ -119,7 +122,7 @@ export default function Subansambluri() {
                       </Box>
                       <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(120px, 1fr))', gap: 1.25 }}>
                         {DEPT_COLS.map(col => (
-                          <AppSelect key={col} label={col.toUpperCase()} value={String(editRow?.[col] ?? sa[col])} onChange={e => setEditRow(r => ({ ...r!, [col]: e.target.value }))} options={STATUS_OPTIONS} />
+                          <AppSelect key={col} label={col.toUpperCase()} value={normalizeDepartmentStatus(String(editRow?.[col] ?? sa[col] ?? ''))} onChange={e => setEditRow(r => ({ ...r!, [col]: e.target.value }))} options={STATUS_OPTIONS} />
                         ))}
                       </Box>
                       <AppField label={s.colComentarii} value={String(editRow?.comentarii ?? sa.comentarii ?? '')} onChange={e => setEditRow(r => ({ ...r!, comentarii: e.target.value }))} />
@@ -168,11 +171,13 @@ export default function Subansambluri() {
                   </TableCell>
                   {DEPT_COLS.map(col => <TableCell key={col} sx={{ textAlign: 'center' }}>{statusChip(sa[col])}</TableCell>)}
                   <TableCell sx={{ fontSize: 12, color: sa.blocat ? '#f87171' : 'var(--color-ink-muted)', maxWidth: 180 }}>{sa.comentarii}</TableCell>
-                  <TableCell>
-                    <ActionButton variant="outlined" onClick={() => { setEditId(sa.id); setEditRow({ status_global: sa.status_global, progres: sa.progres, blocat: sa.blocat, laser: sa.laser, rolat: sa.rolat, sudat: sa.sudat, asamblat: sa.asamblat, vopsit: sa.vopsit, data_start: sa.data_start ?? '', data_due: sa.data_due ?? '', data_done: sa.data_done ?? '', laser_done: sa.laser_done ?? '', rolat_done: sa.rolat_done ?? '', sudat_done: sa.sudat_done ?? '', asamblat_done: sa.asamblat_done ?? '', vopsit_done: sa.vopsit_done ?? '', comentarii: sa.comentarii ?? '' }) }} sx={{ px: 1, py: 0.375, fontSize: 11 }}>
-                      {t.common.edit}
-                    </ActionButton>
-                  </TableCell>
+	                  <TableCell>
+	                    {canWrite && (
+	                      <ActionButton variant="outlined" onClick={() => { setEditId(sa.id); setEditRow({ status_global: normalizeGlobalStatus(sa.status_global), progres: sa.progres, blocat: sa.blocat, laser: normalizeDepartmentStatus(sa.laser), rolat: normalizeDepartmentStatus(sa.rolat), sudat: normalizeDepartmentStatus(sa.sudat), asamblat: normalizeDepartmentStatus(sa.asamblat), vopsit: normalizeDepartmentStatus(sa.vopsit), data_start: sa.data_start ?? '', data_due: sa.data_due ?? '', data_done: sa.data_done ?? '', laser_done: sa.laser_done ?? '', rolat_done: sa.rolat_done ?? '', sudat_done: sa.sudat_done ?? '', asamblat_done: sa.asamblat_done ?? '', vopsit_done: sa.vopsit_done ?? '', comentarii: sa.comentarii ?? '' }) }} sx={{ px: 1, py: 0.375, fontSize: 11 }}>
+	                        {t.common.edit}
+	                      </ActionButton>
+	                    )}
+	                  </TableCell>
                 </TableRow>
               )
             ))}

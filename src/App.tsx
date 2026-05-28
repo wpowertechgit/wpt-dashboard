@@ -3,9 +3,11 @@ import type { ReactNode } from 'react'
 import { Routes, Route, NavLink, Navigate, useNavigate } from 'react-router-dom'
 import type { Session } from '@supabase/supabase-js'
 import { Box, Button, CircularProgress, Stack, Typography } from '@mui/material'
-import { supabase, supabaseAdmin } from './lib/supabase'
+import { supabase } from './lib/supabase'
 import { useLang } from './lib/i18n'
 import { isDemoMode, exitDemo } from './lib/demo'
+import { resolveValidSession, verifySession } from './lib/session'
+import { PermissionsProvider } from './lib/permissionsContext'
 import LoginPage from './components/LoginPage'
 import Dashboard from './components/Dashboard'
 import Subassemblies from './components/Subassemblies'
@@ -159,21 +161,23 @@ function AppShell({ session, profile, demoMode, onExitDemo }: { session: Session
         </Stack>
       </Box>
 
-      <Box component="main" sx={{ flex: 1, p: '24px 24px 48px', maxWidth: 1400, width: '100%', mx: 'auto' }}>
-        <Routes>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/projects" element={<Projects />} />
-          <Route path="/subassemblies" element={<Subassemblies />} />
-          <Route path="/planning" element={<PlanningCalendar />} />
-          <Route path="/blockages" element={<Blockages />} />
-          <Route path="/pdca" element={<PDCA />} />
-          <Route path="/daily-flow" element={<DailyFlow />} />
-          <Route path="/kpi" element={<TeamKPI />} />
-          {isAdmin && <Route path="/admin" element={<Admin />} />}
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-      </Box>
+      <PermissionsProvider role={profile?.role ?? null} demoMode={demoMode}>
+        <Box component="main" sx={{ flex: 1, p: '24px 24px 48px', maxWidth: 1400, width: '100%', mx: 'auto' }}>
+          <Routes>
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/projects" element={<Projects />} />
+            <Route path="/subassemblies" element={<Subassemblies />} />
+            <Route path="/planning" element={<PlanningCalendar />} />
+            <Route path="/blockages" element={<Blockages />} />
+            <Route path="/pdca" element={<PDCA />} />
+            <Route path="/daily-flow" element={<DailyFlow />} />
+            <Route path="/kpi" element={<TeamKPI />} />
+            {isAdmin && <Route path="/admin" element={<Admin />} />}
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </Box>
+      </PermissionsProvider>
     </Stack>
   )
 }
@@ -190,21 +194,30 @@ export default function App() {
 
   useEffect(() => {
     if (demoMode) return
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      if (session) loadProfile(session.user.id)
-    })
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session)
-      if (session) loadProfile(session.user.id)
+    let active = true
+
+    resolveValidSession(supabase.auth).then(validSession => {
+      if (!active) return
+      setSession(validSession)
+      if (validSession) loadProfile(validSession.user.id)
       else setProfile(null)
     })
-    return () => subscription.unsubscribe()
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      verifySession(supabase.auth, session).then(validSession => {
+        if (!active) return
+        setSession(validSession)
+        if (validSession) loadProfile(validSession.user.id)
+        else setProfile(null)
+      })
+    })
+    return () => {
+      active = false
+      subscription.unsubscribe()
+    }
   }, [demoMode])
 
   async function loadProfile(userId: string) {
-    const client = supabaseAdmin ?? supabase
-    const { data, error } = await client.from('profiles').select('*').eq('id', userId).single()
+    const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single()
     if (data) setProfile(data as Profile)
     else if (error) console.error('Profile load failed:', error.message)
   }

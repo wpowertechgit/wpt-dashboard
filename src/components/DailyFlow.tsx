@@ -1,8 +1,11 @@
 import { useState } from 'react'
 import { useLang } from '../lib/i18n'
 import { useQuery } from '../lib/useQuery'
-import { fetchFluxZilnic, insertFluxZilnic } from '../lib/api'
+import { fetchFluxZilnic, fetchProiecte, insertFluxZilnic } from '../lib/api'
 import { formatDateLabel } from '../lib/dateUtils'
+import { usePermissions } from '../lib/permissionsContext'
+import { buildProjectOptions } from '../lib/projectOptions'
+import { pageInfo } from '../lib/pageInfo'
 import { ErrorBanner, EmptyState, LoadingRows } from './StateViews'
 import { ActionButton, AppField, AppSelect, Badge, Box, Card, DataTable, Eyebrow, PageTitle, Stack, TableCell, TableRow, Typography } from './Ui'
 
@@ -17,9 +20,11 @@ function deptBadge(d: string) {
 const BLANK = { data: '', proiect: '', subansamblu: '', dept_origine: 'SUDAT', dept_destinatie: 'ASAMBLAT', echipa: '', validat_de: '', observatii: '' }
 
 export default function FluxZilnic() {
-  const { t } = useLang()
+  const { t, lang } = useLang()
+  const { canWrite } = usePermissions()
   const f = t.flux
   const { data, loading, error, refetch } = useQuery(fetchFluxZilnic)
+  const projects = useQuery(fetchProiecte)
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({ ...BLANK })
   const [saving, setSaving] = useState(false)
@@ -38,11 +43,12 @@ export default function FluxZilnic() {
     return acc
   }, {})
   const deptCounts = DEPTS.map(d => ({ dept: d, count: (data ?? []).filter(fl => fl.dept_origine === d || fl.dept_destinatie === d).length }))
+  const projectOptions = buildProjectOptions(projects.data)
 
   return (
     <Stack gap={4}>
-      <PageTitle eyebrow={f.eyebrow} title={f.title} subtitle={`${f.subtitle} · ${data?.length ?? '…'} ${f.miscari}`} action={<ActionButton variant={showForm ? 'outlined' : 'contained'} onClick={() => setShowForm(s => !s)}>{showForm ? `✕ ${t.common.cancel}` : f.newBtn}</ActionButton>} />
-      {error && <ErrorBanner message={error} />}
+      <PageTitle eyebrow={f.eyebrow} title={f.title} subtitle={`${f.subtitle} - ${data?.length ?? '...'} ${f.miscari}`} info={pageInfo(lang, 'dailyFlow')} action={canWrite ? <ActionButton variant={showForm ? 'outlined' : 'contained'} onClick={() => setShowForm(s => !s)}>{showForm ? `x ${t.common.cancel}` : f.newBtn}</ActionButton> : undefined} />
+      {(error || projects.error) && <ErrorBanner message={(error || projects.error) ?? ''} />}
 
       <Card>
         <Eyebrow sx={{ mb: 2 }}>{f.vizTitle}</Eyebrow>
@@ -56,20 +62,20 @@ export default function FluxZilnic() {
                   <Typography variant="h5" fontWeight={700} sx={{ fontSize: 18, color: c, mt: 0.5, fontFamily: 'var(--font-display)' }}>{count}</Typography>
                   <Typography variant="body2" sx={{ fontSize: 10, color: 'var(--color-ink-tertiary)', mt: 0.125 }}>{f.miscari}</Typography>
                 </Box>
-                {i < deptCounts.length - 1 && <Typography variant="body2" sx={{ px: 0.5, color: 'var(--color-hairline-strong)', fontSize: 18 }}>→</Typography>}
+                {i < deptCounts.length - 1 && <Typography variant="body2" sx={{ px: 0.5, color: 'var(--color-hairline-strong)', fontSize: 18 }}>to</Typography>}
               </Stack>
             )
           })}
         </Stack>
       </Card>
 
-      {showForm && (
+      {canWrite && showForm && (
         <Card sx={{ borderLeft: '3px solid var(--color-primary)' }}>
           <Eyebrow sx={{ mb: 2 }}>{f.formTitle}</Eyebrow>
           <Stack component="form" onSubmit={submit} gap={1.5}>
             <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1.5 }}>
               <AppField label={f.data} type="date" value={form.data} onChange={e => setF('data', e.target.value)} />
-              <AppSelect label={f.proiect} value={form.proiect} onChange={e => setF('proiect', e.target.value)} options={[{ value: '', label: '— Selectați —' }, 'WP1000-08','WP1000-09','WP1000-10']} />
+              <AppSelect label={f.proiect} value={form.proiect} onChange={e => setF('proiect', e.target.value)} options={[{ value: '', label: '- Selectati -' }, ...projectOptions]} />
               <AppField label={f.subansamblu} required value={form.subansamblu} onChange={e => setF('subansamblu', e.target.value)} />
               <AppSelect label={f.deLa} value={form.dept_origine} onChange={e => setF('dept_origine', e.target.value)} options={DEPTS} />
               <AppSelect label={f.la} value={form.dept_destinatie} onChange={e => setF('dept_destinatie', e.target.value)} options={DEPTS} />
@@ -99,7 +105,7 @@ function FlowTable({ title, count, rows, loading, labels }: { title?: string | n
             <TableCell><Typography variant="body2" sx={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--color-primary)' }}>{fl.proiect}</Typography></TableCell>
             <TableCell sx={{ fontWeight: 500 }}>{fl.subansamblu}</TableCell>
             <TableCell>{deptBadge(fl.dept_origine)}</TableCell>
-            <TableCell sx={{ color: 'var(--color-ink-tertiary)', p: '10px 4px' }}>→</TableCell>
+            <TableCell sx={{ color: 'var(--color-ink-tertiary)', p: '10px 4px' }}>to</TableCell>
             <TableCell>{deptBadge(fl.dept_destinatie)}</TableCell>
             <TableCell sx={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>{fl.echipa}</TableCell>
             <TableCell sx={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>{fl.validat_de}</TableCell>

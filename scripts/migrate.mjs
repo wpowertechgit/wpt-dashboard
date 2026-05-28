@@ -22,6 +22,9 @@ const migrations = [
   '../migrations/002_seed.sql',
   '../migrations/003_profiles.sql',
   '../migrations/004_security_hardening.sql',
+  '../migrations/005_date_tracking.sql',
+  '../migrations/006_project_budget.sql',
+  '../migrations/007_role_based_rls.sql',
 ]
 
 await client.connect()

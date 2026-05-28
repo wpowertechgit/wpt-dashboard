@@ -1,9 +1,11 @@
 import { useState } from 'react'
+import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { useLang } from '../lib/i18n'
 import { useQuery } from '../lib/useQuery'
 import { fetchKpiEchipe, upsertKpiEchipe } from '../lib/api'
+import { usePermissions } from '../lib/permissionsContext'
+import { pageInfo } from '../lib/pageInfo'
 import { ErrorBanner, LoadingRows } from './StateViews'
-import { useLang } from '../lib/i18n'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LineChart, Line, Legend, ResponsiveContainer } from 'recharts'
 import { ActionButton, AppField, AppSelect, Badge, Box, Card, DataTable, Eyebrow, PageTitle, Stack, TableCell, TableRow, Typography } from './Ui'
 
 const DEPT_COLORS: Record<string, string> = { LASER: '#818cf8', ROLAT: '#60a5fa', SUDAT: '#fbbf24', ASAMBLAT: '#34d399', VOPSIT: '#f87171' }
@@ -23,7 +25,8 @@ function MiniProgress({ value, width = 60 }: { value: number; width?: number }) 
 }
 
 export default function KPIEchipe() {
-  const { t } = useLang()
+  const { t, lang } = useLang()
+  const { canWrite } = usePermissions()
   const k = t.kpi
   const { data, loading, error, refetch } = useQuery(fetchKpiEchipe)
   const [showForm, setShowForm] = useState(false)
@@ -52,7 +55,7 @@ export default function KPIEchipe() {
 
   return (
     <Stack gap={4}>
-      <PageTitle eyebrow={k.eyebrow} title={k.title} subtitle={k.subtitle} action={<ActionButton variant={showForm ? 'outlined' : 'contained'} onClick={() => setShowForm(s => !s)}>{showForm ? `✕ ${t.common.cancel}` : k.newBtn}</ActionButton>} />
+      <PageTitle eyebrow={k.eyebrow} title={k.title} subtitle={k.subtitle} info={pageInfo(lang, 'kpi')} action={canWrite ? <ActionButton variant={showForm ? 'outlined' : 'contained'} onClick={() => setShowForm(s => !s)}>{showForm ? `x ${t.common.cancel}` : k.newBtn}</ActionButton> : undefined} />
       {error && <ErrorBanner message={error} />}
 
       {latestWeek && (
@@ -74,7 +77,7 @@ export default function KPIEchipe() {
                       </Box>
                     ))}
                   </Box>
-                  {row.sa_blocate > 0 && <Box sx={{ bgcolor: 'rgba(239,68,68,0.1)', borderRadius: 'var(--radius-xs)', p: '4px 8px', textAlign: 'center' }}><Typography variant="body2" sx={{ fontSize: 11, color: '#f87171' }}>⛔ {row.sa_blocate} {k.blocate}</Typography></Box>}
+                  {row.sa_blocate > 0 && <Box sx={{ bgcolor: 'rgba(239,68,68,0.1)', borderRadius: 'var(--radius-xs)', p: '4px 8px', textAlign: 'center' }}><Typography variant="body2" sx={{ fontSize: 11, color: '#f87171' }}>{row.sa_blocate} {k.blocate}</Typography></Box>}
                 </Stack>
               </Card>
             ))}
@@ -87,7 +90,7 @@ export default function KPIEchipe() {
         <Card><Eyebrow sx={{ mb: 2.5 }}>{k.chartLeadTime}</Eyebrow><ResponsiveContainer width="100%" height={220}><BarChart data={chartData('lead_time')} margin={{ top: 4, right: 8, bottom: 0, left: -20 }}><CartesianGrid strokeDasharray="3 3" stroke="#23252a" /><XAxis dataKey="saptamana" tick={{ fill: '#8a8f98', fontSize: 11 }} axisLine={false} tickLine={false} /><YAxis tick={{ fill: '#8a8f98', fontSize: 11 }} axisLine={false} tickLine={false} /><Tooltip contentStyle={tooltipStyle} /><Legend wrapperStyle={{ fontSize: 11, color: '#8a8f98' }} />{DEPTS.map(d => <Bar key={d} dataKey={d} fill={DEPT_COLORS[d]} radius={[3, 3, 0, 0]} maxBarSize={14} />)}</BarChart></ResponsiveContainer></Card>
       </Box>
 
-      {showForm && (
+      {canWrite && showForm && (
         <Card sx={{ borderLeft: '3px solid var(--color-primary)' }}>
           <Eyebrow sx={{ mb: 2 }}>{k.formTitle}</Eyebrow>
           <Stack component="form" onSubmit={submit} gap={1.5}>
@@ -112,8 +115,8 @@ export default function KPIEchipe() {
               <TableCell><Box component="span" sx={{ display: 'inline-block', p: '2px 8px', borderRadius: 'var(--radius-xs)', bgcolor: `${DEPT_COLORS[row.echipa]}18`, color: DEPT_COLORS[row.echipa], fontSize: 11, fontWeight: 600 }}>{row.echipa}</Box></TableCell>
               <TableCell sx={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{row.sa_intrare}</TableCell>
               <TableCell sx={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{row.sa_iesire}</TableCell>
-              <TableCell>{row.sa_blocate > 0 ? <Badge tone="error">{row.sa_blocate}</Badge> : <Typography variant="body2" sx={{ color: 'var(--color-ink-tertiary)' }}>–</Typography>}</TableCell>
-              <TableCell>{row.sa_intarziate > 0 ? <Badge tone="warning">{row.sa_intarziate}</Badge> : <Typography variant="body2" sx={{ color: 'var(--color-ink-tertiary)' }}>–</Typography>}</TableCell>
+              <TableCell>{row.sa_blocate > 0 ? <Badge tone="error">{row.sa_blocate}</Badge> : <Typography variant="body2" sx={{ color: 'var(--color-ink-tertiary)' }}>-</Typography>}</TableCell>
+              <TableCell>{row.sa_intarziate > 0 ? <Badge tone="warning">{row.sa_intarziate}</Badge> : <Typography variant="body2" sx={{ color: 'var(--color-ink-tertiary)' }}>-</Typography>}</TableCell>
               <TableCell><MiniProgress value={Number(row.eficienta)} /></TableCell>
               <TableCell sx={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: Number(row.lead_time) > 20 ? '#fbbf24' : 'var(--color-ink-muted)' }}>{row.lead_time}h</TableCell>
               <TableCell><MiniProgress value={Number(row.calitate)} /></TableCell>

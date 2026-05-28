@@ -55,6 +55,12 @@ export async function upsertSubansamblu(row: Record<string, unknown>) {
   if (error) throw error
 }
 
+export async function updateSubansamblu(id: number, row: Record<string, unknown>) {
+  if (isDemoMode()) return
+  const { error } = await supabase.from('subansambluri').update(row).eq('id', id)
+  if (error) throw friendlySupabaseError(error)
+}
+
 export async function fetchBlocaje() {
   if (isDemoMode()) return DEMO.blocaje
   const { data, error } = await supabase.from('blocaje').select('*').order('data_deschidere', { ascending: false })
@@ -122,6 +128,13 @@ export async function upsertKpiEchipe(row: Record<string, unknown>) {
 export async function fetchProfiles() {
   if (isDemoMode()) return []
   const { data, error } = await supabase.from('profiles').select('*').order('created_at')
+  if (error) throw error
+  return data
+}
+
+export async function createUserAccount(row: Record<string, unknown>) {
+  if (isDemoMode()) return
+  const { data, error } = await supabase.functions.invoke('create-user', { body: row })
   if (error) throw error
   return data
 }

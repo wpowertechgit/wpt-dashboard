@@ -4,19 +4,21 @@ import { useQuery } from '../lib/useQuery'
 import { fetchProiecte, insertProiect } from '../lib/api'
 import { formatDateLabel } from '../lib/dateUtils'
 import { DEFAULT_SUBASSEMBLY_NAMES } from '../lib/projectDefaults'
+import { usePermissions } from '../lib/permissionsContext'
+import { pageInfo } from '../lib/pageInfo'
 import { ErrorBanner, LoadingRows } from './StateViews'
 import { ActionButton, AppField, AppSelect, Badge, Box, Card, DataTable, Eyebrow, PageTitle, Stack, TableCell, TableRow, Typography } from './Ui'
 
 function priorityBadge(p: string) {
-  if (p === 'CRITIC') return <Badge tone="error">🔴 CRITIC</Badge>
-  if (p === 'RIDICAT') return <Badge tone="warning">🟡 RIDICAT</Badge>
-  return <Badge tone="success">🟢 NORMAL</Badge>
+  if (p === 'CRITIC') return <Badge tone="error">CRITIC</Badge>
+  if (p === 'RIDICAT') return <Badge tone="warning">RIDICAT</Badge>
+  return <Badge tone="success">NORMAL</Badge>
 }
 
 function statusBadge(s: string) {
-  if (s === 'LIVRAT') return <Badge tone="success">✅ LIVRAT</Badge>
-  if (s === 'IN LIVRARE') return <Badge tone="warning">🟡 IN LIVRARE</Badge>
-  if (s === 'BLOCAJE ACTIVE') return <Badge tone="error">⛔ BLOCAJE ACTIVE</Badge>
+  if (s === 'LIVRAT') return <Badge tone="success">LIVRAT</Badge>
+  if (s === 'IN LIVRARE') return <Badge tone="warning">IN LIVRARE</Badge>
+  if (s === 'BLOCAJE ACTIVE') return <Badge tone="error">BLOCAJE ACTIVE</Badge>
   return <Badge>{s}</Badge>
 }
 
@@ -37,7 +39,8 @@ function ProgressBar({ value }: { value: number }) {
 const BLANK = { id: '', client: '', responsabil: '', data_start: '', data_target: '', data_done: '', total_sa: DEFAULT_SUBASSEMBLY_NAMES.length, buget_ore: 0, prioritate: 'NORMAL', status: 'IN PRODUCTIE' }
 
 export default function Proiecte() {
-  const { t } = useLang()
+  const { t, lang } = useLang()
+  const { canWrite } = usePermissions()
   const p = t.proiecte
   const { data, loading, error, refetch } = useQuery(fetchProiecte)
   const [showForm, setShowForm] = useState(false)
@@ -68,13 +71,14 @@ export default function Proiecte() {
       <PageTitle
         eyebrow={p.eyebrow}
         title={p.title}
-        subtitle={`${data?.length ?? '…'} ${t.common.records}`}
-        action={<ActionButton variant={showForm ? 'outlined' : 'contained'} onClick={() => { setShowForm(s => !s); setFormError(null) }}>{showForm ? `✕ ${t.common.cancel}` : p.newBtn}</ActionButton>}
+        subtitle={`${data?.length ?? '...'} ${t.common.records}`}
+        info={pageInfo(lang, 'projects')}
+        action={canWrite ? <ActionButton variant={showForm ? 'outlined' : 'contained'} onClick={() => { setShowForm(s => !s); setFormError(null) }}>{showForm ? `x ${t.common.cancel}` : p.newBtn}</ActionButton> : undefined}
       />
 
       {error && <ErrorBanner message={error} />}
 
-      {showForm && (
+      {canWrite && showForm && (
         <Card sx={{ borderLeft: '3px solid var(--color-primary)' }}>
           <Eyebrow sx={{ mb: 2 }}>{p.formTitle}</Eyebrow>
           {formError && <Box sx={{ bgcolor: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 'var(--radius-sm)', p: '8px 12px', mb: 1.5 }}><Typography variant="body2" sx={{ fontSize: 12, color: '#f87171' }}>{formError}</Typography></Box>}
@@ -99,7 +103,7 @@ export default function Proiecte() {
       )}
 
       <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2 }}>
-        {loading ? [1,2,3].map(i => (
+        {loading ? [1, 2, 3].map(i => (
           <Card key={i} sx={{ height: 260, animation: 'pulse 1.4s ease-in-out infinite', bgcolor: 'var(--color-surface-1)' }} />
         )) : data?.map(p => (
           <Card key={p.id} sx={{ borderTop: `3px solid ${p.prioritate === 'CRITIC' ? '#f87171' : p.prioritate === 'RIDICAT' ? '#fbbf24' : '#4ade80'}` }}>
@@ -135,7 +139,6 @@ export default function Proiecte() {
               </Box>
               {p.blocaje_active > 0 && (
                 <Stack direction="row" gap={1} sx={{ bgcolor: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 'var(--radius-sm)', p: '8px 12px' }}>
-                  <Typography variant="body2">⛔</Typography>
                   <Typography variant="body2" sx={{ fontSize: 12, color: '#f87171' }}><strong>{p.blocaje_active}</strong> blocaje active</Typography>
                 </Stack>
               )}
@@ -159,7 +162,7 @@ export default function Proiecte() {
               <TableCell sx={{ textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: 12 }}>{p.total_sa}</TableCell>
               <TableCell sx={{ textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: 12 }}>{p.finalizate_sa}</TableCell>
               <TableCell sx={{ minWidth: 180 }}><ProgressBar value={Number(p.progres)} /></TableCell>
-              <TableCell sx={{ textAlign: 'center' }}>{p.blocaje_active > 0 ? <Badge tone="error">{p.blocaje_active}</Badge> : <Typography variant="body2" sx={{ color: 'var(--color-ink-tertiary)' }}>–</Typography>}</TableCell>
+              <TableCell sx={{ textAlign: 'center' }}>{p.blocaje_active > 0 ? <Badge tone="error">{p.blocaje_active}</Badge> : <Typography variant="body2" sx={{ color: 'var(--color-ink-tertiary)' }}>-</Typography>}</TableCell>
               <TableCell>{statusBadge(p.status)}</TableCell>
             </TableRow>
           ))}

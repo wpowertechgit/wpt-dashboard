@@ -1,8 +1,13 @@
+import { useState } from 'react'
 import type { ReactNode } from 'react'
 import {
   Box,
   Button,
   Chip,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  IconButton,
   MenuItem,
   Paper,
   Stack,
@@ -15,6 +20,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
 import type { ButtonProps, ChipProps, SxProps, TextFieldProps, Theme } from '@mui/material'
 
 export type BadgeTone = 'success' | 'warning' | 'error' | 'info' | 'default'
@@ -98,14 +104,52 @@ export function Eyebrow({ children, sx }: { children: ReactNode; sx?: SxProps<Th
   )
 }
 
-export function PageTitle({ eyebrow, title, subtitle, action }: { eyebrow: ReactNode; title: ReactNode; subtitle?: ReactNode; action?: ReactNode }) {
+export function InfoButton({ title, items }: { title: ReactNode; items: ReactNode[] }) {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <>
+      <IconButton
+        aria-label="Page information"
+        onClick={() => setOpen(true)}
+        sx={{
+          width: 32,
+          height: 32,
+          color: 'var(--color-ink-subtle)',
+          border: '1px solid var(--color-hairline)',
+          bgcolor: 'var(--color-surface-1)',
+          '&:hover': { color: 'var(--color-ink)', bgcolor: 'var(--color-surface-2)' },
+        }}
+      >
+        <InfoOutlinedIcon fontSize="small" />
+      </IconButton>
+      <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ fontFamily: 'var(--font-display)', fontSize: 18, color: 'var(--color-ink)' }}>{title}</DialogTitle>
+        <DialogContent>
+          <Stack component="ul" gap={1.25} sx={{ pl: 2, my: 0 }}>
+            {items.map((item, index) => (
+              <Typography key={index} component="li" variant="body2" sx={{ fontSize: 13, color: 'var(--color-ink-muted)' }}>
+                {item}
+              </Typography>
+            ))}
+          </Stack>
+        </DialogContent>
+      </Dialog>
+    </>
+  )
+}
+
+export function PageTitle({ eyebrow, title, subtitle, action, info }: { eyebrow: ReactNode; title: ReactNode; subtitle?: ReactNode; action?: ReactNode; info?: ReactNode[] }) {
   return (
     <Stack direction="row" alignItems="flex-end" justifyContent="space-between" gap={2}>
       <Box>
         <Eyebrow sx={{ mb: 0.75 }}>{eyebrow}</Eyebrow>
-        <Typography variant="h4" fontWeight={600} sx={{ color: 'var(--color-ink)', fontFamily: 'var(--font-display)', fontSize: 28, letterSpacing: 0 }}>
-          {title}
-        </Typography>
+        <Stack direction="row" alignItems="center" gap={1}>
+          <Typography variant="h4" fontWeight={600} sx={{ color: 'var(--color-ink)', fontFamily: 'var(--font-display)', fontSize: 28, letterSpacing: 0 }}>
+            {title}
+          </Typography>
+          {info && info.length > 0 && <InfoButton title={title} items={info} />}
+        </Stack>
         {subtitle && (
           <Typography variant="body2" sx={{ color: 'var(--color-ink-subtle)', mt: 0.5, fontSize: 13 }}>
             {subtitle}

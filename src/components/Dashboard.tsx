@@ -1,6 +1,8 @@
 import { useLang } from '../lib/i18n'
 import { useQuery } from '../lib/useQuery'
 import { fetchProiecte, fetchBlocaje, fetchSubansambluri } from '../lib/api'
+import { buildProjectOptions } from '../lib/projectOptions'
+import { pageInfo } from '../lib/pageInfo'
 import { ErrorBanner, LoadingRows } from './StateViews'
 import { Badge, Box, Card, DataTable, Eyebrow, PageTitle, Stack, TableCell, TableRow, Typography } from './Ui'
 
@@ -54,7 +56,7 @@ function StatCard({ label, value, sub, accent }: { label: string; value: string 
 const DEPTS = ['LASER', 'ROLAT', 'SUDAT', 'ASAMBLAT', 'VOPSIT'] as const
 
 export default function Dashboard() {
-  const { t } = useLang()
+  const { t, lang } = useLang()
   const d = t.dashboard
   const proiecte = useQuery(fetchProiecte)
   const blocaje = useQuery(fetchBlocaje)
@@ -66,13 +68,14 @@ export default function Dashboard() {
   const blocateSA = sa.data?.filter(s => s.blocat).length ?? 0
   const progresGlobal = totalSA ? Math.round((finalizateSA / totalSA) * 1000) / 10 : 0
   const blocajeActive = blocaje.data?.filter(b => b.status === 'Deschis') ?? []
+  const projectIds = buildProjectOptions(proiecte.data)
 
   const heatmap = DEPTS.map(dept => {
     const deptKey = dept.toLowerCase() as string
     const row: Record<string, string | number> = { departament: dept }
     let totalBlocaje = 0
     let saActive = 0
-    for (const p of ['WP1000-08', 'WP1000-09', 'WP1000-10']) {
+    for (const p of projectIds) {
       const items = sa.data?.filter(s => s.proiect === p) ?? []
       const blocati = items.filter(s => s[deptKey] === 'Blocat').length
       const inLucru = items.filter(s => s[deptKey] === 'În lucru').length
@@ -92,7 +95,7 @@ export default function Dashboard() {
 
   return (
     <Stack gap={4}>
-      <PageTitle eyebrow={d.eyebrow} title={d.title} subtitle={d.subtitle} />
+      <PageTitle eyebrow={d.eyebrow} title={d.title} subtitle={d.subtitle} info={pageInfo(lang, 'dashboard')} />
       {err && <ErrorBanner message={err} />}
 
       <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 2 }}>
@@ -133,11 +136,11 @@ export default function Dashboard() {
           <Box sx={{ p: '20px 24px 16px', borderBottom: '1px solid var(--color-hairline)' }}>
             <Eyebrow>{d.heatmap}</Eyebrow>
           </Box>
-          <DataTable head={<TableRow><TableCell>{d.colDept}</TableCell><TableCell>WP1000-08</TableCell><TableCell>WP1000-09</TableCell><TableCell>WP1000-10</TableCell><TableCell>{d.colBlocaje}</TableCell><TableCell>{d.colActive}</TableCell></TableRow>}>
+	          <DataTable head={<TableRow><TableCell>{d.colDept}</TableCell>{projectIds.map(id => <TableCell key={id}>{id}</TableCell>)}<TableCell>{d.colBlocaje}</TableCell><TableCell>{d.colActive}</TableCell></TableRow>}>
             {sa.loading ? <LoadingRows cols={6} /> : heatmap.map(row => (
               <TableRow key={String(row.departament)}>
                 <TableCell sx={{ fontWeight: 500 }}>{row.departament}</TableCell>
-                {['WP1000-08','WP1000-09','WP1000-10'].map(p => {
+	                {projectIds.map(p => {
                   const v = String(row[p] ?? '–')
                   const bg = v.startsWith('⛔') ? 'rgba(239,68,68,0.1)' : v.startsWith('🔄') ? 'rgba(94,106,210,0.1)' : v.startsWith('✅') ? 'rgba(39,166,68,0.08)' : 'transparent'
                   const color = v.startsWith('⛔') ? '#f87171' : v.startsWith('🔄') ? '#818cf8' : v.startsWith('✅') ? '#4ade80' : 'var(--color-ink-tertiary)'

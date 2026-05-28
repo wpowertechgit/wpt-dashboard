@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useLang } from '../lib/i18n'
 import { useQuery } from '../lib/useQuery'
-import { updateProfile } from '../lib/api'
-import { supabaseAdmin } from '../lib/supabase'
+import { createUserAccount, fetchProfiles, updateProfile } from '../lib/api'
+import { pageInfo } from '../lib/pageInfo'
 import { ErrorBanner, LoadingRows } from './StateViews'
 import { ActionButton, AppField, AppSelect, Badge, Box, Card, DataTable, Eyebrow, PageTitle, Stack, TableCell, TableRow, Typography } from './Ui'
 
@@ -11,17 +11,9 @@ const ROLES = ['worker', 'admin']
 const BLANK_USER = { email: '', password: '', full_name: '', departament: '', role: 'worker' }
 
 export default function Admin() {
-  const { t } = useLang()
+  const { t, lang } = useLang()
   const a = t.admin
-
-  async function fetchProfilesAdmin() {
-    if (!supabaseAdmin) throw new Error('Service key not configured')
-    const { data, error } = await supabaseAdmin.from('profiles').select('*').order('created_at')
-    if (error) throw error
-    return data
-  }
-
-  const { data: profiles, loading, error, refetch } = useQuery(fetchProfilesAdmin)
+  const { data: profiles, loading, error, refetch } = useQuery(fetchProfiles)
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({ ...BLANK_USER })
   const [saving, setSaving] = useState(false)
@@ -35,17 +27,11 @@ export default function Admin() {
 
   async function createUser(e: { preventDefault(): void }) {
     e.preventDefault()
-    if (!supabaseAdmin) {
-      setCreateError('Service key not configured — add VITE_SUPABASE_SERVICE_KEY to .env.local')
-      return
-    }
     setSaving(true)
     setCreateError(null)
     setCreateSuccess(null)
     try {
-      const { data, error } = await supabaseAdmin.auth.admin.createUser({ email: form.email, password: form.password, email_confirm: true, user_metadata: { full_name: form.full_name } })
-      if (error) throw error
-      if (data.user) await updateProfile(data.user.id, { full_name: form.full_name || null, role: form.role, departament: form.departament || null })
+      await createUserAccount(form)
       setCreateSuccess(`Cont creat pentru ${form.email}`)
       setForm({ ...BLANK_USER })
       setShowForm(false)
@@ -59,8 +45,13 @@ export default function Admin() {
 
   async function saveEdit(id: string) {
     setSaveError(null)
-    try { await updateProfile(id, { role: editRole, departament: editDept || null }); setEditId(null); refetch() }
-    catch (err: unknown) { setSaveError(err instanceof Error ? err.message : String(err)) }
+    try {
+      await updateProfile(id, { role: editRole, departament: editDept || null })
+      setEditId(null)
+      refetch()
+    } catch (err: unknown) {
+      setSaveError(err instanceof Error ? err.message : String(err))
+    }
   }
 
   function roleBadge(role: string) {
@@ -69,21 +60,35 @@ export default function Admin() {
 
   return (
     <Stack gap={4}>
-      <PageTitle eyebrow={a.eyebrow} title={a.title} subtitle={`${a.subtitle} · ${profiles?.length ?? '…'} ${a.users}`} action={<ActionButton variant={showForm ? 'outlined' : 'contained'} onClick={() => { setShowForm(s => !s); setCreateError(null); setCreateSuccess(null) }}>{showForm ? `✕ ${t.common.cancel}` : a.newBtn}</ActionButton>} />
+      <PageTitle
+        eyebrow={a.eyebrow}
+        title={a.title}
+        subtitle={`${a.subtitle} · ${profiles?.length ?? '...'} ${a.users}`}
+        info={pageInfo(lang, 'admin')}
+        action={<ActionButton variant={showForm ? 'outlined' : 'contained'} onClick={() => { setShowForm(s => !s); setCreateError(null); setCreateSuccess(null) }}>{showForm ? `x ${t.common.cancel}` : a.newBtn}</ActionButton>}
+      />
       {error && <ErrorBanner message={error} />}
       {saveError && <ErrorBanner message={saveError} />}
-      {createSuccess && <Box sx={{ bgcolor: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)', borderRadius: 'var(--radius-md)', p: '10px 16px' }}><Typography variant="body2" sx={{ fontSize: 13, color: '#4ade80' }}>✅ {createSuccess}</Typography></Box>}
+      {createSuccess && (
+        <Box sx={{ bgcolor: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)', borderRadius: 'var(--radius-md)', p: '10px 16px' }}>
+          <Typography variant="body2" sx={{ fontSize: 13, color: '#4ade80' }}>{createSuccess}</Typography>
+        </Box>
+      )}
 
       {showForm && (
         <Card sx={{ borderLeft: '3px solid var(--color-primary)' }}>
           <Eyebrow sx={{ mb: 2 }}>{a.formTitle}</Eyebrow>
-          {createError && <Box sx={{ bgcolor: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 'var(--radius-sm)', p: '8px 12px', mb: 1.5 }}><Typography variant="body2" sx={{ fontSize: 12, color: '#f87171' }}>{createError}</Typography></Box>}
+          {createError && (
+            <Box sx={{ bgcolor: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 'var(--radius-sm)', p: '8px 12px', mb: 1.5 }}>
+              <Typography variant="body2" sx={{ fontSize: 12, color: '#f87171' }}>{createError}</Typography>
+            </Box>
+          )}
           <Stack component="form" onSubmit={createUser} gap={1.5}>
             <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1.5 }}>
               <AppField label={`${a.email} *`} required type="email" value={form.email} onChange={e => setF('email', e.target.value)} placeholder="ion.popescu@wpowertech.ro" />
               <AppField label={`${a.password} *`} required type="password" value={form.password} onChange={e => setF('password', e.target.value)} placeholder="min. 6 caractere" inputProps={{ minLength: 6 }} />
               <AppField label={a.fullName} value={form.full_name} onChange={e => setF('full_name', e.target.value)} placeholder="Ion Popescu" />
-              <AppSelect label={a.departament} value={form.departament} onChange={e => setF('departament', e.target.value)} options={DEPTS.map(d => ({ value: d, label: d || '— Selectați —' }))} />
+              <AppSelect label={a.departament} value={form.departament} onChange={e => setF('departament', e.target.value)} options={DEPTS.map(d => ({ value: d, label: d || '- Selectati -' }))} />
               <AppSelect label={a.rol} value={form.role} onChange={e => setF('role', e.target.value)} options={[{ value: 'worker', label: 'Worker' }, { value: 'admin', label: 'Admin' }]} />
             </Box>
             <ActionButton type="submit" disabled={saving} sx={{ alignSelf: 'flex-start', opacity: saving ? 0.7 : 1 }}>{saving ? a.creating : a.createBtn}</ActionButton>
@@ -98,18 +103,18 @@ export default function Admin() {
             editId === p.id ? (
               <TableRow key={p.id} sx={{ bgcolor: 'rgba(94,106,210,0.06)' }}>
                 <TableCell colSpan={2} sx={{ fontSize: 13, color: 'var(--color-ink-muted)' }}>{p.full_name || p.email}</TableCell>
-                <TableCell><AppSelect value={editDept} onChange={e => setEditDept(e.target.value)} options={DEPTS.map(d => ({ value: d, label: d || '— Fără —' }))} /></TableCell>
+                <TableCell><AppSelect value={editDept} onChange={e => setEditDept(e.target.value)} options={DEPTS.map(d => ({ value: d, label: d || '- Fara -' }))} /></TableCell>
                 <TableCell><AppSelect value={editRole} onChange={e => setEditRole(e.target.value)} options={ROLES} /></TableCell>
                 <TableCell />
-                <TableCell><Stack direction="row" gap={0.75}><ActionButton onClick={() => saveEdit(p.id)} sx={{ px: 1.25, py: 0.5, fontSize: 11 }}>{t.common.save}</ActionButton><ActionButton variant="outlined" onClick={() => setEditId(null)} sx={{ px: 1, py: 0.5, fontSize: 11 }}>✕</ActionButton></Stack></TableCell>
+                <TableCell><Stack direction="row" gap={0.75}><ActionButton onClick={() => saveEdit(p.id)} sx={{ px: 1.25, py: 0.5, fontSize: 11 }}>{t.common.save}</ActionButton><ActionButton variant="outlined" onClick={() => setEditId(null)} sx={{ px: 1, py: 0.5, fontSize: 11 }}>x</ActionButton></Stack></TableCell>
               </TableRow>
             ) : (
               <TableRow key={p.id}>
-                <TableCell sx={{ fontWeight: 500, fontSize: 13 }}>{p.full_name || <Typography variant="body2" sx={{ color: 'var(--color-ink-tertiary)' }}>—</Typography>}</TableCell>
+                <TableCell sx={{ fontWeight: 500, fontSize: 13 }}>{p.full_name || <Typography variant="body2" sx={{ color: 'var(--color-ink-tertiary)' }}>-</Typography>}</TableCell>
                 <TableCell sx={{ fontSize: 12, color: 'var(--color-ink-muted)', fontFamily: 'var(--font-mono)' }}>{p.email}</TableCell>
-                <TableCell>{p.departament ? <Badge>{p.departament}</Badge> : <Typography variant="body2" sx={{ color: 'var(--color-ink-tertiary)' }}>—</Typography>}</TableCell>
+                <TableCell>{p.departament ? <Badge>{p.departament}</Badge> : <Typography variant="body2" sx={{ color: 'var(--color-ink-tertiary)' }}>-</Typography>}</TableCell>
                 <TableCell>{roleBadge(p.role)}</TableCell>
-                <TableCell sx={{ fontSize: 12, color: 'var(--color-ink-tertiary)' }}>{p.created_at ? new Date(p.created_at).toLocaleDateString('ro-RO') : '—'}</TableCell>
+                <TableCell sx={{ fontSize: 12, color: 'var(--color-ink-tertiary)' }}>{p.created_at ? new Date(p.created_at).toLocaleDateString('ro-RO') : '-'}</TableCell>
                 <TableCell><ActionButton variant="outlined" onClick={() => { setEditId(p.id); setEditRole(p.role); setEditDept(p.departament ?? '') }} sx={{ px: 1, py: 0.375, fontSize: 11 }}>{t.common.edit}</ActionButton></TableCell>
               </TableRow>
             )

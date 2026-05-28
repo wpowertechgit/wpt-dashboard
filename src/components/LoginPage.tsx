@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { enterDemo } from '../lib/demo'
+import { enterDemo, isDemoAvailable } from '../lib/demo'
 import { useLang } from '../lib/i18n'
+import { pageInfo } from '../lib/pageInfo'
 import { supabase } from '../lib/supabase'
-import { ActionButton, AppField, Box, Card, LanguageFlag, Stack, Typography } from './Ui'
+import { ActionButton, AppField, Box, Card, InfoButton, LanguageFlag, Stack, Typography } from './Ui'
 
 export default function LoginPage() {
   const { t, lang, toggle } = useLang()
@@ -11,6 +12,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const demoAvailable = isDemoAvailable()
 
   async function handleSubmit(e: { preventDefault(): void }) {
     e.preventDefault()
@@ -59,9 +61,12 @@ export default function LoginPage() {
             aria-label="Waste Powertech"
             sx={{ width: 'clamp(420px, 46vw, 560px)', height: 'clamp(92px, 10vw, 120px)', objectFit: 'fill', mx: 'auto', mb: 3.5, display: 'block' }}
           />
-          <Typography variant="body2" sx={{ fontSize: 13, color: 'var(--color-ink-subtle)' }}>
-            {s.oms}
-          </Typography>
+          <Stack direction="row" alignItems="center" justifyContent="center" gap={1}>
+            <Typography variant="body2" sx={{ fontSize: 13, color: 'var(--color-ink-subtle)' }}>
+              {s.oms}
+            </Typography>
+            <InfoButton title={s.title} items={pageInfo(lang, 'login')} />
+          </Stack>
         </Box>
 
         <Card sx={{ width: '100%', maxWidth: 400, mx: 'auto', p: 4 }}>
@@ -104,19 +109,21 @@ export default function LoginPage() {
           </Stack>
         </Card>
 
-        <ActionButton
-          variant="outlined"
-          onClick={handleDemo}
-          sx={{
-            width: '100%',
-            maxWidth: 400,
-            mx: 'auto',
-            bgcolor: 'transparent',
-            '&:hover': { borderColor: 'var(--color-primary)', color: 'var(--color-primary)', bgcolor: 'transparent' },
-          }}
-        >
-          {s.demo}
-        </ActionButton>
+        {demoAvailable && (
+          <ActionButton
+            variant="outlined"
+            onClick={handleDemo}
+            sx={{
+              width: '100%',
+              maxWidth: 400,
+              mx: 'auto',
+              bgcolor: 'transparent',
+              '&:hover': { borderColor: 'var(--color-primary)', color: 'var(--color-primary)', bgcolor: 'transparent' },
+            }}
+          >
+            {s.demo}
+          </ActionButton>
+        )}
       </Stack>
     </Box>
   )

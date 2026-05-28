@@ -11,6 +11,7 @@ import { PickersDay, type PickersDayProps } from '@mui/x-date-pickers/PickersDay
 import { YearCalendar } from '@mui/x-date-pickers/YearCalendar'
 import { buildPlanningBuckets, type PlanningItem, type PlanningTone } from '../lib/planning'
 import { formatDateLabel } from '../lib/dateUtils'
+import { pageInfo } from '../lib/pageInfo'
 import { ErrorBanner } from './StateViews'
 
 function toneColor(tone: PlanningTone) {
@@ -66,7 +67,7 @@ function SummaryList({ title, rows, emptyLabel }: { title: string; rows: Plannin
 }
 
 export default function PlanningCalendar() {
-  const { t } = useLang()
+  const { t, lang } = useLang()
   const p = t.planning
   const proiecte = useQuery(fetchProiecte)
   const subansambluri = useQuery(fetchSubansambluri)
@@ -92,7 +93,7 @@ export default function PlanningCalendar() {
 
   return (
     <Stack gap={4}>
-      <PageTitle eyebrow={p.eyebrow} title={p.title} subtitle={p.subtitle} />
+      <PageTitle eyebrow={p.eyebrow} title={p.title} subtitle={p.subtitle} info={pageInfo(lang, 'planning')} />
       {err && <ErrorBanner message={err} />}
 
       <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(380px, 1.3fr) minmax(240px, 0.7fr)', gap: 2 }}>
