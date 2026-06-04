@@ -5,6 +5,8 @@ import { Box, CircularProgress, IconButton, Stack, Typography, Tooltip } from '@
 import CheckIcon from '@mui/icons-material/Check'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
+import ZoomInIcon from '@mui/icons-material/ZoomIn'
+import ZoomOutIcon from '@mui/icons-material/ZoomOut'
 import { Card, Eyebrow, PageTitle } from './Ui'
 import { useLang } from '../lib/i18n'
 import { useQuery } from '../lib/useQuery'
@@ -15,6 +17,15 @@ import { ErrorBanner } from './StateViews'
 import { usePermissions } from '../lib/permissionsContext'
 
 type GanttRow = TaskTimelineRow
+
+const DEFAULT_PIXELS_PER_DAY = 44
+const MIN_PIXELS_PER_DAY = 10
+const MAX_PIXELS_PER_DAY = 72
+const ZOOM_STEP = 4
+
+function clamp(value: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, value))
+}
 
 function barColor(tone: GanttRow['tone']): { bar: string; fill: string; border: string } {
   if (tone === 'success') return { bar: 'rgba(74,222,128,0.12)', fill: '#4ade80', border: 'rgba(74,222,128,0.5)' }
@@ -83,6 +94,7 @@ export default function PlanningCalendar({ userId }: { userId: string | null }) 
   const p = t.planning
   const { hasPermission } = usePermissions()
   const [today] = useState(() => dayjs())
+  const [pixelsPerDay, setPixelsPerDay] = useState(DEFAULT_PIXELS_PER_DAY)
   const todayKey = today.format('YYYY-MM-DD')
   const scrollerRef = useRef<HTMLDivElement | null>(null)
   const includeProduction = hasPermission('view_projects') || hasPermission('view_subassemblies') || hasPermission('view_planning')
@@ -103,7 +115,8 @@ export default function PlanningCalendar({ userId }: { userId: string | null }) 
     subassemblies: subassemblies.data ?? [],
     includeProduction,
     includeTasks,
-  }), [assignedTasks, includeProduction, includeTasks, projects.data, subassemblies.data, todayKey])
+    pixelsPerDay,
+  }), [assignedTasks, includeProduction, includeTasks, pixelsPerDay, projects.data, subassemblies.data, todayKey])
 
   const planning = useMemo(() => {
     const overdue = timeline.rows
@@ -133,6 +146,22 @@ export default function PlanningCalendar({ userId }: { userId: string | null }) 
 
   function scrollTimeline(direction: -1 | 1) {
     scrollerRef.current?.scrollBy({ left: direction * 420, behavior: 'smooth' })
+  }
+
+  function zoomTimeline(direction: -1 | 1) {
+    const target = scrollerRef.current
+    const maxScroll = target ? target.scrollWidth - target.clientWidth : 0
+    const scrollRatio = target && maxScroll > 0 ? target.scrollLeft / maxScroll : 0
+
+    setPixelsPerDay(current => clamp(current + direction * ZOOM_STEP, MIN_PIXELS_PER_DAY, MAX_PIXELS_PER_DAY))
+
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        const nextTarget = scrollerRef.current
+        if (!nextTarget) return
+        nextTarget.scrollLeft = (nextTarget.scrollWidth - nextTarget.clientWidth) * scrollRatio
+      })
+    })
   }
 
   function handleTimelineWheel(event: WheelEvent<HTMLDivElement>) {
@@ -168,6 +197,19 @@ export default function PlanningCalendar({ userId }: { userId: string | null }) 
             <IconButton size="small" onClick={() => scrollTimeline(1)} sx={{ color: 'var(--color-ink-subtle)', border: '1px solid var(--color-hairline)', width: 28, height: 28 }}>
               <ChevronRightIcon fontSize="small" />
             </IconButton>
+            <Tooltip title="Zoom out" arrow>
+              <IconButton size="small" onClick={() => zoomTimeline(-1)} sx={{ color: 'var(--color-ink-subtle)', border: '1px solid var(--color-hairline)', width: 28, height: 28 }}>
+                <ZoomOutIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            <Typography sx={{ minWidth: 38, textAlign: 'center', alignSelf: 'center', fontSize: 11, color: 'var(--color-ink-tertiary)', fontFamily: 'var(--font-mono)' }}>
+              {Math.round((pixelsPerDay / DEFAULT_PIXELS_PER_DAY) * 100)}%
+            </Typography>
+            <Tooltip title="Zoom in" arrow>
+              <IconButton size="small" onClick={() => zoomTimeline(1)} sx={{ color: 'var(--color-ink-subtle)', border: '1px solid var(--color-hairline)', width: 28, height: 28 }}>
+                <ZoomInIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
           </Stack>
 
           <Stack direction="row" gap={1.5}>
@@ -193,9 +235,21 @@ export default function PlanningCalendar({ userId }: { userId: string | null }) 
                 {timeline.monthTicks.map(tick => (
                   <Box
                     key={`${tick.label}-${tick.pct}`}
-                    sx={{ position: 'absolute', left: `${tick.pct}%`, top: 0, height: '100%', display: 'flex', alignItems: 'center', pl: 0.75 }}
+                    sx={{
+                      position: 'absolute',
+                      left: `${tick.pct}%`,
+                      top: 0,
+                      height: '100%',
+                      width: `${tick.widthPct}%`,
+                      minWidth: 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                      pl: 0.75,
+                      pr: 0.75,
+                      overflow: 'hidden',
+                    }}
                   >
-                    <Typography sx={{ fontSize: 10, fontWeight: 600, color: 'var(--color-ink-tertiary)', whiteSpace: 'nowrap', fontFamily: 'var(--font-mono)', letterSpacing: 0 }}>{tick.label.toUpperCase()}</Typography>
+                    <Typography sx={{ fontSize: 10, fontWeight: 600, color: 'var(--color-ink-tertiary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: 'var(--font-mono)', letterSpacing: 0 }}>{tick.label.toUpperCase()}</Typography>
                     <Box sx={{ position: 'absolute', left: 0, top: 0, height: '100%', width: '1px', bgcolor: 'var(--color-hairline)' }} />
                   </Box>
                 ))}

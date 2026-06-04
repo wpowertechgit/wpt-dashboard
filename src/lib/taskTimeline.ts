@@ -21,6 +21,7 @@ export interface TaskTimelineRow {
 interface MonthTick {
   label: string
   pct: number
+  widthPct: number
 }
 
 interface TaskTimelineInput {
@@ -63,7 +64,9 @@ function buildMonthTicks(start: dayjs.Dayjs, totalDays: number): MonthTick[] {
 
   while (cursor.isBefore(end)) {
     const pct = toPct(cursor, start, totalDays)
-    if (pct >= 0 && pct <= 100) ticks.push({ label: cursor.format('MMM YY'), pct })
+    const nextMonth = cursor.add(1, 'month')
+    const nextPct = toPct(nextMonth, start, totalDays)
+    if (pct >= 0 && pct <= 100) ticks.push({ label: cursor.format('MMM YY'), pct, widthPct: Math.max(nextPct - pct, 0) })
     cursor = cursor.add(1, 'month')
   }
 

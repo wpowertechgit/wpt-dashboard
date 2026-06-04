@@ -64,6 +64,26 @@ test('buildTaskTimeline expands canvas width for long schedules', () => {
   assert.equal(timeline.canvasWidth > 3000, true)
 })
 
+test('buildTaskTimeline scales canvas width by pixels per day for zooming', () => {
+  const task = {
+    id: 'long-task',
+    title: 'Long delivery',
+    description: null,
+    created_by: 'manager',
+    assigned_to: 'me',
+    priority: 'URGENT',
+    status: 'TODO',
+    due_date: '2026-12-31',
+    created_at: '2026-01-01T08:00:00Z',
+    updated_at: '2026-01-01T08:00:00Z',
+  }
+
+  const zoomedIn = buildTaskTimeline({ today: '2026-06-04', tasks: [task], pixelsPerDay: 44 })
+  const zoomedOut = buildTaskTimeline({ today: '2026-06-04', tasks: [task], pixelsPerDay: 12 })
+
+  assert.equal(zoomedOut.canvasWidth < zoomedIn.canvasWidth, true)
+})
+
 test('buildCalendarTimeline combines production due dates and assigned tasks', () => {
   const timeline = buildCalendarTimeline({
     today: '2026-06-04',
