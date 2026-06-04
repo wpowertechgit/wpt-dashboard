@@ -132,6 +132,31 @@ export default function Subansambluri() {
     } finally { setSaving(false) }
   }
 
+  async function resetRow(id: number) {
+    setSaving(true)
+    setSaveError(null)
+    try {
+      const resetData: Record<string, unknown> = {
+        status_global: '🔄 IN LUCRU',
+        progres: '0%',
+        blocat: false,
+        data_done: null,
+        proiectare_done: null,
+        laser_done: null,
+        rolat_done: null,
+        sudat_done: null,
+        asamblat_done: null,
+        vopsit_done: null,
+      }
+      for (const col of DEPT_COLS) resetData[col] = 'Neînceput'
+      await updateSubansamblu(id, resetData)
+      setEditId(null); setEditRow(null)
+      refetch()
+    } catch (e: unknown) {
+      setSaveError(e instanceof Error ? e.message : String(e))
+    } finally { setSaving(false) }
+  }
+
   async function finalizeRow(sa: Record<string, unknown>) {
     setFinalizing(sa.id as number)
     const today = new Date().toISOString().slice(0, 10)
@@ -269,8 +294,12 @@ export default function Subansambluri() {
                           <Typography variant="body2" sx={{ fontSize: 11, color: '#f87171' }}>{saveError}</Typography>
                         </Box>
                       )}
-                      <Stack direction="row" gap={0.75}>
+                      <Stack direction="row" gap={0.75} flexWrap="wrap">
                         <ActionButton onClick={saveEdit} disabled={saving} sx={{ px: 1.25, py: 0.5, fontSize: 11 }}>{saving ? '...' : t.common.save}</ActionButton>
+                        <ActionButton variant="outlined" onClick={() => resetRow(sa.id)}  disabled={saving}
+                          sx={{ px: 1.25, py: 0.5, fontSize: 11, color: '#fbbf24', borderColor: 'rgba(251,191,36,0.3)', '&:hover': { borderColor: '#fbbf24', bgcolor: 'rgba(251,191,36,0.06)' } }}>
+                          ↺ Reset
+                        </ActionButton>
                         <ActionButton variant="outlined" onClick={() => { setEditId(null); setEditRow(null); setSaveError(null) }} sx={{ px: 1, py: 0.5, fontSize: 11 }}>✕</ActionButton>
                       </Stack>
                     </Stack>
