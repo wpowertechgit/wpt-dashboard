@@ -71,7 +71,16 @@ export default function Subansambluri() {
   const [editId, setEditId] = useState<number | null>(null)
   const [editRow, setEditRow] = useState<Record<string, string | boolean> | null>(null)
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
   const [finalizing, setFinalizing] = useState<number | null>(null)
+
+  const DATE_FIELDS = new Set(['data_start','data_due','data_done','proiectare_done','laser_done','rolat_done','sudat_done','asamblat_done','vopsit_done'])
+
+  function prepareRow(row: Record<string, string | boolean>): Record<string, unknown> {
+    return Object.fromEntries(
+      Object.entries(row).map(([k, v]) => [k, DATE_FIELDS.has(k) && v === '' ? null : v])
+    )
+  }
 
   const { data, loading, error, refetch } = useQuery(fetchSubansambluri)
   const projects = ['ALL', ...Array.from(new Set((data ?? []).map(sa => sa.proiect))).sort()]
@@ -92,11 +101,12 @@ export default function Subansambluri() {
   async function saveEdit() {
     if (!editRow || editId === null) return
     setSaving(true)
+    setSaveError(null)
     try {
       const original = data?.find(s => s.id === editId)
       const becomingBlocked = String(editRow.status_global).includes('BLOCAT') && !original?.blocat
 
-      await updateSubansamblu(editId, editRow)
+      await updateSubansamblu(editId, prepareRow(editRow))
 
       if (becomingBlocked && original) {
         const today = new Date().toISOString().slice(0, 10)
@@ -117,6 +127,8 @@ export default function Subansambluri() {
 
       setEditId(null); setEditRow(null)
       refetch()
+    } catch (e: unknown) {
+      setSaveError(e instanceof Error ? e.message : String(e))
     } finally { setSaving(false) }
   }
 
@@ -252,9 +264,14 @@ export default function Subansambluri() {
                       </Box>
 
                       <AppField label={s.colComentarii} value={String(editRow?.comentarii ?? '')} onChange={e => setEditRow(r => ({ ...r!, comentarii: e.target.value }))} />
+                      {saveError && (
+                        <Box sx={{ bgcolor: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 'var(--radius-sm)', p: '6px 10px' }}>
+                          <Typography variant="body2" sx={{ fontSize: 11, color: '#f87171' }}>{saveError}</Typography>
+                        </Box>
+                      )}
                       <Stack direction="row" gap={0.75}>
                         <ActionButton onClick={saveEdit} disabled={saving} sx={{ px: 1.25, py: 0.5, fontSize: 11 }}>{saving ? '...' : t.common.save}</ActionButton>
-                        <ActionButton variant="outlined" onClick={() => { setEditId(null); setEditRow(null) }} sx={{ px: 1, py: 0.5, fontSize: 11 }}>✕</ActionButton>
+                        <ActionButton variant="outlined" onClick={() => { setEditId(null); setEditRow(null); setSaveError(null) }} sx={{ px: 1, py: 0.5, fontSize: 11 }}>✕</ActionButton>
                       </Stack>
                     </Stack>
                   </TableCell>

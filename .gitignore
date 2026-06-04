@@ -11,3 +11,4 @@ reader.py
 .dev.vars*
 !.dev.vars.example
 !.env.example
+screenshots
