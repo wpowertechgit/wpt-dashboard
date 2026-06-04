@@ -1,6 +1,6 @@
 import type { Lang } from './i18n'
 
-type PageInfoKey = 'login' | 'dashboard' | 'projects' | 'subassemblies' | 'planning' | 'blockages' | 'pdca' | 'dailyFlow' | 'kpi' | 'admin'
+type PageInfoKey = 'login' | 'dashboard' | 'projects' | 'subassemblies' | 'planning' | 'blockages' | 'pdca' | 'dailyFlow' | 'kpi' | 'admin' | 'tasks' | 'inventory'
 
 const INFO: Record<Lang, Record<PageInfoKey, string[]>> = {
   ro: {
@@ -54,6 +54,16 @@ const INFO: Record<Lang, Record<PageInfoKey, string[]>> = {
       'Adminii pot crea conturi si pot schimba rolul sau departamentul unui utilizator.',
       'Rolul controleaza accesul la modificari: adminii pot scrie date, workerii consulta datele operationale.',
     ],
+    tasks: [
+      'Zona de birou pentru gestionarea sarcinilor interne intre angajati.',
+      'Poti crea sarcini pentru colegi, sa le atribui prioritati si termene, si sa urmaresti statusul.',
+      'Fiecare sarcina poate avea comentarii pentru comunicare directa.',
+    ],
+    inventory: [
+      'Modulul de inventar urmareste stocurile de materii prime si produse finite.',
+      'Fiecare articol are cantitate disponibila, nivel minim de stoc, furnizor si locatie.',
+      'Tranzactiile de intrare, iesire si ajustare actualizeaza automat cantitatea disponibila.',
+    ],
   },
   en: {
     login: [
@@ -105,6 +115,16 @@ const INFO: Record<Lang, Record<PageInfoKey, string[]>> = {
       'The Admin Panel manages accounts and roles.',
       'Admins can create accounts and change a user role or department.',
       'The role controls write access: admins can change data, workers can view operational data.',
+    ],
+    tasks: [
+      'The office zone for managing internal tasks between employees.',
+      'You can create tasks for colleagues, assign priorities and due dates, and track status.',
+      'Each task supports a comment thread for direct communication.',
+    ],
+    inventory: [
+      'The inventory module tracks stock levels for raw materials and finished goods.',
+      'Each item has a quantity on hand, minimum stock level, supplier, and location.',
+      'Receive, issue, and adjustment transactions automatically update stock levels.',
     ],
   },
 }

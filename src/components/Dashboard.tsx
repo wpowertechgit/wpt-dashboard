@@ -1,8 +1,10 @@
+import { useNavigate } from 'react-router-dom'
 import { useLang } from '../lib/i18n'
 import { useQuery } from '../lib/useQuery'
-import { fetchProiecte, fetchBlocaje, fetchSubansambluri } from '../lib/api'
+import { fetchProiecte, fetchBlocaje, fetchSubansambluri, fetchTasksForUser, fetchLowStockItems } from '../lib/api'
 import { buildProjectOptions } from '../lib/projectOptions'
 import { pageInfo } from '../lib/pageInfo'
+import { usePermissions } from '../lib/permissionsContext'
 import { ErrorBanner, LoadingRows } from './StateViews'
 import { Badge, Box, Card, DataTable, Eyebrow, PageTitle, Stack, TableCell, TableRow, Typography } from './Ui'
 
@@ -55,12 +57,22 @@ function StatCard({ label, value, sub, accent }: { label: string; value: string 
 
 const DEPTS = ['LASER', 'ROLAT', 'SUDAT', 'ASAMBLAT', 'VOPSIT'] as const
 
-export default function Dashboard() {
+export default function Dashboard({ userId }: { userId?: string | null }) {
   const { t, lang } = useLang()
   const d = t.dashboard
+  const navigate = useNavigate()
+  const { hasPermission } = usePermissions()
   const proiecte = useQuery(fetchProiecte)
   const blocaje = useQuery(fetchBlocaje)
   const sa = useQuery(fetchSubansambluri)
+
+  const showTasks = hasPermission('view_tasks')
+  const showInventory = hasPermission('view_inventory')
+  const tasks = useQuery(showTasks && userId ? () => fetchTasksForUser(userId) : () => Promise.resolve({ assigned: [], created: [] }), [showTasks, userId])
+  const lowStock = useQuery(showInventory ? fetchLowStockItems : () => Promise.resolve([]), [showInventory])
+
+  const pendingTasks = (tasks.data?.assigned ?? []).filter(t => t.status !== 'DONE')
+  const lowStockItems = lowStock.data ?? []
 
   const totalSA = sa.data?.length ?? 0
   const finalizateSA = sa.data?.filter(s => s.status_global.includes('FINALIZAT')).length ?? 0
@@ -111,6 +123,45 @@ export default function Dashboard() {
         <StatCard label={d.blocajeDeschise} value={blocajeActive.length} />
         <StatCard label={d.intarziate} value={sa.data?.filter(s => s.intarziat).length ?? 0} />
       </Box>
+
+      {(showTasks || showInventory) && (
+        <Box sx={{ display: 'grid', gridTemplateColumns: `repeat(${[showTasks, showInventory].filter(Boolean).length}, 1fr)`, gap: 2 }}>
+          {showTasks && (
+            <Box onClick={() => navigate('/tasks')} sx={{ cursor: 'pointer', bgcolor: 'var(--color-surface-1)', border: '1px solid var(--color-hairline)', borderLeft: '3px solid #38bdf8', borderRadius: 'var(--radius-md)', p: '20px 24px', '&:hover': { bgcolor: 'var(--color-surface-2)' } }}>
+              <Stack direction="row" alignItems="flex-start" justifyContent="space-between">
+                <Stack gap={0.75}>
+                  <Eyebrow>{t.tasks.title.toUpperCase()}</Eyebrow>
+                  <Typography variant="h4" fontWeight={600} sx={{ fontSize: 36, color: '#38bdf8', fontFamily: 'var(--font-display)', lineHeight: 1.1 }}>
+                    {pendingTasks.length}
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontSize: 12, color: 'var(--color-ink-subtle)' }}>
+                    {pendingTasks.filter(tk => tk.priority === 'URGENT' || tk.priority === 'HIGH').length > 0
+                      ? `${pendingTasks.filter(tk => tk.priority === 'URGENT' || tk.priority === 'HIGH').length} urgente/ridicate`
+                      : 'sarcini active'}
+                  </Typography>
+                </Stack>
+                <Typography sx={{ fontSize: 24 }}>📋</Typography>
+              </Stack>
+            </Box>
+          )}
+          {showInventory && (
+            <Box onClick={() => navigate('/inventory')} sx={{ cursor: 'pointer', bgcolor: 'var(--color-surface-1)', border: '1px solid var(--color-hairline)', borderLeft: `3px solid ${lowStockItems.length > 0 ? '#f87171' : '#4ade80'}`, borderRadius: 'var(--radius-md)', p: '20px 24px', '&:hover': { bgcolor: 'var(--color-surface-2)' } }}>
+              <Stack direction="row" alignItems="flex-start" justifyContent="space-between">
+                <Stack gap={0.75}>
+                  <Eyebrow>{t.inventory.lowStock.toUpperCase()}</Eyebrow>
+                  <Typography variant="h4" fontWeight={600} sx={{ fontSize: 36, color: lowStockItems.length > 0 ? '#f87171' : '#4ade80', fontFamily: 'var(--font-display)', lineHeight: 1.1 }}>
+                    {lowStockItems.length}
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontSize: 12, color: 'var(--color-ink-subtle)' }}>
+                    {lowStockItems.length > 0 ? t.inventory.lowStockHint : 'stocuri în regulă'}
+                  </Typography>
+                </Stack>
+                <Typography sx={{ fontSize: 24 }}>📦</Typography>
+              </Stack>
+            </Box>
+          )}
+        </Box>
+      )}
 
       <Card sx={{ p: 0, overflow: 'hidden' }}>
         <Box sx={{ p: '20px 24px 16px', borderBottom: '1px solid var(--color-hairline)' }}>

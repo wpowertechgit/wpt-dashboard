@@ -6,8 +6,8 @@ import { Box, Button, CircularProgress, Stack, Typography } from '@mui/material'
 import { supabase } from './lib/supabase'
 import { useLang } from './lib/i18n'
 import { isDemoMode, exitDemo } from './lib/demo'
-import { resolveValidSession, verifySession } from './lib/session'
-import { PermissionsProvider } from './lib/permissionsContext'
+import { PermissionsProvider, usePermissions } from './lib/permissionsContext'
+import type { AppRole } from './lib/permissions'
 import LoginPage from './components/LoginPage'
 import Dashboard from './components/Dashboard'
 import Subassemblies from './components/Subassemblies'
@@ -18,17 +18,19 @@ import TeamKPI from './components/TeamKPI'
 import Projects from './components/Projects'
 import Admin from './components/Admin'
 import PlanningCalendar from './components/PlanningCalendar'
+import TaskBoard from './components/TaskBoard'
+import Inventory from './components/Inventory'
 import { LanguageFlag } from './components/Ui'
 
 interface Profile {
   id: string
   email: string
   full_name: string | null
-  role: string
+  role: AppRole
   departament: string | null
 }
 
-function NavButton({ path, label, admin }: { path: string; label: string; admin: boolean }) {
+function NavButton({ path, label, admin }: { path: string; label: string; admin?: boolean }) {
   return (
     <Button
       component={NavLink}
@@ -95,96 +97,148 @@ function StatusPill({ demo, label }: { demo?: boolean; label: string }) {
   )
 }
 
-function AppShell({ session, profile, demoMode, onExitDemo }: { session: Session | null; profile: Profile | null; demoMode: boolean; onExitDemo: () => void }) {
+function AppNav({ profile, demoMode, onExitDemo }: { profile: Profile | null; demoMode: boolean; onExitDemo: () => void }) {
   const { t, lang, toggle } = useLang()
   const navigate = useNavigate()
-  const isAdmin = profile?.role === 'admin'
+  const { hasPermission } = usePermissions()
+  const canViewCalendar = hasPermission('view_planning') || hasPermission('view_tasks')
 
-  const baseRoutes = [
-    { path: '/dashboard', label: t.nav.dashboard },
-    { path: '/projects', label: t.nav.proiecte },
-    { path: '/subassemblies', label: t.nav.subansambluri },
-    { path: '/planning', label: t.nav.planning },
-    { path: '/blockages', label: t.nav.blocaje },
-    { path: '/pdca', label: t.nav.pdca },
-    { path: '/daily-flow', label: t.nav.flux },
-    { path: '/kpi', label: t.nav.kpi },
-  ]
-  const routes = isAdmin ? [...baseRoutes, { path: '/admin', label: t.nav.admin }] : baseRoutes
+  const navItems = [
+    hasPermission('view_dashboard')      && { path: '/dashboard',   label: t.nav.dashboard },
+    hasPermission('view_projects')       && { path: '/projects',    label: t.nav.proiecte },
+    hasPermission('view_subassemblies')  && { path: '/subassemblies', label: t.nav.subansambluri },
+    canViewCalendar                      && { path: '/planning',    label: t.nav.planning },
+    hasPermission('view_blockages')      && { path: '/blockages',   label: t.nav.blocaje },
+    hasPermission('view_pdca')           && { path: '/pdca',        label: t.nav.pdca },
+    hasPermission('view_daily_flow')     && { path: '/daily-flow',  label: t.nav.flux },
+    hasPermission('view_kpi')            && { path: '/kpi',         label: t.nav.kpi },
+    hasPermission('view_tasks')          && { path: '/tasks',       label: t.nav.tasks },
+    hasPermission('view_inventory')      && { path: '/inventory',   label: t.nav.inventory },
+  ].filter(Boolean) as { path: string; label: string }[]
+
+  const defaultPath = navItems[0]?.path ?? '/login'
 
   return (
-    <Stack sx={{ minHeight: '100vh', bgcolor: 'var(--color-canvas)' }}>
-      <Box
-        component="nav"
-        sx={{
-          height: 56,
-          bgcolor: 'var(--color-canvas)',
-          borderBottom: '1px solid var(--color-hairline)',
-          display: 'flex',
-          alignItems: 'center',
-          px: 3,
-          position: 'sticky',
-          top: 0,
-          zIndex: 100,
-        }}
-      >
-        <Box component={NavLink} to="/dashboard" sx={{ display: 'flex', alignItems: 'center', mr: 4, flexShrink: 0, textDecoration: 'none' }}>
-          <Box component="img" src="/wpt symbol-02.png" alt="Waste Powertech" sx={{ height: 'clamp(28px, 2.5vw, 38px)', width: 'auto', display: 'block' }} />
-        </Box>
-
-        <Stack direction="row" alignItems="center" gap={0.25} sx={{ flex: 1 }}>
-          {routes.map(({ path, label }) => <NavButton key={path} path={path} label={label} admin={path === '/admin'} />)}
-        </Stack>
-
-        <Stack direction="row" alignItems="center" gap={1.25} sx={{ flexShrink: 0 }}>
-          {demoMode ? (
-            <>
-              <StatusPill demo label="DEMO MODE" />
-              <SmallButton onClick={toggle}><LanguageFlag code={lang === 'ro' ? 'en' : 'ro'} /></SmallButton>
-              <SmallButton onClick={() => { onExitDemo(); navigate('/login', { replace: true }) }}>✕ Exit Demo</SmallButton>
-            </>
-          ) : (
-            <>
-              <StatusPill label={t.status.active} />
-              <SmallButton onClick={toggle}><LanguageFlag code={lang === 'ro' ? 'en' : 'ro'} /></SmallButton>
-              <Stack direction="row" alignItems="center" gap={1} sx={{ borderLeft: '1px solid var(--color-hairline)', pl: 1.25 }}>
-                <Box sx={{ textAlign: 'right' }}>
-                  <Typography variant="body2" sx={{ fontSize: 12, color: 'var(--color-ink-subtle)', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {profile?.full_name || session?.user.email}
-                  </Typography>
-                  {profile?.departament && <Typography variant="body2" sx={{ fontSize: 10, color: 'var(--color-ink-tertiary)', textAlign: 'right' }}>{profile.departament}</Typography>}
-                </Box>
-                <SmallButton onClick={() => supabase.auth.signOut()}>{t.status.signOut}</SmallButton>
-              </Stack>
-            </>
-          )}
-        </Stack>
+    <Box
+      component="nav"
+      sx={{
+        height: 56,
+        bgcolor: 'var(--color-canvas)',
+        borderBottom: '1px solid var(--color-hairline)',
+        display: 'flex',
+        alignItems: 'center',
+        px: 3,
+        position: 'sticky',
+        top: 0,
+        zIndex: 100,
+      }}
+    >
+      <Box component={NavLink} to={defaultPath} sx={{ display: 'flex', alignItems: 'center', mr: 4, flexShrink: 0, textDecoration: 'none' }}>
+        <Box component="img" src="/wpt symbol-02.png" alt="Waste Powertech" sx={{ height: 'clamp(28px, 2.5vw, 38px)', width: 'auto', display: 'block' }} />
       </Box>
 
-      <PermissionsProvider role={profile?.role ?? null} demoMode={demoMode}>
+      <Stack direction="row" alignItems="center" gap={0.25} sx={{ flex: 1, overflowX: 'auto' }}>
+        {navItems.map(({ path, label }) => (
+          <NavButton key={path} path={path} label={label} />
+        ))}
+        {hasPermission('manage_users') && (
+          <NavButton path="/admin" label={t.nav.admin} admin />
+        )}
+      </Stack>
+
+      <Stack direction="row" alignItems="center" gap={1.25} sx={{ flexShrink: 0 }}>
+        {demoMode ? (
+          <>
+            <StatusPill demo label="DEMO MODE" />
+            <SmallButton onClick={toggle}><LanguageFlag code={lang === 'ro' ? 'en' : 'ro'} /></SmallButton>
+            <SmallButton onClick={() => { onExitDemo(); navigate('/login', { replace: true }) }}>✕ Exit Demo</SmallButton>
+          </>
+        ) : (
+          <>
+            <StatusPill label={t.status.active} />
+            <SmallButton onClick={toggle}><LanguageFlag code={lang === 'ro' ? 'en' : 'ro'} /></SmallButton>
+            <Stack direction="row" alignItems="center" gap={1} sx={{ borderLeft: '1px solid var(--color-hairline)', pl: 1.25 }}>
+              <Box sx={{ textAlign: 'right' }}>
+                <Typography variant="body2" sx={{ fontSize: 12, color: 'var(--color-ink-subtle)', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {profile?.full_name || profile?.email}
+                </Typography>
+                {profile?.departament && <Typography variant="body2" sx={{ fontSize: 10, color: 'var(--color-ink-tertiary)', textAlign: 'right' }}>{profile.departament}</Typography>}
+              </Box>
+              <SmallButton onClick={() => supabase.auth.signOut().then(() => navigate('/', { replace: true }))}>{t.status.signOut}</SmallButton>
+            </Stack>
+          </>
+        )}
+      </Stack>
+    </Box>
+  )
+}
+
+const ORDERED_ROUTES = [
+  { perm: 'view_dashboard',     path: '/dashboard' },
+  { perm: 'view_tasks',         path: '/tasks' },
+  { perm: 'view_inventory',     path: '/inventory' },
+  { perm: 'view_projects',      path: '/projects' },
+  { perm: 'view_subassemblies', path: '/subassemblies' },
+  { perm: 'view_planning',      path: '/planning' },
+  { perm: 'view_blockages',     path: '/blockages' },
+  { perm: 'view_pdca',          path: '/pdca' },
+  { perm: 'view_daily_flow',    path: '/daily-flow' },
+  { perm: 'view_kpi',           path: '/kpi' },
+] as const
+
+function RootRedirect() {
+  const { hasPermission, permissionsLoaded } = usePermissions()
+  if (!permissionsLoaded) return null
+  const first = ORDERED_ROUTES.find(r => hasPermission(r.perm))
+  if (!first) return null  // profile loaded but no permissions yet — wait
+  return <Navigate to={first.path} replace />
+}
+
+function PermGuard({ perm, children }: { perm: Parameters<ReturnType<typeof usePermissions>['hasPermission']>[0]; children: ReactNode }) {
+  const { hasPermission, permissionsLoaded } = usePermissions()
+  if (!permissionsLoaded) return null
+  if (!hasPermission(perm)) return <RootRedirect />
+  return <>{children}</>
+}
+
+function AnyPermGuard({ perms, children }: { perms: Parameters<ReturnType<typeof usePermissions>['hasPermission']>[0][]; children: ReactNode }) {
+  const { hasPermission, permissionsLoaded } = usePermissions()
+  if (!permissionsLoaded) return null
+  if (!perms.some(perm => hasPermission(perm))) return <RootRedirect />
+  return <>{children}</>
+}
+
+function AppShell({ session, profile, demoMode, onExitDemo }: { session: Session | null; profile: Profile | null; demoMode: boolean; onExitDemo: () => void }) {
+  return (
+    <PermissionsProvider role={profile?.role ?? null} userId={profile?.id ?? null} demoMode={demoMode}>
+      <Stack sx={{ minHeight: '100vh', bgcolor: 'var(--color-canvas)' }}>
+        <AppNav profile={profile} demoMode={demoMode} onExitDemo={onExitDemo} />
+
         <Box component="main" sx={{ flex: 1, p: '24px 24px 48px', maxWidth: 1400, width: '100%', mx: 'auto' }}>
           <Routes>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/projects" element={<Projects />} />
-            <Route path="/subassemblies" element={<Subassemblies />} />
-            <Route path="/planning" element={<PlanningCalendar />} />
-            <Route path="/blockages" element={<Blockages />} />
-            <Route path="/pdca" element={<PDCA />} />
-            <Route path="/daily-flow" element={<DailyFlow />} />
-            <Route path="/kpi" element={<TeamKPI />} />
-            {isAdmin && <Route path="/admin" element={<Admin />} />}
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/" element={<RootRedirect />} />
+            <Route path="/dashboard"     element={<PermGuard perm="view_dashboard"><Dashboard userId={profile?.id} /></PermGuard>} />
+            <Route path="/projects"      element={<PermGuard perm="view_projects"><Projects /></PermGuard>} />
+            <Route path="/subassemblies" element={<PermGuard perm="view_subassemblies"><Subassemblies /></PermGuard>} />
+            <Route path="/planning"      element={<AnyPermGuard perms={['view_planning', 'view_tasks']}><PlanningCalendar userId={profile?.id ?? null} /></AnyPermGuard>} />
+            <Route path="/blockages"     element={<PermGuard perm="view_blockages"><Blockages /></PermGuard>} />
+            <Route path="/pdca"          element={<PermGuard perm="view_pdca"><PDCA /></PermGuard>} />
+            <Route path="/daily-flow"    element={<PermGuard perm="view_daily_flow"><DailyFlow /></PermGuard>} />
+            <Route path="/kpi"           element={<PermGuard perm="view_kpi"><TeamKPI /></PermGuard>} />
+            <Route path="/tasks"         element={<PermGuard perm="view_tasks"><TaskBoard userId={profile?.id ?? null} /></PermGuard>} />
+            <Route path="/inventory"     element={<PermGuard perm="view_inventory"><Inventory userId={profile?.id ?? null} /></PermGuard>} />
+            <Route path="/admin"         element={<PermGuard perm="manage_users"><Admin /></PermGuard>} />
+            <Route path="*"             element={<Navigate to="/" replace />} />
           </Routes>
         </Box>
-      </PermissionsProvider>
-    </Stack>
+      </Stack>
+    </PermissionsProvider>
   )
 }
 
 export default function App() {
   const [session, setSession] = useState<Session | null | undefined>(undefined)
-  const [profile, setProfile] = useState<Profile | null>(null)
+  const [profile, setProfile] = useState<Profile | null | undefined>(undefined)
   const [demoMode, setDemoMode] = useState<boolean>(() => isDemoMode())
 
   const handleExitDemo = useCallback(() => {
@@ -196,20 +250,13 @@ export default function App() {
     if (demoMode) return
     let active = true
 
-    resolveValidSession(supabase.auth).then(validSession => {
-      if (!active) return
-      setSession(validSession)
-      if (validSession) loadProfile(validSession.user.id)
-      else setProfile(null)
-    })
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      verifySession(supabase.auth, session).then(validSession => {
-        if (!active) return
-        setSession(validSession)
-        if (validSession) loadProfile(validSession.user.id)
-        else setProfile(null)
-      })
+      if (!active) return
+      setSession(session)
+      if (session?.user) loadProfile(session.user.id)
+      else { setSession(null); setProfile(null) }  // null = definitively no profile
     })
+
     return () => {
       active = false
       subscription.unsubscribe()
@@ -219,19 +266,24 @@ export default function App() {
   async function loadProfile(userId: string) {
     const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single()
     if (data) setProfile(data as Profile)
-    else if (error) console.error('Profile load failed:', error.message)
+    else {
+      if (error) console.error('Profile load failed:', error.message)
+      setProfile(null)
+    }
   }
+
+  const spinner = (
+    <Box sx={{ minHeight: '100vh', bgcolor: 'var(--color-canvas)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <CircularProgress size={24} />
+    </Box>
+  )
 
   if (demoMode) return <AppShell session={null} profile={null} demoMode={demoMode} onExitDemo={handleExitDemo} />
 
-  if (session === undefined) {
-    return (
-      <Box sx={{ minHeight: '100vh', bgcolor: 'var(--color-canvas)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <CircularProgress size={24} />
-      </Box>
-    )
-  }
+  // Still resolving initial auth state
+  if (session === undefined) return spinner
 
+  // No session → login page
   if (!session) {
     return (
       <Routes>
@@ -239,6 +291,9 @@ export default function App() {
       </Routes>
     )
   }
+
+  // Session exists but profile not yet fetched
+  if (profile === undefined) return spinner
 
   return <AppShell session={session} profile={profile} demoMode={demoMode} onExitDemo={handleExitDemo} />
 }

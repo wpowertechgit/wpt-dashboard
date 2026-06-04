@@ -1,11 +1,11 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from 'npm:@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-type Role = 'admin' | 'worker'
+type Role = 'admin' | 'production' | 'office' | 'office_production' | 'viewer'
 
 interface CreateUserBody {
   email?: unknown
@@ -27,7 +27,7 @@ function readString(value: unknown): string {
 }
 
 function readRole(value: unknown): Role | null {
-  if (value === 'admin' || value === 'worker') return value
+  if (value === 'admin' || value === 'production' || value === 'office' || value === 'office_production' || value === 'viewer') return value
   return null
 }
 
@@ -58,7 +58,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const password = readString(body.password)
   const fullName = readString(body.full_name)
   const departament = readString(body.departament)
-  const role = readRole(body.role ?? 'worker')
+  const role = readRole(body.role ?? 'viewer')
 
   if (!email || !password) return json({ error: 'Email and password are required' }, 400)
   if (!role) return json({ error: 'Invalid role' }, 400)

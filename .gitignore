@@ -4,3 +4,4 @@ dist
 .env
 tmp
 ~$WastePowertech_OMS_1.xlsx
+reader.py
