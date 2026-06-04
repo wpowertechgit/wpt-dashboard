@@ -1,8 +1,19 @@
 import { useState, useEffect, useCallback } from 'react'
-import type { ReactNode } from 'react'
-import { Routes, Route, NavLink, Navigate, useNavigate } from 'react-router-dom'
+import type { ComponentType, ReactNode } from 'react'
+import { Routes, Route, NavLink, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import type { Session } from '@supabase/supabase-js'
 import { Box, Button, CircularProgress, Stack, Typography } from '@mui/material'
+import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined'
+import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined'
+import BuildOutlinedIcon from '@mui/icons-material/BuildOutlined'
+import CalendarTodayOutlinedIcon from '@mui/icons-material/CalendarTodayOutlined'
+import ReportProblemOutlinedIcon from '@mui/icons-material/ReportProblemOutlined'
+import RepeatOutlinedIcon from '@mui/icons-material/RepeatOutlined'
+import TrendingUpOutlinedIcon from '@mui/icons-material/TrendingUpOutlined'
+import BarChartOutlinedIcon from '@mui/icons-material/BarChartOutlined'
+import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined'
+import StorageOutlinedIcon from '@mui/icons-material/StorageOutlined'
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined'
 import { supabase } from './lib/supabase'
 import { useLang } from './lib/i18n'
 import { isDemoMode, exitDemo } from './lib/demo'
@@ -97,6 +108,131 @@ function StatusPill({ demo, label }: { demo?: boolean; label: string }) {
   )
 }
 
+const NAV_ICONS: Record<string, ComponentType<{ sx?: object }>> = {
+  '/dashboard': HomeOutlinedIcon,
+  '/projects': FolderOutlinedIcon,
+  '/subassemblies': BuildOutlinedIcon,
+  '/planning': CalendarTodayOutlinedIcon,
+  '/blockages': ReportProblemOutlinedIcon,
+  '/pdca': RepeatOutlinedIcon,
+  '/daily-flow': TrendingUpOutlinedIcon,
+  '/kpi': BarChartOutlinedIcon,
+  '/tasks': AssignmentOutlinedIcon,
+  '/inventory': StorageOutlinedIcon,
+  '/admin': SettingsOutlinedIcon,
+}
+
+function MobileHeader({ profile, demoMode, onExitDemo }: { profile: Profile | null; demoMode: boolean; onExitDemo: () => void }) {
+  const { t, lang, toggle } = useLang()
+  const navigate = useNavigate()
+  const { hasPermission } = usePermissions()
+  const navItems = [hasPermission('view_dashboard') && '/dashboard', hasPermission('view_tasks') && '/tasks', hasPermission('view_inventory') && '/inventory'].filter(Boolean) as string[]
+  const defaultPath = navItems[0] ?? '/login'
+
+  return (
+    <Box
+      component="header"
+      sx={{
+        display: { xs: 'flex', md: 'none' },
+        height: 48,
+        alignItems: 'center',
+        px: 2,
+        bgcolor: 'var(--color-canvas)',
+        borderBottom: '1px solid var(--color-hairline)',
+        position: 'sticky',
+        top: 0,
+        zIndex: 100,
+        gap: 1.5,
+      }}
+    >
+      <Box component={NavLink} to={defaultPath} sx={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0 }}>
+        <Box component="img" src="/wpt symbol-02.png" alt="WPT" sx={{ height: 28, width: 'auto', display: 'block' }} />
+      </Box>
+      <Typography sx={{ flex: 1, fontSize: 12, color: 'var(--color-ink-subtle)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        {profile?.full_name || profile?.email || (demoMode ? 'Demo' : '')}
+      </Typography>
+      <SmallButton onClick={toggle}><LanguageFlag code={lang === 'ro' ? 'en' : 'ro'} /></SmallButton>
+      {demoMode
+        ? <SmallButton onClick={() => { onExitDemo(); navigate('/login', { replace: true }) }}>✕ Demo</SmallButton>
+        : <SmallButton onClick={() => supabase.auth.signOut().then(() => navigate('/', { replace: true }))}>{t.status.signOut}</SmallButton>
+      }
+    </Box>
+  )
+}
+
+function MobileNav({ profile: _profile, demoMode: _demoMode }: { profile: Profile | null; demoMode: boolean; onExitDemo: () => void }) {
+  const { t } = useLang()
+  const location = useLocation()
+  const { hasPermission } = usePermissions()
+  const canViewCalendar = hasPermission('view_planning') || hasPermission('view_tasks')
+
+  const navItems = [
+    hasPermission('view_dashboard')      && { path: '/dashboard',     label: t.nav.dashboard },
+    hasPermission('view_projects')       && { path: '/projects',      label: t.nav.proiecte },
+    hasPermission('view_subassemblies')  && { path: '/subassemblies', label: t.nav.subansambluri },
+    canViewCalendar                      && { path: '/planning',      label: t.nav.planning },
+    hasPermission('view_blockages')      && { path: '/blockages',     label: t.nav.blocaje },
+    hasPermission('view_pdca')           && { path: '/pdca',          label: t.nav.pdca },
+    hasPermission('view_daily_flow')     && { path: '/daily-flow',    label: t.nav.flux },
+    hasPermission('view_kpi')            && { path: '/kpi',           label: t.nav.kpi },
+    hasPermission('view_tasks')          && { path: '/tasks',         label: t.nav.tasks },
+    hasPermission('view_inventory')      && { path: '/inventory',     label: t.nav.inventory },
+    hasPermission('manage_users')        && { path: '/admin',         label: t.nav.admin, admin: true },
+  ].filter(Boolean) as { path: string; label: string; admin?: boolean }[]
+
+  return (
+    <Box
+      component="nav"
+      sx={{
+        display: { xs: 'flex', md: 'none' },
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        bgcolor: 'var(--color-canvas)',
+        borderTop: '1px solid var(--color-hairline)',
+        zIndex: 100,
+        overflowX: 'auto',
+        scrollbarWidth: 'none',
+        '&::-webkit-scrollbar': { display: 'none' },
+        pb: 'env(safe-area-inset-bottom, 0px)',
+      }}
+    >
+      {navItems.map(({ path, label, admin }) => {
+        const Icon = NAV_ICONS[path]
+        const isActive = location.pathname === path
+        const activeColor = admin ? '#818cf8' : 'var(--color-primary)'
+        return (
+          <Box
+            key={path}
+            component={NavLink}
+            to={path}
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 0.25,
+              py: 1,
+              px: 0.75,
+              minWidth: 52,
+              flex: '0 0 auto',
+              textDecoration: 'none',
+              color: isActive ? activeColor : 'var(--color-ink-subtle)',
+              borderTop: `2px solid ${isActive ? activeColor : 'transparent'}`,
+            }}
+          >
+            {Icon && <Icon sx={{ fontSize: 20 }} />}
+            <Typography sx={{ fontSize: 9, fontWeight: isActive ? 600 : 400, textAlign: 'center', lineHeight: 1.2, color: 'inherit' }}>
+              {label}
+            </Typography>
+          </Box>
+        )
+      })}
+    </Box>
+  )
+}
+
 function AppNav({ profile, demoMode, onExitDemo }: { profile: Profile | null; demoMode: boolean; onExitDemo: () => void }) {
   const { t, lang, toggle } = useLang()
   const navigate = useNavigate()
@@ -125,7 +261,7 @@ function AppNav({ profile, demoMode, onExitDemo }: { profile: Profile | null; de
         height: 56,
         bgcolor: 'var(--color-canvas)',
         borderBottom: '1px solid var(--color-hairline)',
-        display: 'flex',
+        display: { xs: 'none', md: 'flex' },
         alignItems: 'center',
         px: 3,
         position: 'sticky',
@@ -213,8 +349,10 @@ function AppShell({ session, profile, demoMode, onExitDemo }: { session: Session
     <PermissionsProvider role={profile?.role ?? null} userId={profile?.id ?? null} demoMode={demoMode}>
       <Stack sx={{ minHeight: '100vh', bgcolor: 'var(--color-canvas)' }}>
         <AppNav profile={profile} demoMode={demoMode} onExitDemo={onExitDemo} />
+        <MobileHeader profile={profile} demoMode={demoMode} onExitDemo={onExitDemo} />
+        <MobileNav profile={profile} demoMode={demoMode} onExitDemo={onExitDemo} />
 
-        <Box component="main" sx={{ flex: 1, p: '24px 24px 48px', maxWidth: 1400, width: '100%', mx: 'auto' }}>
+        <Box component="main" sx={{ flex: 1, p: { xs: '16px 16px 80px', md: '24px 24px 48px' }, maxWidth: 1400, width: '100%', mx: 'auto' }}>
           <Routes>
             <Route path="/" element={<RootRedirect />} />
             <Route path="/dashboard"     element={<PermGuard perm="view_dashboard"><Dashboard userId={profile?.id} /></PermGuard>} />

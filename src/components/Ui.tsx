@@ -141,7 +141,7 @@ export function InfoButton({ title, items }: { title: ReactNode; items: ReactNod
 
 export function PageTitle({ eyebrow, title, subtitle, action, info }: { eyebrow: ReactNode; title: ReactNode; subtitle?: ReactNode; action?: ReactNode; info?: ReactNode[] }) {
   return (
-    <Stack direction="row" alignItems="flex-end" justifyContent="space-between" gap={2}>
+    <Stack direction={{ xs: 'column', sm: 'row' }} alignItems={{ xs: 'flex-start', sm: 'flex-end' }} justifyContent="space-between" gap={2}>
       <Box>
         <Eyebrow sx={{ mb: 0.75 }}>{eyebrow}</Eyebrow>
         <Stack direction="row" alignItems="center" gap={1}>
@@ -246,7 +246,7 @@ export function AppSelect({ options, ...props }: TextFieldProps & { options: Arr
 
 export function DataTable({ head, children, sx }: { head?: ReactNode; children: ReactNode; sx?: SxProps<Theme> }) {
   return (
-    <TableContainer component={Box} sx={sx}>
+    <TableContainer component={Box} sx={[{ overflowX: 'auto' }, sx] as SxProps<Theme>}>
       <Table size="small">
         {head && <TableHead>{head}</TableHead>}
         <TableBody>{children}</TableBody>

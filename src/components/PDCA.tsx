@@ -57,7 +57,7 @@ export default function PDCA_View() {
       <PageTitle eyebrow={pd.eyebrow} title={pd.title} subtitle={`${pd.subtitle} - ${data?.length ?? '...'} - ${overdue.length} ${pd.overdueLabel}`} info={pageInfo(lang, 'pdca')} action={canWrite ? <ActionButton variant={showForm ? 'outlined' : 'contained'} onClick={() => setShowForm(s => !s)}>{showForm ? `x ${t.common.cancel}` : pd.newBtn}</ActionButton> : undefined} />
       {(error || projects.error) && <ErrorBanner message={(error || projects.error) ?? ''} />}
 
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1.5 }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(4, 1fr)' }, gap: 1.5 }}>
         {[
           { phase: 'PLAN', color: '#818cf8', bg: 'rgba(94,106,210,0.08)', desc: 'Identificare problema' },
           { phase: 'DO', color: '#fbbf24', bg: 'rgba(245,158,11,0.08)', desc: 'Contramasuri' },
@@ -75,7 +75,7 @@ export default function PDCA_View() {
         <Card sx={{ borderLeft: '3px solid var(--color-primary)' }}>
           <Eyebrow sx={{ mb: 2 }}>{pd.formTitle}</Eyebrow>
           <Stack component="form" onSubmit={submit} gap={1.5}>
-            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1.5 }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: 1.5 }}>
               <AppField label="ID PDCA *" required value={form.id} onChange={e => setF('id', e.target.value)} placeholder="PDCA-006" />
               <AppField label="Sursa" value={form.sursa} onChange={e => setF('sursa', e.target.value)} placeholder="BLK-001" />
               <AppField label="Data Deschis" type="date" value={form.data_deschis} onChange={e => setF('data_deschis', e.target.value)} />

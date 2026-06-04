@@ -141,7 +141,7 @@ function PermEditor({ userId, role, onClose }: PermEditorProps) {
       </Box>
       {(loadError || error) && <ErrorBanner message={loadError ?? error ?? ''} />}
       {!overrideState ? <CircularProgress size={20} /> : (
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2 }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' }, gap: 2 }}>
           {categories.map(({ key, label, cat }) => (
             <Box key={key}>
               <Typography sx={{ fontSize: 10, fontWeight: 700, letterSpacing: 0.8, textTransform: 'uppercase', color: 'var(--color-ink-tertiary)', mb: 1 }}>{label}</Typography>
@@ -288,7 +288,7 @@ export default function Admin() {
             </Box>
           )}
           <Stack component="form" onSubmit={createUser} gap={1.5}>
-            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1.5 }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: 1.5 }}>
               <AppField label={`${a.email} *`} required type="email" value={form.email} onChange={e => setF('email', e.target.value)} placeholder="ion.popescu@wpowertech.ro" />
               <AppField label={`${a.password} *`} required type="password" value={form.password} onChange={e => setF('password', e.target.value)} placeholder="min. 6 caractere" inputProps={{ minLength: 6 }} />
               <AppField label={a.fullName} value={form.full_name} onChange={e => setF('full_name', e.target.value)} placeholder="Ion Popescu" />
@@ -348,7 +348,7 @@ export default function Admin() {
 
       <Card>
         <Eyebrow sx={{ mb: 1.5 }}>{a.ghidTitle}</Eyebrow>
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1.5 }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: 1.5 }}>
           {ROLES.map(role => {
             const color = ROLE_COLORS[role] ?? '#8a8f98'
             const descKey = ROLE_DESCRIPTIONS[role] as keyof typeof a

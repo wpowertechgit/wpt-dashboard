@@ -90,7 +90,7 @@ function TaskDetail({ task, users, userId, onClose, onUpdated }: TaskDetailProps
   const creatorName  = users.find(u => u.id === task.created_by)?.label ?? '—'
 
   return (
-    <Dialog open onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ sx: { bgcolor: 'var(--color-surface-1)', backgroundImage: 'none', border: '1px solid var(--color-hairline)' } }}>
+    <Dialog open onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ sx: { bgcolor: 'var(--color-surface-1)', backgroundImage: 'none', border: '1px solid var(--color-hairline)', m: { xs: 1, sm: 2 } } }}>
       <DialogTitle sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', pb: 1 }}>
         <Box>
           <Typography sx={{ fontSize: 16, fontWeight: 600, color: 'var(--color-ink)', lineHeight: 1.3 }}>{task.title}</Typography>
@@ -222,7 +222,7 @@ function TaskForm({ users, userId, onSave, onCancel }: TaskFormProps) {
       <Stack component="form" onSubmit={submit} gap={1.5}>
         <AppField label={`${tk.title_} *`} required value={form.title} onChange={e => setF('title', e.target.value)} placeholder="Titlu sarcină..." />
         <AppField label={tk.description} value={form.description} onChange={e => setF('description', e.target.value)} multiline rows={3} />
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1.5 }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' }, gap: 1.5 }}>
           <AppSelect label={tk.assignTo} value={form.assigned_to} onChange={e => setF('assigned_to', e.target.value)}
             options={[{ value: '', label: `— ${tk.unassigned} —` }, ...users.map(u => ({ value: u.id, label: u.label }))]} />
           <AppSelect label={tk.priority} value={form.priority} onChange={e => setF('priority', e.target.value)}

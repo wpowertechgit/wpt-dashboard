@@ -83,7 +83,7 @@ function ProjectFormCard({
         </Box>
       )}
       <Stack component="form" onSubmit={submit} gap={1.5}>
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1.5 }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: 1.5 }}>
           <AppField label={`${p.idProiect} *`} required value={form.id} onChange={e => setF('id', e.target.value)} placeholder="WP1000-11" disabled={mode === 'edit'} />
           <AppField label={`${p.client} *`} required value={form.client} onChange={e => setF('client', e.target.value)} />
           <AppField label={p.responsabil} value={form.responsabil} onChange={e => setF('responsabil', e.target.value)} />
@@ -200,7 +200,7 @@ export default function Proiecte() {
       )}
 
       {/* Project cards */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2 }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: 2 }}>
         {loading ? [1, 2, 3].map(i => (
           <Card key={i} sx={{ height: 260, animation: 'pulse 1.4s ease-in-out infinite', bgcolor: 'var(--color-surface-1)' }} />
         )) : data?.map(proj => (

@@ -227,7 +227,7 @@ export default function PlanningCalendar({ userId }: { userId: string | null }) 
           </Stack>
         </Box>
 
-        <Box ref={scrollerRef} onWheel={handleTimelineWheel} sx={{ overflow: 'auto', maxHeight: 620 }}>
+        <Box ref={scrollerRef} onWheel={handleTimelineWheel} sx={{ overflow: 'auto', maxHeight: { xs: 380, md: 620 } }}>
           <Box sx={{ width: timeline.canvasWidth + LABEL_W, minWidth: '100%', display: 'flex', flexDirection: 'column' }}>
             <Box sx={{ display: 'flex', borderBottom: '1px solid var(--color-hairline)', height: 32 }}>
               <Box sx={{ width: LABEL_W, flexShrink: 0, borderRight: '1px solid var(--color-hairline)' }} />
@@ -316,7 +316,7 @@ export default function PlanningCalendar({ userId }: { userId: string | null }) 
         </Box>
       </Card>
 
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2 }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 2 }}>
         <SummaryCard title={p.overdue} rows={planning.overdue} emptyLabel={p.empty} tone="danger" />
         <SummaryCard title={p.upcoming} rows={planning.upcoming} emptyLabel={p.empty} tone="warning" />
         <SummaryCard title={p.completed} rows={planning.completed} emptyLabel={p.empty} tone="success" />

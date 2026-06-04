@@ -76,7 +76,7 @@ function ItemForm({ categories, initial, onSave, onCancel, type }: ItemFormProps
       <Eyebrow sx={{ mb: 2 }}>{initial ? inv.editItem : inv.formTitle}</Eyebrow>
       {error && <ErrorBanner message={error} />}
       <Stack component="form" onSubmit={submit} gap={1.5}>
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1.5 }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: 1.5 }}>
           <AppField label={`${inv.name} *`} required value={form.name} onChange={e => setF('name', e.target.value)} />
           <AppField label={inv.sku} value={form.sku ?? ''} onChange={e => setF('sku', e.target.value)} />
           <AppSelect label={inv.category} value={form.category_id ?? ''} onChange={e => setF('category_id', e.target.value)}
@@ -130,7 +130,7 @@ function TxDialog({ item, txType, userId, onClose, onDone }: TxDialogProps) {
   }
 
   return (
-    <Dialog open onClose={onClose} maxWidth="xs" fullWidth PaperProps={{ sx: { bgcolor: 'var(--color-surface-1)', backgroundImage: 'none', border: '1px solid var(--color-hairline)' } }}>
+    <Dialog open onClose={onClose} maxWidth="xs" fullWidth PaperProps={{ sx: { bgcolor: 'var(--color-surface-1)', backgroundImage: 'none', border: '1px solid var(--color-hairline)', m: { xs: 1, sm: 2 } } }}>
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 1 }}>
         <Typography sx={{ fontSize: 15, fontWeight: 600, color: 'var(--color-ink)' }}>{label} · {item.name}</Typography>
         <IconButton onClick={onClose} size="small" sx={{ color: 'var(--color-ink-subtle)' }}><CloseIcon fontSize="small" /></IconButton>
@@ -164,7 +164,7 @@ function TxLog({ item, onClose }: TxLogProps) {
     ({ in: 'success', out: 'error', adjustment: 'info', reservation: 'warning' } as const)[type]
 
   return (
-    <Dialog open onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ sx: { bgcolor: 'var(--color-surface-1)', backgroundImage: 'none', border: '1px solid var(--color-hairline)' } }}>
+    <Dialog open onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ sx: { bgcolor: 'var(--color-surface-1)', backgroundImage: 'none', border: '1px solid var(--color-hairline)', m: { xs: 1, sm: 2 } } }}>
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 1 }}>
         <Typography sx={{ fontSize: 15, fontWeight: 600, color: 'var(--color-ink)' }}>{inv.txTitle} · {item.name}</Typography>
         <IconButton onClick={onClose} size="small" sx={{ color: 'var(--color-ink-subtle)' }}><CloseIcon fontSize="small" /></IconButton>

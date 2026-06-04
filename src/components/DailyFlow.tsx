@@ -52,7 +52,7 @@ export default function FluxZilnic() {
 
       <Card>
         <Eyebrow sx={{ mb: 2 }}>{f.vizTitle}</Eyebrow>
-        <Stack direction="row" alignItems="center">
+        <Stack direction="row" alignItems="center" sx={{ overflowX: 'auto', pb: 0.5 }}>
           {deptCounts.map(({ dept, count }, i) => {
             const c = DEPT_COLORS[dept]
             return (
@@ -73,7 +73,7 @@ export default function FluxZilnic() {
         <Card sx={{ borderLeft: '3px solid var(--color-primary)' }}>
           <Eyebrow sx={{ mb: 2 }}>{f.formTitle}</Eyebrow>
           <Stack component="form" onSubmit={submit} gap={1.5}>
-            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1.5 }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: 1.5 }}>
               <AppField label={f.data} type="date" value={form.data} onChange={e => setF('data', e.target.value)} />
               <AppSelect label={f.proiect} value={form.proiect} onChange={e => setF('proiect', e.target.value)} options={[{ value: '', label: '- Selectati -' }, ...projectOptions]} />
               <AppField label={f.subansamblu} required value={form.subansamblu} onChange={e => setF('subansamblu', e.target.value)} />

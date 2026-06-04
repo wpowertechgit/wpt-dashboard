@@ -110,14 +110,14 @@ export default function Dashboard({ userId }: { userId?: string | null }) {
       <PageTitle eyebrow={d.eyebrow} title={d.title} subtitle={d.subtitle} info={pageInfo(lang, 'dashboard')} />
       {err && <ErrorBanner message={err} />}
 
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 2 }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(4, 1fr)' }, gap: 2 }}>
         <StatCard label={d.totalSA} value={totalSA} />
         <StatCard label={d.finalizate} value={finalizateSA} accent="var(--color-success)" />
         <StatCard label={d.inLucru} value={inLucruSA} accent="var(--color-primary)" />
         <StatCard label={d.blocate} value={blocateSA} accent="var(--color-danger)" sub={d.blocateHint} />
       </Box>
 
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 2 }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(4, 1fr)' }, gap: 2 }}>
         <StatCard label={d.progresGlobal} value={`${progresGlobal}%`} />
         <StatCard label={d.proiecteActive} value={proiecte.data?.length ?? 0} />
         <StatCard label={d.blocajeDeschise} value={blocajeActive.length} />
@@ -182,7 +182,7 @@ export default function Dashboard({ userId }: { userId?: string | null }) {
         </DataTable>
       </Card>
 
-      <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
         <Card sx={{ p: 0, overflow: 'hidden' }}>
           <Box sx={{ p: '20px 24px 16px', borderBottom: '1px solid var(--color-hairline)' }}>
             <Eyebrow>{d.heatmap}</Eyebrow>

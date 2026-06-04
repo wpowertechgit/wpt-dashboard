@@ -94,7 +94,7 @@ export default function Subansambluri() {
       {error && <ErrorBanner message={error} />}
 
       <Stack direction="row" alignItems="center" gap={1.5} flexWrap="wrap">
-        <AppField type="text" placeholder={s.search} value={search} onChange={e => setSearch(e.target.value)} sx={{ width: 220 }} />
+        <AppField type="text" placeholder={s.search} value={search} onChange={e => setSearch(e.target.value)} sx={{ width: { xs: '100%', sm: 220 } }} />
         {projects.length > 1 && pills(projects, filterProiect, v => setFilterProiect(v))}
         {pills(['ALL','FINALIZAT','IN LUCRU','BLOCAT'], filterStatus, v => setFilterStatus(v as FilterStatus))}
       </Stack>
@@ -108,7 +108,7 @@ export default function Subansambluri() {
                   <TableCell colSpan={14} sx={{ p: 2 }}>
                     <Stack gap={1.5}>
                       <Typography variant="body2" sx={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--color-primary)' }}>{sa.proiect} #{sa.nr} · {sa.nume}</Typography>
-                      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(120px, 1fr))', gap: 1.25 }}>
+                      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 1.25 }}>
                         <AppSelect label="Status Global" value={normalizeGlobalStatus(String(editRow?.status_global ?? sa.status_global ?? ''))} onChange={e => setEditRow(r => ({ ...r!, status_global: e.target.value }))} options={['✅ FINALIZAT','🔄 IN LUCRU','⛔ BLOCAT']} />
                         <AppField label="Progres" value={String(editRow?.progres ?? sa.progres)} onChange={e => setEditRow(r => ({ ...r!, progres: e.target.value }))} />
                         <AppField label="Start" type="date" value={String(editRow?.data_start ?? sa.data_start ?? '')} onChange={e => setEditRow(r => ({ ...r!, data_start: e.target.value }))} />
@@ -120,7 +120,7 @@ export default function Subansambluri() {
                         <AppField label="Asamblat Done" type="date" value={String(editRow?.asamblat_done ?? sa.asamblat_done ?? '')} onChange={e => setEditRow(r => ({ ...r!, asamblat_done: e.target.value }))} />
                         <AppField label="Vopsit Done" type="date" value={String(editRow?.vopsit_done ?? sa.vopsit_done ?? '')} onChange={e => setEditRow(r => ({ ...r!, vopsit_done: e.target.value }))} />
                       </Box>
-                      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(120px, 1fr))', gap: 1.25 }}>
+                      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(5, 1fr)' }, gap: 1.25 }}>
                         {DEPT_COLS.map(col => (
                           <AppSelect key={col} label={col.toUpperCase()} value={normalizeDepartmentStatus(String(editRow?.[col] ?? sa[col] ?? ''))} onChange={e => setEditRow(r => ({ ...r!, [col]: e.target.value }))} options={STATUS_OPTIONS} />
                         ))}

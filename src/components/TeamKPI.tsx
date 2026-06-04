@@ -61,7 +61,7 @@ export default function KPIEchipe() {
       {latestWeek && (
         <Box>
           <Stack direction="row" alignItems="center" gap={1} sx={{ mb: 1.5 }}><Eyebrow>{k.currentWeek}</Eyebrow><Badge tone="info">{latestWeek}</Badge></Stack>
-          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 1.5 }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(5, 1fr)' }, gap: 1.5 }}>
             {latestData.map(row => (
               <Card key={row.echipa} sx={{ p: 2, borderTop: `3px solid ${DEPT_COLORS[row.echipa]}` }}>
                 <Typography variant="body2" sx={{ fontSize: 11, fontWeight: 600, color: DEPT_COLORS[row.echipa], letterSpacing: 0.3, mb: 1.25 }}>{row.echipa}</Typography>
@@ -85,7 +85,7 @@ export default function KPIEchipe() {
         </Box>
       )}
 
-      <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
         <Card><Eyebrow sx={{ mb: 2.5 }}>{k.chartEficienta}</Eyebrow><ResponsiveContainer width="100%" height={220}><LineChart data={chartData('eficienta')} margin={{ top: 4, right: 8, bottom: 0, left: -20 }}><CartesianGrid strokeDasharray="3 3" stroke="#23252a" /><XAxis dataKey="saptamana" tick={{ fill: '#8a8f98', fontSize: 11 }} axisLine={false} tickLine={false} /><YAxis tick={{ fill: '#8a8f98', fontSize: 11 }} axisLine={false} tickLine={false} domain={[50, 105]} /><Tooltip contentStyle={tooltipStyle} /><Legend wrapperStyle={{ fontSize: 11, color: '#8a8f98' }} />{DEPTS.map(d => <Line key={d} type="monotone" dataKey={d} stroke={DEPT_COLORS[d]} strokeWidth={2} dot={{ r: 3, fill: DEPT_COLORS[d] }} />)}</LineChart></ResponsiveContainer></Card>
         <Card><Eyebrow sx={{ mb: 2.5 }}>{k.chartLeadTime}</Eyebrow><ResponsiveContainer width="100%" height={220}><BarChart data={chartData('lead_time')} margin={{ top: 4, right: 8, bottom: 0, left: -20 }}><CartesianGrid strokeDasharray="3 3" stroke="#23252a" /><XAxis dataKey="saptamana" tick={{ fill: '#8a8f98', fontSize: 11 }} axisLine={false} tickLine={false} /><YAxis tick={{ fill: '#8a8f98', fontSize: 11 }} axisLine={false} tickLine={false} /><Tooltip contentStyle={tooltipStyle} /><Legend wrapperStyle={{ fontSize: 11, color: '#8a8f98' }} />{DEPTS.map(d => <Bar key={d} dataKey={d} fill={DEPT_COLORS[d]} radius={[3, 3, 0, 0]} maxBarSize={14} />)}</BarChart></ResponsiveContainer></Card>
       </Box>
@@ -94,7 +94,7 @@ export default function KPIEchipe() {
         <Card sx={{ borderLeft: '3px solid var(--color-primary)' }}>
           <Eyebrow sx={{ mb: 2 }}>{k.formTitle}</Eyebrow>
           <Stack component="form" onSubmit={submit} gap={1.5}>
-            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1.5 }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 1.5 }}>
               <AppField label={k.saptamana} value={form.saptamana} onChange={e => setF('saptamana', e.target.value)} placeholder="S-20 (Mai 19)" />
               <AppSelect label={k.echipa} value={form.echipa} onChange={e => setF('echipa', e.target.value)} options={DEPTS} />
               {[{ key: 'sa_intrare', label: k.saIntrare }, { key: 'sa_iesire', label: k.saIesire }, { key: 'sa_blocate', label: k.saBlocate }, { key: 'sa_intarziate', label: k.saIntarziate }, { key: 'eficienta', label: k.eficientaPct }, { key: 'lead_time', label: k.leadTimeH }, { key: 'calitate', label: k.calitatePct }].map(({ key, label }) => (
