@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react'
 import { Box, Stack, Typography, Checkbox, FormControlLabel, Divider, CircularProgress } from '@mui/material'
 import { useLang } from '../lib/i18n'
 import { useQuery } from '../lib/useQuery'
-import { createUserAccount, fetchProfiles, updateProfile, fetchUserPermissionOverrides, saveUserPermissionOverrides } from '../lib/api'
+import { createUserAccount, fetchProfiles, updateProfile, sendPasswordReset, fetchUserPermissionOverrides, saveUserPermissionOverrides } from '../lib/api'
 import type { PermissionKey, PermissionOverride } from '../lib/permissions'
 import { ROLE_DEFAULTS } from '../lib/permissions'
 import { pageInfo } from '../lib/pageInfo'
@@ -223,7 +223,9 @@ export default function Admin() {
   const [editId, setEditId] = useState<string | null>(null)
   const [editRole, setEditRole] = useState('')
   const [editDept, setEditDept] = useState('')
+  const [editName, setEditName] = useState('')
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [resetSuccess, setResetSuccess] = useState<string | null>(null)
   const [permEditorId, setPermEditorId] = useState<string | null>(null)
   const [permEditorRole, setPermEditorRole] = useState<string>('')
   const setF = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }))
@@ -249,9 +251,21 @@ export default function Admin() {
   async function saveEdit(id: string) {
     setSaveError(null)
     try {
-      await updateProfile(id, { role: editRole, departament: editDept || null })
+      await updateProfile(id, { full_name: editName || null, role: editRole, departament: editDept || null })
       setEditId(null)
       refetch()
+    } catch (err: unknown) {
+      setSaveError(err instanceof Error ? err.message : String(err))
+    }
+  }
+
+  async function handlePasswordReset(email: string) {
+    setResetSuccess(null)
+    setSaveError(null)
+    try {
+      await sendPasswordReset(email)
+      setResetSuccess(`Email de resetare trimis la ${email}`)
+      setTimeout(() => setResetSuccess(null), 5000)
     } catch (err: unknown) {
       setSaveError(err instanceof Error ? err.message : String(err))
     }
@@ -273,6 +287,11 @@ export default function Admin() {
       />
       {error && <ErrorBanner message={error} />}
       {saveError && <ErrorBanner message={saveError} />}
+      {resetSuccess && (
+        <Box sx={{ bgcolor: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)', borderRadius: 'var(--radius-md)', p: '10px 16px' }}>
+          <Typography variant="body2" sx={{ fontSize: 13, color: '#4ade80' }}>{resetSuccess}</Typography>
+        </Box>
+      )}
       {createSuccess && (
         <Box sx={{ bgcolor: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)', borderRadius: 'var(--radius-md)', p: '10px 16px' }}>
           <Typography variant="body2" sx={{ fontSize: 13, color: '#4ade80' }}>{createSuccess}</Typography>
@@ -314,16 +333,22 @@ export default function Admin() {
           {loading ? <LoadingRows cols={6} /> : (profiles ?? []).map(p => (
             editId === p.id ? (
               <TableRow key={p.id} sx={{ bgcolor: 'rgba(94,106,210,0.06)' }}>
-                <TableCell colSpan={2} sx={{ fontSize: 13, color: 'var(--color-ink-muted)' }}>{p.full_name || p.email}</TableCell>
-                <TableCell><AppSelect value={editDept} onChange={e => setEditDept(e.target.value)} options={DEPTS.map(d => ({ value: d, label: d || a.noRoleOption }))} /></TableCell>
-                <TableCell>
-                  <AppSelect value={editRole} onChange={e => setEditRole(e.target.value)} options={roleOptions(a)} />
-                </TableCell>
-                <TableCell />
-                <TableCell>
-                  <Stack direction="row" gap={0.75}>
-                    <ActionButton onClick={() => saveEdit(p.id)} sx={{ px: 1.25, py: 0.5, fontSize: 11 }}>{t.common.save}</ActionButton>
-                    <ActionButton variant="outlined" onClick={() => setEditId(null)} sx={{ px: 1, py: 0.5, fontSize: 11 }}>x</ActionButton>
+                <TableCell colSpan={6} sx={{ p: 2 }}>
+                  <Stack gap={1.5}>
+                    <Typography variant="body2" sx={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--color-ink-subtle)' }}>{p.email}</Typography>
+                    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' }, gap: 1.25 }}>
+                      <AppField label={a.fullName} value={editName} onChange={e => setEditName(e.target.value)} placeholder="Ion Popescu" />
+                      <AppSelect label={a.departament} value={editDept} onChange={e => setEditDept(e.target.value)} options={DEPTS.map(d => ({ value: d, label: d || a.noRoleOption }))} />
+                      <AppSelect label={a.rol} value={editRole} onChange={e => setEditRole(e.target.value)} options={roleOptions(a)} />
+                    </Box>
+                    <Stack direction="row" gap={0.75} flexWrap="wrap">
+                      <ActionButton onClick={() => saveEdit(p.id)} sx={{ px: 1.25, py: 0.5, fontSize: 11 }}>{t.common.save}</ActionButton>
+                      <ActionButton variant="outlined" onClick={() => handlePasswordReset(p.email)}
+                        sx={{ px: 1.25, py: 0.5, fontSize: 11, color: '#fbbf24', borderColor: 'rgba(251,191,36,0.3)', '&:hover': { borderColor: '#fbbf24', bgcolor: 'rgba(251,191,36,0.06)' } }}>
+                        ✉ Reset Parolă
+                      </ActionButton>
+                      <ActionButton variant="outlined" onClick={() => setEditId(null)} sx={{ px: 1, py: 0.5, fontSize: 11 }}>✕</ActionButton>
+                    </Stack>
                   </Stack>
                 </TableCell>
               </TableRow>
@@ -336,7 +361,7 @@ export default function Admin() {
                 <TableCell sx={{ fontSize: 12, color: 'var(--color-ink-tertiary)' }}>{p.created_at ? new Date(p.created_at).toLocaleDateString('ro-RO') : '-'}</TableCell>
                 <TableCell>
                   <Stack direction="row" gap={0.75}>
-                    <ActionButton variant="outlined" onClick={() => { setEditId(p.id); setEditRole(p.role); setEditDept(p.departament ?? '') }} sx={{ px: 1, py: 0.375, fontSize: 11 }}>{t.common.edit}</ActionButton>
+                    <ActionButton variant="outlined" onClick={() => { setEditId(p.id); setEditRole(p.role); setEditDept(p.departament ?? ''); setEditName(p.full_name ?? '') }} sx={{ px: 1, py: 0.375, fontSize: 11 }}>{t.common.edit}</ActionButton>
                     <ActionButton variant="outlined" onClick={() => openPermEditor(p.id, p.role)} sx={{ px: 1, py: 0.375, fontSize: 11, color: '#818cf8', borderColor: 'rgba(129,140,248,0.3)' }}>{a.permBtn}</ActionButton>
                   </Stack>
                 </TableCell>

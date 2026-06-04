@@ -188,6 +188,14 @@ export async function updateProfile(id: string, row: Record<string, unknown>) {
   if (error) throw error
 }
 
+export async function sendPasswordReset(email: string) {
+  if (isDemoMode()) return
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/`,
+  })
+  if (error) throw error
+}
+
 // ── Permissions ────────────────────────────────────────────────────────────────
 
 export async function fetchUserPermissionOverrides(userId: string): Promise<PermissionOverride[]> {
