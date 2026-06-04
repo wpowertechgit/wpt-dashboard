@@ -76,15 +76,19 @@ export default function Dashboard({ userId }: { userId?: string | null }) {
   const pendingTasks = (tasks.data?.assigned ?? []).filter(t => t.status !== 'DONE')
   const lowStockItems = lowStock.data ?? []
 
+  function saIsBlocat(s: { blocat: boolean; status_global: string }) {
+    return s.blocat || s.status_global?.includes('BLOCAT')
+  }
+
+  const blocateSA_list = sa.data?.filter(saIsBlocat) ?? []
   const totalSA = sa.data?.length ?? 0
   const finalizateSA = sa.data?.filter(s => s.status_global.includes('FINALIZAT')).length ?? 0
   const inLucruSA = sa.data?.filter(s => s.status_global.includes('IN LUCRU')).length ?? 0
-  const blocateSA = sa.data?.filter(s => s.blocat).length ?? 0
+  const blocateSA = blocateSA_list.length
   const progresGlobal = totalSA ? Math.round((finalizateSA / totalSA) * 1000) / 10 : 0
   const blocajeActive = blocaje.data?.filter(b => b.status === 'Deschis') ?? []
   const projectIds = buildProjectOptions(proiecte.data)
 
-  const blocateSA_list = sa.data?.filter(s => s.blocat) ?? []
   const pdcaOpen = pdca.data?.filter(p => p.status !== 'Inchis') ?? []
   const pdcaOverdue = pdcaOpen.filter(p => p.zile_ramas === 'DEPASIT')
 
@@ -257,19 +261,37 @@ export default function Dashboard({ userId }: { userId?: string | null }) {
             <Eyebrow>{d.blocajeActive}</Eyebrow>
             <Badge tone="error" sx={{ ml: 'auto' }}>{d.actiuneImediata}</Badge>
           </Stack>
-          <DataTable head={<TableRow><TableCell>{d.colProiect.slice(0,2)}</TableCell><TableCell>{d.colSubansamblu}</TableCell><TableCell>{d.colDept}</TableCell><TableCell>{d.colOwner}</TableCell><TableCell>{d.colImpact}</TableCell></TableRow>}>
-            {blocaje.loading ? <LoadingRows cols={5} /> : blocajeActive.map(b => (
-              <TableRow key={b.id}>
-                <TableCell><Typography variant="body2" sx={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--color-primary)' }}>{b.id}</Typography></TableCell>
-                <TableCell sx={{ maxWidth: 180 }}>
-                  <Typography variant="body2" sx={{ fontWeight: 500, fontSize: 12 }}>{b.subansamblu}</Typography>
-                  <Typography variant="body2" sx={{ fontSize: 11, color: 'var(--color-ink-subtle)', mt: 0.25 }}>{b.descriere}</Typography>
-                </TableCell>
-                <TableCell><Badge>{b.departament}</Badge></TableCell>
-                <TableCell sx={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>{b.responsabil}</TableCell>
-                <TableCell>{impactBadge(b.impact)}</TableCell>
-              </TableRow>
-            ))}
+          <DataTable head={<TableRow><TableCell>PR / ID</TableCell><TableCell>{d.colSubansamblu}</TableCell><TableCell>{d.colDept}</TableCell><TableCell>{d.colOwner}</TableCell><TableCell>{d.colImpact}</TableCell></TableRow>}>
+            {(blocaje.loading || sa.loading) ? <LoadingRows cols={5} /> : (<>
+              {/* Manual blocaje */}
+              {blocajeActive.map(b => (
+                <TableRow key={b.id}>
+                  <TableCell><Typography variant="body2" sx={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--color-primary)' }}>{b.id}</Typography></TableCell>
+                  <TableCell sx={{ maxWidth: 180 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 500, fontSize: 12 }}>{b.subansamblu}</Typography>
+                    <Typography variant="body2" sx={{ fontSize: 11, color: 'var(--color-ink-subtle)', mt: 0.25 }}>{b.descriere}</Typography>
+                  </TableCell>
+                  <TableCell><Badge>{b.departament}</Badge></TableCell>
+                  <TableCell sx={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>{b.responsabil}</TableCell>
+                  <TableCell>{impactBadge(b.impact)}</TableCell>
+                </TableRow>
+              ))}
+              {/* Blocked subassemblies not already covered by a manual blocaj */}
+              {blocateSA_list
+                .filter(s => !blocajeActive.some(b => b.subansamblu === s.nume && b.proiect === s.proiect))
+                .map(s => (
+                  <TableRow key={`sa-${s.id}`} sx={{ bgcolor: 'rgba(239,68,68,0.04)' }}>
+                    <TableCell><Typography variant="body2" sx={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--color-primary)' }}>{s.proiect} #{s.nr}</Typography></TableCell>
+                    <TableCell sx={{ maxWidth: 180 }}>
+                      <Typography variant="body2" sx={{ fontWeight: 500, fontSize: 12 }}>{s.nume}</Typography>
+                      <Typography variant="body2" sx={{ fontSize: 11, color: '#f87171', mt: 0.25 }}>{s.comentarii || '—'}</Typography>
+                    </TableCell>
+                    <TableCell><Badge>SA</Badge></TableCell>
+                    <TableCell sx={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>—</TableCell>
+                    <TableCell><Badge tone="error">⛔</Badge></TableCell>
+                  </TableRow>
+                ))}
+            </>)}
           </DataTable>
         </Card>
       </Box>

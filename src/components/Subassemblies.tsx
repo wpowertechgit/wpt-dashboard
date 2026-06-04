@@ -76,11 +76,15 @@ export default function Subansambluri() {
   const { data, loading, error, refetch } = useQuery(fetchSubansambluri)
   const projects = ['ALL', ...Array.from(new Set((data ?? []).map(sa => sa.proiect))).sort()]
 
+  function isBlocat(sa: { blocat: boolean; status_global: string }) {
+    return sa.blocat || sa.status_global?.includes('BLOCAT')
+  }
+
   const filtered = (data ?? []).filter(sa => {
     if (filterProiect !== 'ALL' && sa.proiect !== filterProiect) return false
     if (filterStatus === 'FINALIZAT' && !sa.status_global.includes('FINALIZAT')) return false
     if (filterStatus === 'IN LUCRU' && !sa.status_global.includes('IN LUCRU')) return false
-    if (filterStatus === 'BLOCAT' && !sa.blocat) return false
+    if (filterStatus === 'BLOCAT' && !isBlocat(sa)) return false
     if (search && !sa.nume.toLowerCase().includes(search.toLowerCase())) return false
     return true
   })
@@ -187,10 +191,9 @@ export default function Subansambluri() {
             <TableCell>{s.colStatus}</TableCell>
             <TableCell>{s.colProgres}</TableCell>
             <TableCell>{s.colTimeline}</TableCell>
-            <TableCell>{s.colDeptDates}</TableCell>
             {DEPT_COLS.map(col => <TableCell key={col} sx={{ textAlign: 'center' }}>{DEPT_DISPLAY[col]}</TableCell>)}
             <TableCell>{s.colComentarii}</TableCell>
-            <TableCell />
+            <TableCell sx={{ position: 'sticky', right: 0, bgcolor: 'var(--color-surface-1)', zIndex: 2, borderLeft: '1px solid var(--color-hairline)' }} />
           </TableRow>
         }>
           {loading ? <LoadingRows cols={14} /> : filtered.length === 0 ? <EmptyState label={s.empty} /> :
@@ -257,7 +260,7 @@ export default function Subansambluri() {
                   </TableCell>
                 </TableRow>
               ) : (
-                <TableRow key={sa.id} sx={sa.blocat ? { bgcolor: 'rgba(239,68,68,0.03)' } : undefined}>
+                <TableRow key={sa.id} sx={isBlocat(sa) ? { bgcolor: 'rgba(239,68,68,0.03)' } : undefined}>
                   <TableCell><Typography variant="body2" sx={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--color-primary)' }}>{sa.proiect}</Typography></TableCell>
                   <TableCell sx={{ color: 'var(--color-ink-tertiary)', fontFamily: 'var(--font-mono)', fontSize: 12 }}>{sa.nr}</TableCell>
                   <TableCell>
@@ -280,16 +283,9 @@ export default function Subansambluri() {
                       ))}
                     </Stack>
                   </TableCell>
-                  <TableCell sx={{ minWidth: 100 }}>
-                    <Stack gap={0.25}>
-                      {deptDateSummary(sa as Record<string, unknown>).map(([label, value]) => (
-                        <Typography key={label} variant="body2" sx={{ fontSize: 10, color: 'var(--color-ink-subtle)' }}>{label}: {value}</Typography>
-                      ))}
-                    </Stack>
-                  </TableCell>
                   {DEPT_COLS.map(col => <TableCell key={col} sx={{ textAlign: 'center' }}>{statusChip(sa[col])}</TableCell>)}
-                  <TableCell sx={{ fontSize: 12, color: sa.blocat ? '#f87171' : 'var(--color-ink-muted)', maxWidth: 180 }}>{sa.comentarii}</TableCell>
-                  <TableCell>
+                  <TableCell sx={{ fontSize: 12, color: isBlocat(sa) ? '#f87171' : 'var(--color-ink-muted)', maxWidth: 160 }}>{sa.comentarii}</TableCell>
+                  <TableCell sx={{ position: 'sticky', right: 0, bgcolor: isBlocat(sa) ? 'rgba(20,8,8,0.95)' : 'var(--color-surface-1)', zIndex: 1, borderLeft: '1px solid var(--color-hairline)', p: '8px 10px' }}>
                     {canWrite && (
                       <Stack direction="row" gap={0.5}>
                         <ActionButton variant="outlined" onClick={() => startEdit(sa as Record<string, unknown>)} sx={{ px: 1, py: 0.375, fontSize: 11 }}>
