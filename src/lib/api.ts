@@ -69,9 +69,17 @@ export async function upsertSubansamblu(row: Record<string, unknown>) {
   if (error) throw error
 }
 
+const SA_DATE_FIELDS = new Set(['data_start','data_due','data_done','proiectare_done','laser_done','rolat_done','sudat_done','asamblat_done','vopsit_done'])
+
+function sanitizeSaRow(row: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(row).map(([k, v]) => [k, SA_DATE_FIELDS.has(k) && v === '' ? null : v])
+  )
+}
+
 export async function updateSubansamblu(id: number, row: Record<string, unknown>) {
   if (isDemoMode()) return
-  const { error } = await supabase.from('subansambluri').update(row).eq('id', id)
+  const { error } = await supabase.from('subansambluri').update(sanitizeSaRow(row)).eq('id', id)
   if (error) throw friendlySupabaseError(error)
 }
 
