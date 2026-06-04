@@ -300,6 +300,12 @@ export default function TaskBoard({ userId }: { userId: string | null }) {
         <TableCell><Badge tone={STATUS_TONE[task.status]}>{statusLabel(task.status, t)}</Badge></TableCell>
         <TableCell onClick={e => e.stopPropagation()}>
           <Stack direction="row" gap={0.5}>
+            {task.status !== 'DONE' && (task.assigned_to === userId || canManage) && (
+              <ActionButton onClick={() => { updateTask(task.id, { status: 'DONE' }).then(load) }}
+                sx={{ px: 1, py: 0.375, fontSize: 11, bgcolor: 'rgba(39,166,68,0.1)', color: '#4ade80', border: '1px solid rgba(39,166,68,0.2)', '&:hover': { bgcolor: 'rgba(39,166,68,0.2)' } }}>
+                ✓
+              </ActionButton>
+            )}
             {(canManage || task.created_by === userId) && (
               <ActionButton variant="outlined" onClick={() => handleDelete(task.id)} disabled={isDeleting}
                 sx={{ px: 1, py: 0.375, fontSize: 11, color: '#f87171', borderColor: 'rgba(248,113,113,0.3)', '&:hover': { borderColor: '#f87171' } }}>

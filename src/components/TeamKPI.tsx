@@ -8,10 +8,11 @@ import { pageInfo } from '../lib/pageInfo'
 import { ErrorBanner, LoadingRows } from './StateViews'
 import { ActionButton, AppField, AppSelect, Badge, Box, Card, DataTable, Eyebrow, PageTitle, Stack, TableCell, TableRow, Typography } from './Ui'
 
-const DEPT_COLORS: Record<string, string> = { LASER: '#818cf8', ROLAT: '#60a5fa', SUDAT: '#fbbf24', ASAMBLAT: '#34d399', VOPSIT: '#f87171' }
-const DEPTS = ['LASER','ROLAT','SUDAT','ASAMBLAT','VOPSIT']
+const DEPT_COLORS: Record<string, string> = { LASER: '#818cf8', VIROLAT: '#60a5fa', ROLAT: '#60a5fa', SUDAT: '#fbbf24', ASAMBLAT: '#34d399', VOPSIT: '#f87171' }
+const DEPTS = ['LASER','VIROLAT','SUDAT','ASAMBLAT','VOPSIT']
 const tooltipStyle = { backgroundColor: '#0f1011', border: '1px solid #23252a', borderRadius: 8, color: '#f7f8f8', fontSize: 12 }
 const BLANK_ROW = { saptamana: '', echipa: 'LASER', sa_intrare: 0, sa_iesire: 0, sa_blocate: 0, sa_intarziate: 0, eficienta: 0, lead_time: 0, calitate: 0, observatii: '' }
+function normalizeDept(d: string) { return d === 'ROLAT' ? 'VIROLAT' : d }
 
 function MiniProgress({ value, width = 60 }: { value: number; width?: number }) {
   return (
@@ -63,8 +64,8 @@ export default function KPIEchipe() {
           <Stack direction="row" alignItems="center" gap={1} sx={{ mb: 1.5 }}><Eyebrow>{k.currentWeek}</Eyebrow><Badge tone="info">{latestWeek}</Badge></Stack>
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(5, 1fr)' }, gap: 1.5 }}>
             {latestData.map(row => (
-              <Card key={row.echipa} sx={{ p: 2, borderTop: `3px solid ${DEPT_COLORS[row.echipa]}` }}>
-                <Typography variant="body2" sx={{ fontSize: 11, fontWeight: 600, color: DEPT_COLORS[row.echipa], letterSpacing: 0.3, mb: 1.25 }}>{row.echipa}</Typography>
+              <Card key={normalizeDept(row.echipa)} sx={{ p: 2, borderTop: `3px solid ${DEPT_COLORS[normalizeDept(row.echipa)]}` }}>
+                <Typography variant="body2" sx={{ fontSize: 11, fontWeight: 600, color: DEPT_COLORS[normalizeDept(row.echipa)], letterSpacing: 0.3, mb: 1.25 }}>{normalizeDept(row.echipa)}</Typography>
                 <Stack gap={1}>
                   {[{ label: k.eficienta, val: Number(row.eficienta) }, { label: k.calitate, val: Number(row.calitate) }].map(({ label, val }) => (
                     <Box key={label}><Eyebrow sx={{ mb: 0.25 }}>{label}</Eyebrow><MiniProgress value={val} width={999} /></Box>
@@ -112,7 +113,7 @@ export default function KPIEchipe() {
           {loading ? <LoadingRows cols={9} /> : (data ?? []).map((row, i) => (
             <TableRow key={i}>
               <TableCell sx={{ fontSize: 12, color: 'var(--color-ink-muted)', whiteSpace: 'nowrap' }}>{row.saptamana}</TableCell>
-              <TableCell><Box component="span" sx={{ display: 'inline-block', p: '2px 8px', borderRadius: 'var(--radius-xs)', bgcolor: `${DEPT_COLORS[row.echipa]}18`, color: DEPT_COLORS[row.echipa], fontSize: 11, fontWeight: 600 }}>{row.echipa}</Box></TableCell>
+              <TableCell><Box component="span" sx={{ display: 'inline-block', p: '2px 8px', borderRadius: 'var(--radius-xs)', bgcolor: `${DEPT_COLORS[normalizeDept(row.echipa)]}18`, color: DEPT_COLORS[normalizeDept(row.echipa)], fontSize: 11, fontWeight: 600 }}>{normalizeDept(row.echipa)}</Box></TableCell>
               <TableCell sx={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{row.sa_intrare}</TableCell>
               <TableCell sx={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{row.sa_iesire}</TableCell>
               <TableCell>{row.sa_blocate > 0 ? <Badge tone="error">{row.sa_blocate}</Badge> : <Typography variant="body2" sx={{ color: 'var(--color-ink-tertiary)' }}>-</Typography>}</TableCell>

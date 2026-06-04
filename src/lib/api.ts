@@ -126,6 +126,18 @@ export async function insertFluxZilnic(row: Record<string, unknown>) {
   if (error) throw error
 }
 
+export async function updateFluxZilnic(id: string, row: Record<string, unknown>) {
+  if (isDemoMode()) return
+  const { error } = await supabase.from('flux_zilnic').update(row).eq('id', id)
+  if (error) throw error
+}
+
+export async function deleteFluxZilnic(id: string) {
+  if (isDemoMode()) return
+  const { error } = await supabase.from('flux_zilnic').delete().eq('id', id)
+  if (error) throw error
+}
+
 export async function fetchKpiEchipe() {
   if (isDemoMode()) return DEMO.kpi_echipe
   const { data, error } = await supabase.from('kpi_echipe').select('*').order('saptamana').order('echipa')

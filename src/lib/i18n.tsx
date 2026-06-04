@@ -31,7 +31,7 @@ const T = {
     dashboard: {
       eyebrow: 'Ședință Operațională Zilnică · 08:00 · 15–20 MIN',
       title: 'Tablou de Bord Operațional',
-      subtitle: 'Flux: LASER → ROLAT → SUDAT → ASAMBLAT → VOPSIT',
+      subtitle: 'Flux: LASER → VIROLAT → SUDAT → ASAMBLAT → VOPSIT',
       totalSA: 'TOTAL SUBANSAMBLURI', finalizate: 'FINALIZATE', inLucru: 'ÎN LUCRU',
       blocate: 'BLOCATE', blocateHint: 'necesită acțiune imediată',
       progresGlobal: 'PROGRES GLOBAL', proiecteActive: 'PROIECTE ACTIVE',
@@ -223,7 +223,7 @@ const T = {
     dashboard: {
       eyebrow: 'Daily Operations Meeting · 08:00 · 15–20 MIN',
       title: 'Operational Dashboard',
-      subtitle: 'Flow: LASER → ROLAT → SUDAT → ASAMBLAT → VOPSIT',
+      subtitle: 'Flow: LASER → VIROLAT → SUDAT → ASAMBLAT → VOPSIT',
       totalSA: 'TOTAL SUBASSEMBLIES', finalizate: 'COMPLETED', inLucru: 'IN PROGRESS',
       blocate: 'BLOCKED', blocateHint: 'requires immediate action',
       progresGlobal: 'GLOBAL PROGRESS', proiecteActive: 'ACTIVE PROJECTS',

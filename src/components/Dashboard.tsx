@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useLang } from '../lib/i18n'
 import { useQuery } from '../lib/useQuery'
-import { fetchProiecte, fetchBlocaje, fetchSubansambluri, fetchTasksForUser, fetchLowStockItems } from '../lib/api'
+import { fetchProiecte, fetchBlocaje, fetchSubansambluri, fetchPDCA, fetchTasksForUser, fetchLowStockItems } from '../lib/api'
 import { buildProjectOptions } from '../lib/projectOptions'
 import { pageInfo } from '../lib/pageInfo'
 import { usePermissions } from '../lib/permissionsContext'
@@ -55,7 +55,8 @@ function StatCard({ label, value, sub, accent }: { label: string; value: string 
   )
 }
 
-const DEPTS = ['LASER', 'ROLAT', 'SUDAT', 'ASAMBLAT', 'VOPSIT'] as const
+const DEPTS = ['LASER', 'VIROLAT', 'SUDAT', 'ASAMBLAT', 'VOPSIT'] as const
+const DEPT_DB: Record<string, string> = { VIROLAT: 'rolat', LASER: 'laser', SUDAT: 'sudat', ASAMBLAT: 'asamblat', VOPSIT: 'vopsit' }
 
 export default function Dashboard({ userId }: { userId?: string | null }) {
   const { t, lang } = useLang()
@@ -65,6 +66,7 @@ export default function Dashboard({ userId }: { userId?: string | null }) {
   const proiecte = useQuery(fetchProiecte)
   const blocaje = useQuery(fetchBlocaje)
   const sa = useQuery(fetchSubansambluri)
+  const pdca = useQuery(fetchPDCA)
 
   const showTasks = hasPermission('view_tasks')
   const showInventory = hasPermission('view_inventory')
@@ -82,8 +84,12 @@ export default function Dashboard({ userId }: { userId?: string | null }) {
   const blocajeActive = blocaje.data?.filter(b => b.status === 'Deschis') ?? []
   const projectIds = buildProjectOptions(proiecte.data)
 
+  const blocateSA_list = sa.data?.filter(s => s.blocat) ?? []
+  const pdcaOpen = pdca.data?.filter(p => p.status !== 'Inchis') ?? []
+  const pdcaOverdue = pdcaOpen.filter(p => p.zile_ramas === 'DEPASIT')
+
   const heatmap = DEPTS.map(dept => {
-    const deptKey = dept.toLowerCase() as string
+    const deptKey = (DEPT_DB[dept] ?? dept.toLowerCase()) as string
     const row: Record<string, string | number> = { departament: dept }
     let totalBlocaje = 0
     let saActive = 0
@@ -103,7 +109,7 @@ export default function Dashboard({ userId }: { userId?: string | null }) {
     return row
   })
 
-  const err = proiecte.error || blocaje.error || sa.error
+  const err = proiecte.error || blocaje.error || sa.error || pdca.error
 
   return (
     <Stack gap={4}>
@@ -159,6 +165,48 @@ export default function Dashboard({ userId }: { userId?: string | null }) {
                 <Typography sx={{ fontSize: 24 }}>📦</Typography>
               </Stack>
             </Box>
+          )}
+        </Box>
+      )}
+
+      {/* Blocked subassemblies + PDCA open */}
+      {(blocateSA_list.length > 0 || pdcaOpen.length > 0) && (
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
+          {blocateSA_list.length > 0 && (
+            <Card sx={{ p: 0, overflow: 'hidden' }}>
+              <Stack direction="row" alignItems="center" sx={{ p: '16px 20px', borderBottom: '1px solid var(--color-hairline)' }}>
+                <Eyebrow>⛔ SUBANSAMBLURI BLOCATE</Eyebrow>
+                <Badge tone="error" sx={{ ml: 'auto' }}>{blocateSA_list.length}</Badge>
+              </Stack>
+              <DataTable head={<TableRow><TableCell>ID</TableCell><TableCell>Subansamblu</TableCell><TableCell>Motiv</TableCell></TableRow>}>
+                {blocateSA_list.map(b => (
+                  <TableRow key={b.id}>
+                    <TableCell><Typography variant="body2" sx={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--color-primary)' }}>{b.proiect} #{b.nr}</Typography></TableCell>
+                    <TableCell sx={{ fontWeight: 500, fontSize: 12 }}>{b.nume}</TableCell>
+                    <TableCell sx={{ fontSize: 12, color: '#f87171', maxWidth: 200 }}>{b.comentarii || '—'}</TableCell>
+                  </TableRow>
+                ))}
+              </DataTable>
+            </Card>
+          )}
+
+          {pdcaOpen.length > 0 && (
+            <Card sx={{ p: 0, overflow: 'hidden' }}>
+              <Stack direction="row" alignItems="center" sx={{ p: '16px 20px', borderBottom: '1px solid var(--color-hairline)' }}>
+                <Eyebrow>PDCA DESCHISE</Eyebrow>
+                {pdcaOverdue.length > 0 && <Badge tone="error" sx={{ ml: 'auto' }}>{pdcaOverdue.length} depășite</Badge>}
+              </Stack>
+              <DataTable head={<TableRow><TableCell>ID</TableCell><TableCell>Problemă</TableCell><TableCell>Responsabil</TableCell><TableCell>Zile</TableCell></TableRow>}>
+                {pdcaOpen.slice(0, 8).map(p => (
+                  <TableRow key={p.id} sx={p.zile_ramas === 'DEPASIT' ? { bgcolor: 'rgba(239,68,68,0.03)' } : undefined}>
+                    <TableCell><Typography variant="body2" sx={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--color-primary)' }}>{p.id}</Typography></TableCell>
+                    <TableCell sx={{ fontSize: 12, maxWidth: 200 }}>{p.problema}</TableCell>
+                    <TableCell sx={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>{p.responsabil}</TableCell>
+                    <TableCell>{p.zile_ramas === 'DEPASIT' ? <Badge tone="error">DEPĂȘIT</Badge> : <Typography variant="body2" sx={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{p.zile_ramas}</Typography>}</TableCell>
+                  </TableRow>
+                ))}
+              </DataTable>
+            </Card>
           )}
         </Box>
       )}

@@ -36,6 +36,11 @@ export default function PDCA_View() {
   const [saving, setSaving] = useState(false)
   const setF = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }))
 
+  function autoGenerateId() {
+    const next = String((data?.length ?? 0) + 1).padStart(3, '0')
+    setF('id', `PDCA-${next}`)
+  }
+
   async function submit(e: { preventDefault(): void }) {
     e.preventDefault()
     if (!form.id) return
@@ -76,7 +81,10 @@ export default function PDCA_View() {
           <Eyebrow sx={{ mb: 2 }}>{pd.formTitle}</Eyebrow>
           <Stack component="form" onSubmit={submit} gap={1.5}>
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: 1.5 }}>
-              <AppField label="ID PDCA *" required value={form.id} onChange={e => setF('id', e.target.value)} placeholder="PDCA-006" />
+              <Box>
+                <AppField label="ID PDCA *" required value={form.id} onChange={e => setF('id', e.target.value)} placeholder="PDCA-006" />
+                <ActionButton variant="outlined" onClick={autoGenerateId} sx={{ mt: 0.5, fontSize: 11, px: 1, py: 0.375 }}>Auto-generează</ActionButton>
+              </Box>
               <AppField label="Sursa" value={form.sursa} onChange={e => setF('sursa', e.target.value)} placeholder="BLK-001" />
               <AppField label="Data Deschis" type="date" value={form.data_deschis} onChange={e => setF('data_deschis', e.target.value)} />
               <AppSelect label="Proiect" value={form.proiect} onChange={e => setF('proiect', e.target.value)} options={[{ value: '', label: '- Selectati -' }, ...projectOptions, 'TOATE']} />

@@ -57,7 +57,7 @@ export default function Blocaje() {
       <AppField label="Data Deschidere" type="date" value={form.data_deschidere} onChange={e => setF('data_deschidere', e.target.value)} />
       <AppSelect label="Proiect" value={form.proiect} onChange={e => setF('proiect', e.target.value)} options={[{ value: '', label: '- Selectati -' }, ...projectOptions]} />
       <AppField label="Subansamblu" value={form.subansamblu} onChange={e => setF('subansamblu', e.target.value)} />
-      <AppSelect label="Departament" value={form.departament} onChange={e => setF('departament', e.target.value)} options={['LASER','ROLAT','SUDAT','ASAMBLAT','VOPSIT']} />
+      <AppSelect label="Departament" value={form.departament} onChange={e => setF('departament', e.target.value)} options={['PROIECTARE','LASER','VIROLAT','SUDAT','ASAMBLAT','VOPSIT']} />
       <AppField label="Responsabil" value={form.responsabil} onChange={e => setF('responsabil', e.target.value)} />
       <AppField label="Descriere Blocaj *" required value={form.descriere} onChange={e => setF('descriere', e.target.value)} sx={{ gridColumn: '1 / -1' }} />
       <AppSelect label="Impact" value={form.impact} onChange={e => setF('impact', e.target.value)} options={['MEDIU','INALT','CRITIC']} />

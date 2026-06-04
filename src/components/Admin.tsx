@@ -9,7 +9,7 @@ import { pageInfo } from '../lib/pageInfo'
 import { ErrorBanner, LoadingRows } from './StateViews'
 import { ActionButton, AppField, AppSelect, Badge, Box as UiBox, Card, DataTable, Eyebrow, PageTitle, Stack as UiStack, TableCell, TableRow, Typography as UiTypo } from './Ui'
 
-const DEPTS = ['', 'LASER', 'ROLAT', 'SUDAT', 'ASAMBLAT', 'VOPSIT', 'MANAGEMENT', 'OFFICE']
+const DEPTS = ['', 'PROIECTARE', 'LASER', 'VIROLAT', 'SUDAT', 'ASAMBLAT', 'VOPSIT', 'MANAGEMENT', 'OFFICE']
 const ROLES = ['viewer', 'production', 'office', 'office_production', 'admin']
 const BLANK_USER = { email: '', password: '', full_name: '', departament: '', role: 'viewer' }
 
