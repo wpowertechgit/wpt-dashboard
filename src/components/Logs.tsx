@@ -115,12 +115,12 @@ export default function LogsPage() {
             style={{ background: 'var(--color-surface)', border: '1px solid var(--color-hairline)', borderRadius: 'var(--radius-sm)', color: 'var(--color-ink)', padding: '6px 10px', fontSize: 13, outline: 'none', minWidth: 200 }}
           />
           <select value={filterAction} onChange={e => setFilterAction(e.target.value)}
-            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-hairline)', borderRadius: 'var(--radius-sm)', color: 'var(--color-ink)', padding: '6px 10px', fontSize: 12 }}>
-            {ACTION_OPTIONS.map(a => <option key={a} value={a}>{a === 'all' ? t.logs.allActions : a}</option>)}
+            style={{ background: '#1e1e2e', border: '1px solid var(--color-hairline)', borderRadius: 'var(--radius-sm)', color: '#e2e8f0', padding: '6px 10px', fontSize: 12 }}>
+            {ACTION_OPTIONS.map(a => <option key={a} value={a} style={{ background: '#1e1e2e', color: '#e2e8f0' }}>{a === 'all' ? t.logs.allActions : a}</option>)}
           </select>
           <select value={filterEntity} onChange={e => setFilterEntity(e.target.value)}
-            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-hairline)', borderRadius: 'var(--radius-sm)', color: 'var(--color-ink)', padding: '6px 10px', fontSize: 12 }}>
-            {ENTITY_OPTIONS.map(e => <option key={e} value={e}>{e === 'all' ? t.logs.allEntities : e}</option>)}
+            style={{ background: '#1e1e2e', border: '1px solid var(--color-hairline)', borderRadius: 'var(--radius-sm)', color: '#e2e8f0', padding: '6px 10px', fontSize: 12 }}>
+            {ENTITY_OPTIONS.map(e => <option key={e} value={e} style={{ background: '#1e1e2e', color: '#e2e8f0' }}>{e === 'all' ? t.logs.allEntities : e}</option>)}
           </select>
           <Typography sx={{ fontSize: 12, color: 'var(--color-ink-subtle)', ml: 'auto' }}>
             {logs.length} {t.common.records}
