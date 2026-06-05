@@ -191,7 +191,7 @@ export async function updateProfile(id: string, row: Record<string, unknown>) {
 export async function sendPasswordReset(email: string) {
   if (isDemoMode()) return
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${window.location.origin}/`,
+    redirectTo: 'https://oms.wpowertech.ro/reset-password',
   })
   if (error) throw error
 }

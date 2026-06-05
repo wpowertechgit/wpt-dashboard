@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from 'react'
 import type { ComponentType, ReactNode } from 'react'
 import { Routes, Route, NavLink, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import type { Session } from '@supabase/supabase-js'
-import { Box, Button, CircularProgress, Stack, Typography } from '@mui/material'
+import { Box, Button, CircularProgress, Divider, Drawer, IconButton, List, ListItemButton, ListItemIcon, ListItemText, Stack, Typography } from '@mui/material'
+import MenuIcon from '@mui/icons-material/Menu'
 import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined'
 import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined'
 import BuildOutlinedIcon from '@mui/icons-material/BuildOutlined'
@@ -20,6 +21,7 @@ import { isDemoMode, exitDemo } from './lib/demo'
 import { PermissionsProvider, usePermissions } from './lib/permissionsContext'
 import type { AppRole } from './lib/permissions'
 import LoginPage from './components/LoginPage'
+import ResetPasswordPage from './components/ResetPasswordPage'
 import Dashboard from './components/Dashboard'
 import Subassemblies from './components/Subassemblies'
 import Blockages from './components/Blockages'
@@ -122,46 +124,10 @@ const NAV_ICONS: Record<string, ComponentType<{ sx?: object }>> = {
   '/admin': SettingsOutlinedIcon,
 }
 
-function MobileHeader({ profile, demoMode, onExitDemo }: { profile: Profile | null; demoMode: boolean; onExitDemo: () => void }) {
+function MobileShell({ profile, demoMode, onExitDemo }: { profile: Profile | null; demoMode: boolean; onExitDemo: () => void }) {
+  const [open, setOpen] = useState(false)
   const { t, lang, toggle } = useLang()
   const navigate = useNavigate()
-  const { hasPermission } = usePermissions()
-  const navItems = [hasPermission('view_dashboard') && '/dashboard', hasPermission('view_tasks') && '/tasks', hasPermission('view_inventory') && '/inventory'].filter(Boolean) as string[]
-  const defaultPath = navItems[0] ?? '/login'
-
-  return (
-    <Box
-      component="header"
-      sx={{
-        display: { xs: 'flex', md: 'none' },
-        height: 48,
-        alignItems: 'center',
-        px: 2,
-        bgcolor: 'var(--color-canvas)',
-        borderBottom: '1px solid var(--color-hairline)',
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
-        gap: 1.5,
-      }}
-    >
-      <Box component={NavLink} to={defaultPath} sx={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0 }}>
-        <Box component="img" src="/wpt symbol-02.png" alt="WPT" sx={{ height: 28, width: 'auto', display: 'block' }} />
-      </Box>
-      <Typography sx={{ flex: 1, fontSize: 12, color: 'var(--color-ink-subtle)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-        {profile?.full_name || profile?.email || (demoMode ? 'Demo' : '')}
-      </Typography>
-      <SmallButton onClick={toggle}><LanguageFlag code={lang === 'ro' ? 'en' : 'ro'} /></SmallButton>
-      {demoMode
-        ? <SmallButton onClick={() => { onExitDemo(); navigate('/login', { replace: true }) }}>✕ Demo</SmallButton>
-        : <SmallButton onClick={() => supabase.auth.signOut().then(() => navigate('/', { replace: true }))}>{t.status.signOut}</SmallButton>
-      }
-    </Box>
-  )
-}
-
-function MobileNav({ profile: _profile, demoMode: _demoMode }: { profile: Profile | null; demoMode: boolean; onExitDemo: () => void }) {
-  const { t } = useLang()
   const location = useLocation()
   const { hasPermission } = usePermissions()
   const canViewCalendar = hasPermission('view_planning') || hasPermission('view_tasks')
@@ -180,56 +146,117 @@ function MobileNav({ profile: _profile, demoMode: _demoMode }: { profile: Profil
     hasPermission('manage_users')        && { path: '/admin',         label: t.nav.admin, admin: true },
   ].filter(Boolean) as { path: string; label: string; admin?: boolean }[]
 
+  const defaultPath = navItems[0]?.path ?? '/login'
+
   return (
-    <Box
-      component="nav"
-      sx={{
-        display: { xs: 'flex', md: 'none' },
-        position: 'fixed',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        bgcolor: 'var(--color-canvas)',
-        borderTop: '1px solid var(--color-hairline)',
-        zIndex: 100,
-        overflowX: 'auto',
-        scrollbarWidth: 'none',
-        '&::-webkit-scrollbar': { display: 'none' },
-        pb: 'env(safe-area-inset-bottom, 0px)',
-      }}
-    >
-      {navItems.map(({ path, label, admin }) => {
-        const Icon = NAV_ICONS[path]
-        const isActive = location.pathname === path
-        const activeColor = admin ? '#818cf8' : 'var(--color-primary)'
-        return (
-          <Box
-            key={path}
-            component={NavLink}
-            to={path}
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 0.25,
-              py: 1,
-              px: 0.75,
-              minWidth: 52,
-              flex: '0 0 auto',
-              textDecoration: 'none',
-              color: isActive ? activeColor : 'var(--color-ink-subtle)',
-              borderTop: `2px solid ${isActive ? activeColor : 'transparent'}`,
-            }}
-          >
-            {Icon && <Icon sx={{ fontSize: 20 }} />}
-            <Typography sx={{ fontSize: 9, fontWeight: isActive ? 600 : 400, textAlign: 'center', lineHeight: 1.2, color: 'inherit' }}>
-              {label}
+    <>
+      {/* Sticky mobile / tablet header */}
+      <Box
+        component="header"
+        sx={{
+          display: { xs: 'flex', lg: 'none' },
+          height: 52,
+          alignItems: 'center',
+          px: 1.5,
+          gap: 1,
+          bgcolor: 'var(--color-canvas)',
+          borderBottom: '1px solid var(--color-hairline)',
+          position: 'sticky',
+          top: 0,
+          zIndex: 200,
+        }}
+      >
+        <IconButton onClick={() => setOpen(true)} size="small" sx={{ color: 'var(--color-ink-subtle)', flexShrink: 0 }}>
+          <MenuIcon />
+        </IconButton>
+        <Box component={NavLink} to={defaultPath} sx={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0, ml: 0.5 }}>
+          <Box component="img" src="/wpt symbol-02.png" alt="WPT" sx={{ height: 26, width: 'auto', display: 'block' }} />
+        </Box>
+        <Typography sx={{ flex: 1, fontSize: 12, color: 'var(--color-ink-subtle)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', ml: 0.5 }}>
+          {profile?.full_name || profile?.email || (demoMode ? 'Demo' : '')}
+        </Typography>
+        <SmallButton onClick={toggle}><LanguageFlag code={lang === 'ro' ? 'en' : 'ro'} /></SmallButton>
+        {demoMode
+          ? <SmallButton onClick={() => { onExitDemo(); navigate('/login', { replace: true }) }}>✕</SmallButton>
+          : <SmallButton onClick={() => supabase.auth.signOut().then(() => navigate('/', { replace: true }))}>{t.status.signOut}</SmallButton>
+        }
+      </Box>
+
+      {/* Slide-out drawer */}
+      <Drawer
+        anchor="left"
+        open={open}
+        onClose={() => setOpen(false)}
+        sx={{
+          display: { xs: 'block', lg: 'none' },
+          '& .MuiDrawer-paper': {
+            width: 280,
+            bgcolor: 'var(--color-canvas)',
+            backgroundImage: 'none',
+            borderRight: '1px solid var(--color-hairline)',
+            display: 'flex',
+            flexDirection: 'column',
+          },
+        }}
+      >
+        {/* Drawer header */}
+        <Box sx={{ p: '16px 20px 12px', borderBottom: '1px solid var(--color-hairline)', display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Box component="img" src="/wpt symbol-02.png" alt="WPT" sx={{ height: 28, width: 'auto' }} />
+          <Box>
+            <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'var(--color-ink)' }}>
+              {profile?.full_name || 'WPT Dashboard'}
             </Typography>
+            {profile?.departament && (
+              <Typography sx={{ fontSize: 11, color: 'var(--color-ink-tertiary)' }}>{profile.departament}</Typography>
+            )}
           </Box>
-        )
-      })}
-    </Box>
+        </Box>
+
+        {/* Nav items */}
+        <List sx={{ flex: 1, overflowY: 'auto', py: 1 }}>
+          {navItems.map(({ path, label, admin }) => {
+            const Icon = NAV_ICONS[path]
+            const isActive = location.pathname === path
+            const activeColor = admin ? '#818cf8' : 'var(--color-primary)'
+            return (
+              <ListItemButton
+                key={path}
+                component={NavLink}
+                to={path}
+                onClick={() => setOpen(false)}
+                sx={{
+                  mx: 1,
+                  mb: 0.25,
+                  borderRadius: 'var(--radius-md)',
+                  bgcolor: isActive ? 'var(--color-surface-2)' : 'transparent',
+                  color: isActive ? activeColor : 'var(--color-ink-subtle)',
+                  '&:hover': { bgcolor: 'var(--color-surface-2)' },
+                }}
+              >
+                <ListItemIcon sx={{ minWidth: 36, color: 'inherit' }}>
+                  {Icon && <Icon sx={{ fontSize: 20 }} />}
+                </ListItemIcon>
+                <ListItemText
+                  primary={label}
+                  slotProps={{ primary: { sx: { fontSize: 14, fontWeight: isActive ? 600 : 400, color: 'inherit', fontFamily: 'var(--font-text)' } } }}
+                />
+              </ListItemButton>
+            )
+          })}
+        </List>
+
+        {/* Drawer footer */}
+        <Box sx={{ borderTop: '1px solid var(--color-hairline)', p: 2 }}>
+          <Stack direction="row" gap={1}>
+            <SmallButton onClick={toggle}><LanguageFlag code={lang === 'ro' ? 'en' : 'ro'} /></SmallButton>
+            {demoMode
+              ? <SmallButton onClick={() => { onExitDemo(); setOpen(false); navigate('/login', { replace: true }) }}>✕ Exit Demo</SmallButton>
+              : <SmallButton onClick={() => supabase.auth.signOut().then(() => navigate('/', { replace: true }))}>{t.status.signOut}</SmallButton>
+            }
+          </Stack>
+        </Box>
+      </Drawer>
+    </>
   )
 }
 
@@ -261,7 +288,7 @@ function AppNav({ profile, demoMode, onExitDemo }: { profile: Profile | null; de
         height: 56,
         bgcolor: 'var(--color-canvas)',
         borderBottom: '1px solid var(--color-hairline)',
-        display: { xs: 'none', md: 'flex' },
+        display: { xs: 'none', lg: 'flex' },
         alignItems: 'center',
         px: 3,
         position: 'sticky',
@@ -349,10 +376,9 @@ function AppShell({ session, profile, demoMode, onExitDemo }: { session: Session
     <PermissionsProvider role={profile?.role ?? null} userId={profile?.id ?? null} demoMode={demoMode}>
       <Stack sx={{ minHeight: '100vh', bgcolor: 'var(--color-canvas)' }}>
         <AppNav profile={profile} demoMode={demoMode} onExitDemo={onExitDemo} />
-        <MobileHeader profile={profile} demoMode={demoMode} onExitDemo={onExitDemo} />
-        <MobileNav profile={profile} demoMode={demoMode} onExitDemo={onExitDemo} />
+        <MobileShell profile={profile} demoMode={demoMode} onExitDemo={onExitDemo} />
 
-        <Box component="main" sx={{ flex: 1, p: { xs: '16px 16px 80px', md: '24px 24px 48px' }, maxWidth: 1400, width: '100%', mx: 'auto' }}>
+        <Box component="main" sx={{ flex: 1, p: { xs: '16px 12px 32px', md: '20px 20px 40px', lg: '24px 24px 48px' }, maxWidth: 1400, width: '100%', mx: 'auto' }}>
           <Routes>
             <Route path="/" element={<RootRedirect />} />
             <Route path="/dashboard"     element={<PermGuard perm="view_dashboard"><Dashboard userId={profile?.id} /></PermGuard>} />
@@ -378,6 +404,7 @@ export default function App() {
   const [session, setSession] = useState<Session | null | undefined>(undefined)
   const [profile, setProfile] = useState<Profile | null | undefined>(undefined)
   const [demoMode, setDemoMode] = useState<boolean>(() => isDemoMode())
+  const [isRecovery, setIsRecovery] = useState(false)
 
   const handleExitDemo = useCallback(() => {
     exitDemo()
@@ -388,11 +415,13 @@ export default function App() {
     if (demoMode) return
     let active = true
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!active) return
+      if (event === 'PASSWORD_RECOVERY') { setIsRecovery(true); setSession(session); return }
+      setIsRecovery(false)
       setSession(session)
       if (session?.user) loadProfile(session.user.id)
-      else { setSession(null); setProfile(null) }  // null = definitively no profile
+      else { setSession(null); setProfile(null) }
     })
 
     return () => {
@@ -421,10 +450,14 @@ export default function App() {
   // Still resolving initial auth state
   if (session === undefined) return spinner
 
-  // No session → login page
+  // Password recovery flow — show reset page regardless of auth state
+  if (isRecovery) return <ResetPasswordPage onDone={() => setIsRecovery(false)} />
+
+  // No session → login page (but allow /reset-password route for direct link access)
   if (!session) {
     return (
       <Routes>
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="*" element={<LoginPage />} />
       </Routes>
     )
