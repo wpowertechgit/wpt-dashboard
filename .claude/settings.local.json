@@ -14,7 +14,8 @@
       "PowerShell($excel = New-Object -ComObject Excel.Application; $excel.Visible = $false; $excel.DisplayAlerts = $false; $wb = $excel.Workbooks.Open\\('C:\\\\Users\\\\admin\\\\Downloads\\\\wpt-dashboard\\\\WastePowertech_OMS_1.xlsx'\\); Write-Host 'Sheets:'; for \\($i = 1; $i -le $wb.Sheets.Count; $i++\\) { Write-Host $wb.Sheets.Item\\($i\\).Name }; $wb.Close\\($false\\); $excel.Quit\\(\\))",
       "PowerShell($excel = New-Object -ComObject Excel.Application; $excel.Visible = $false; $excel.DisplayAlerts = $false; $wb = $excel.Workbooks.Open\\('C:\\\\Users\\\\admin\\\\Downloads\\\\wpt-dashboard\\\\WastePowertech_OMS_1.xlsx'\\); $ws = $wb.Sheets.Item\\('GHID WHITEBOARD'\\); $used = $ws.UsedRange; $rows = $used.Rows.Count; $cols = $used.Columns.Count; Write-Host \"Rows: $rows, Cols: $cols\"; for \\($r = 1; $r -le [Math]::Min\\($rows, 60\\); $r++\\) { $line = ''; for \\($c = 1; $c -le $cols; $c++\\) { $v = $ws.Cells.Item\\($r,$c\\).Text; if \\($v\\) { $line += \"[$c]$v | \" } }; if \\($line\\) { Write-Host \"R${r}: $line\" } }; $wb.Close\\($false\\); $excel.Quit\\(\\))",
       "PowerShell(Get-Process -Name \"node\" -ErrorAction SilentlyContinue)",
-      "PowerShell(Stop-Process -Force)"
+      "PowerShell(Stop-Process -Force)",
+      "Bash(npm run *)"
     ]
   }
 }

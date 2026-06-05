@@ -208,18 +208,86 @@ export default function Subansambluri() {
     </Stack>
   )
 
+  // Shared edit form content — used in both desktop (table row) and mobile (card)
+  function EditFormContent({ saId, saLabel }: { saId: number; saLabel: string }) {
+    return (
+      <Stack gap={1.5}>
+        <Typography variant="body2" sx={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--color-primary)' }}>{saLabel}</Typography>
+
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 1.25 }}>
+          <AppSelect label="Status Global" value={normalizeGlobalStatus(String(editRow?.status_global ?? ''))}
+            onChange={e => {
+              const val = e.target.value
+              setEditRow(r => ({ ...r!, status_global: val, blocat: val.includes('BLOCAT') ? true : val.includes('FINALIZAT') ? false : r!.blocat }))
+            }}
+            options={['✅ FINALIZAT', '🔄 IN LUCRU', '⛔ BLOCAT']} />
+          <Box>
+            <AppField label="Progres %" value={String(editRow?.progres ?? '').replace('%', '')}
+              onChange={e => setEditRow(r => ({ ...r!, progres: e.target.value ? `${e.target.value}%` : '0%' }))} />
+            <Stack direction="row" gap={0.5} sx={{ mt: 0.5, flexWrap: 'wrap' }}>
+              {PROGRESS_PRESETS.map(p => (
+                <ActionButton key={p} variant="outlined" onClick={() => setEditRow(r => ({ ...r!, progres: p }))}
+                  sx={{ px: 0.75, py: 0.25, fontSize: 10, minWidth: 0, bgcolor: editRow?.progres === p ? 'var(--color-primary)' : 'transparent', color: editRow?.progres === p ? '#fff' : 'var(--color-ink-subtle)', border: '1px solid var(--color-hairline)' }}>
+                  {p}
+                </ActionButton>
+              ))}
+            </Stack>
+          </Box>
+          <AppField label="Start" type="date" value={String(editRow?.data_start ?? '')} onChange={e => setEditRow(r => ({ ...r!, data_start: e.target.value }))} />
+          <AppField label="Due" type="date" value={String(editRow?.data_due ?? '')} onChange={e => setEditRow(r => ({ ...r!, data_due: e.target.value }))} />
+          <AppField label="Done" type="date" value={String(editRow?.data_done ?? '')} onChange={e => setEditRow(r => ({ ...r!, data_done: e.target.value }))} />
+        </Box>
+
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(6, 1fr)' }, gap: 1.25 }}>
+          {DEPT_COLS.map(col => (
+            <AppSelect key={col} label={DEPT_DISPLAY[col]}
+              value={normalizeDepartmentStatus(String(editRow?.[col] ?? ''))}
+              onChange={e => setEditRow(r => ({ ...r!, [col]: e.target.value }))}
+              options={STATUS_OPTIONS} />
+          ))}
+        </Box>
+
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(6, 1fr)' }, gap: 1.25 }}>
+          {DEPT_COLS.map(col => (
+            <AppField key={`${col}_done`} label={`${DEPT_DISPLAY[col]} Done`} type="date"
+              value={String(editRow?.[`${col}_done`] ?? '')}
+              onChange={e => setEditRow(r => ({ ...r!, [`${col}_done`]: e.target.value }))} />
+          ))}
+        </Box>
+
+        <AppField label={s.colComentarii} value={String(editRow?.comentarii ?? '')} onChange={e => setEditRow(r => ({ ...r!, comentarii: e.target.value }))} />
+        {saveError && (
+          <Box sx={{ bgcolor: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 'var(--radius-sm)', p: '6px 10px' }}>
+            <Typography variant="body2" sx={{ fontSize: 11, color: '#f87171' }}>{saveError}</Typography>
+          </Box>
+        )}
+        <Stack direction="row" gap={0.75} flexWrap="wrap">
+          <ActionButton onClick={saveEdit} disabled={saving} sx={{ px: 1.25, py: 0.5, fontSize: 11 }}>{saving ? '...' : t.common.save}</ActionButton>
+          <ActionButton variant="outlined" onClick={() => resetRow(saId)} disabled={saving}
+            sx={{ px: 1.25, py: 0.5, fontSize: 11, color: '#fbbf24', borderColor: 'rgba(251,191,36,0.3)', '&:hover': { borderColor: '#fbbf24', bgcolor: 'rgba(251,191,36,0.06)' } }}>
+            ↺ Reset
+          </ActionButton>
+          <ActionButton variant="outlined" onClick={() => { setEditId(null); setEditRow(null); setSaveError(null) }} sx={{ px: 1, py: 0.5, fontSize: 11 }}>✕</ActionButton>
+        </Stack>
+      </Stack>
+    )
+  }
+
   return (
     <Stack gap={3}>
-      <PageTitle eyebrow={s.eyebrow} title={s.title} subtitle={`PROIECTARE → LASER → VIROLAT → SUDAT → ASAMBLAT → VOPSIT · ${filtered.length} ${t.common.records}`} info={pageInfo(lang, 'subassemblies')} />
+      <PageTitle eyebrow={s.eyebrow} title={s.title} subtitle={`${filtered.length} ${t.common.records}`} info={pageInfo(lang, 'subassemblies')} />
       {error && <ErrorBanner message={error} />}
 
-      <Stack direction="row" alignItems="center" gap={1.5} flexWrap="wrap">
-        <AppField type="text" placeholder={s.search} value={search} onChange={e => setSearch(e.target.value)} sx={{ width: { xs: '100%', sm: 220 } }} />
-        {projects.length > 1 && pills(projects, filterProiect, v => setFilterProiect(v))}
-        {pills(['ALL', 'FINALIZAT', 'IN LUCRU', 'BLOCAT'], filterStatus, v => setFilterStatus(v as FilterStatus))}
+      <Stack gap={1.5}>
+        <AppField type="text" placeholder={s.search} value={search} onChange={e => setSearch(e.target.value)} />
+        <Stack direction="row" gap={1} flexWrap="wrap">
+          {projects.length > 1 && pills(projects, filterProiect, v => setFilterProiect(v))}
+          {pills(['ALL', 'FINALIZAT', 'IN LUCRU', 'BLOCAT'], filterStatus, v => setFilterStatus(v as FilterStatus))}
+        </Stack>
       </Stack>
 
-      <Card sx={{ p: 0, overflow: 'hidden' }}>
+      {/* ── Desktop / large-tablet table (md+) ── */}
+      <Card sx={{ p: 0, overflow: 'hidden', display: { xs: 'none', md: 'block' } }}>
         <DataTable sx={{ overflowX: 'auto' }} head={
           <TableRow>
             <TableCell>{s.colProiect}</TableCell>
@@ -238,71 +306,7 @@ export default function Subansambluri() {
               canWrite && editId === sa.id ? (
                 <TableRow key={sa.id} sx={{ bgcolor: 'rgba(94,106,210,0.06)' }}>
                   <TableCell colSpan={14} sx={{ p: 2 }}>
-                    <Stack gap={1.5}>
-                      <Typography variant="body2" sx={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--color-primary)' }}>{sa.proiect} #{sa.nr} · {sa.nume}</Typography>
-
-                      {/* Global status + progress */}
-                      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 1.25 }}>
-                        <AppSelect label="Status Global" value={normalizeGlobalStatus(String(editRow?.status_global ?? ''))}
-                          onChange={e => {
-                            const val = e.target.value
-                            setEditRow(r => ({ ...r!, status_global: val, blocat: val.includes('BLOCAT') ? true : val.includes('FINALIZAT') ? false : r!.blocat }))
-                          }}
-                          options={['✅ FINALIZAT', '🔄 IN LUCRU', '⛔ BLOCAT']} />
-
-                        {/* Progress with quick-select */}
-                        <Box>
-                          <AppField label="Progres %" value={String(editRow?.progres ?? '').replace('%', '')}
-                            onChange={e => setEditRow(r => ({ ...r!, progres: e.target.value ? `${e.target.value}%` : '0%' }))} />
-                          <Stack direction="row" gap={0.5} sx={{ mt: 0.5, flexWrap: 'wrap' }}>
-                            {PROGRESS_PRESETS.map(p => (
-                              <ActionButton key={p} variant="outlined" onClick={() => setEditRow(r => ({ ...r!, progres: p }))}
-                                sx={{ px: 0.75, py: 0.25, fontSize: 10, minWidth: 0, bgcolor: editRow?.progres === p ? 'var(--color-primary)' : 'transparent', color: editRow?.progres === p ? '#fff' : 'var(--color-ink-subtle)', border: '1px solid var(--color-hairline)' }}>
-                                {p}
-                              </ActionButton>
-                            ))}
-                          </Stack>
-                        </Box>
-
-                        <AppField label="Start" type="date" value={String(editRow?.data_start ?? '')} onChange={e => setEditRow(r => ({ ...r!, data_start: e.target.value }))} />
-                        <AppField label="Due" type="date" value={String(editRow?.data_due ?? '')} onChange={e => setEditRow(r => ({ ...r!, data_due: e.target.value }))} />
-                        <AppField label="Done" type="date" value={String(editRow?.data_done ?? '')} onChange={e => setEditRow(r => ({ ...r!, data_done: e.target.value }))} />
-                      </Box>
-
-                      {/* Department statuses */}
-                      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(6, 1fr)' }, gap: 1.25 }}>
-                        {DEPT_COLS.map(col => (
-                          <AppSelect key={col} label={DEPT_DISPLAY[col]}
-                            value={normalizeDepartmentStatus(String(editRow?.[col] ?? ''))}
-                            onChange={e => setEditRow(r => ({ ...r!, [col]: e.target.value }))}
-                            options={STATUS_OPTIONS} />
-                        ))}
-                      </Box>
-
-                      {/* Department done dates */}
-                      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(6, 1fr)' }, gap: 1.25 }}>
-                        {DEPT_COLS.map(col => (
-                          <AppField key={`${col}_done`} label={`${DEPT_DISPLAY[col]} Done`} type="date"
-                            value={String(editRow?.[`${col}_done`] ?? '')}
-                            onChange={e => setEditRow(r => ({ ...r!, [`${col}_done`]: e.target.value }))} />
-                        ))}
-                      </Box>
-
-                      <AppField label={s.colComentarii} value={String(editRow?.comentarii ?? '')} onChange={e => setEditRow(r => ({ ...r!, comentarii: e.target.value }))} />
-                      {saveError && (
-                        <Box sx={{ bgcolor: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 'var(--radius-sm)', p: '6px 10px' }}>
-                          <Typography variant="body2" sx={{ fontSize: 11, color: '#f87171' }}>{saveError}</Typography>
-                        </Box>
-                      )}
-                      <Stack direction="row" gap={0.75} flexWrap="wrap">
-                        <ActionButton onClick={saveEdit} disabled={saving} sx={{ px: 1.25, py: 0.5, fontSize: 11 }}>{saving ? '...' : t.common.save}</ActionButton>
-                        <ActionButton variant="outlined" onClick={() => resetRow(sa.id)}  disabled={saving}
-                          sx={{ px: 1.25, py: 0.5, fontSize: 11, color: '#fbbf24', borderColor: 'rgba(251,191,36,0.3)', '&:hover': { borderColor: '#fbbf24', bgcolor: 'rgba(251,191,36,0.06)' } }}>
-                          ↺ Reset
-                        </ActionButton>
-                        <ActionButton variant="outlined" onClick={() => { setEditId(null); setEditRow(null); setSaveError(null) }} sx={{ px: 1, py: 0.5, fontSize: 11 }}>✕</ActionButton>
-                      </Stack>
-                    </Stack>
+                    <EditFormContent saId={sa.id} saLabel={`${sa.proiect} #${sa.nr} · ${sa.nume}`} />
                   </TableCell>
                 </TableRow>
               ) : (
@@ -351,6 +355,96 @@ export default function Subansambluri() {
             ))}
         </DataTable>
       </Card>
+
+      {/* ── Mobile / small-tablet cards (xs–sm) ── */}
+      <Stack gap={2} sx={{ display: { xs: 'flex', md: 'none' } }}>
+        {loading ? (
+          [1, 2, 3].map(i => <Card key={i} sx={{ height: 180, opacity: 0.4, bgcolor: 'var(--color-surface-1)' }} />)
+        ) : filtered.length === 0 ? (
+          <Card><Typography sx={{ fontSize: 13, color: 'var(--color-ink-tertiary)', textAlign: 'center', py: 2 }}>{s.empty}</Typography></Card>
+        ) : filtered.map(sa => (
+          canWrite && editId === sa.id ? (
+            <Card key={sa.id} sx={{ borderLeft: '3px solid var(--color-primary)' }}>
+              <EditFormContent saId={sa.id} saLabel={`${sa.proiect} #${sa.nr} · ${sa.nume}`} />
+            </Card>
+          ) : (
+            <Card key={sa.id} sx={{ borderLeft: `3px solid ${isBlocat(sa) ? '#f87171' : sa.status_global?.includes('FINALIZAT') ? '#4ade80' : 'var(--color-hairline)'}` }}>
+              <Stack gap={1.5}>
+                {/* Header row */}
+                <Stack direction="row" justifyContent="space-between" alignItems="flex-start" gap={1}>
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography sx={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--color-primary)', fontWeight: 600 }}>
+                      {sa.proiect} <Typography component="span" sx={{ color: 'var(--color-ink-tertiary)' }}>#{sa.nr}</Typography>
+                    </Typography>
+                    <Typography sx={{ fontWeight: 600, fontSize: 15, color: 'var(--color-ink)', mt: 0.25, lineHeight: 1.3 }}>{sa.nume}</Typography>
+                    {sa.conditionat_de && <Typography sx={{ fontSize: 11, color: 'var(--color-primary)', mt: 0.25 }}>🔵 {sa.conditionat_de}</Typography>}
+                  </Box>
+                  {globalChip(sa.status_global)}
+                </Stack>
+
+                {/* Progress */}
+                <Stack direction="row" alignItems="center" gap={1.5}>
+                  <Box className="progress-bar" sx={{ flex: 1 }}>
+                    <Box className={`progress-fill ${parseInt(sa.progres) >= 90 ? 'progress-fill-success' : parseInt(sa.progres) >= 60 ? 'progress-fill-warning' : 'progress-fill-danger'}`} sx={{ width: sa.progres }} />
+                  </Box>
+                  <Typography sx={{ fontSize: 12, color: 'var(--color-ink-muted)', fontFamily: 'var(--font-mono)', minWidth: 36 }}>{sa.progres}</Typography>
+                </Stack>
+
+                {/* Timeline dates */}
+                <Stack direction="row" gap={2} flexWrap="wrap">
+                  {timelineSummary(sa as Record<string, unknown>).map(([label, value]) => (
+                    <Box key={label}>
+                      <Typography sx={{ fontSize: 9, color: 'var(--color-ink-tertiary)', fontWeight: 700, letterSpacing: 0.4, textTransform: 'uppercase' }}>{label === 'S' ? 'Start' : label === 'D' ? 'Due' : 'Done'}</Typography>
+                      <Typography sx={{ fontSize: 12, color: 'var(--color-ink-muted)', fontFamily: 'var(--font-mono)' }}>{value || '—'}</Typography>
+                    </Box>
+                  ))}
+                </Stack>
+
+                {/* Dept statuses grid */}
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0.75 }}>
+                  {DEPT_COLS.map(col => (
+                    <Box key={col}>
+                      <Typography sx={{ fontSize: 9, color: 'var(--color-ink-tertiary)', fontWeight: 700, letterSpacing: 0.4, mb: 0.25 }}>{DEPT_DISPLAY[col]}</Typography>
+                      {statusChip(sa[col])}
+                    </Box>
+                  ))}
+                </Box>
+
+                {/* Dept done dates (non-empty only) */}
+                {deptDateSummary(sa as Record<string, unknown>).length > 0 && (
+                  <Stack direction="row" gap={1.5} flexWrap="wrap">
+                    {deptDateSummary(sa as Record<string, unknown>).map(([label, value]) => (
+                      <Typography key={label} sx={{ fontSize: 10, color: 'var(--color-ink-subtle)' }}>{label}: {value}</Typography>
+                    ))}
+                  </Stack>
+                )}
+
+                {/* Comments */}
+                {sa.comentarii && (
+                  <Typography sx={{ fontSize: 12, color: isBlocat(sa) ? '#f87171' : 'var(--color-ink-subtle)', fontStyle: 'italic' }}>
+                    {sa.comentarii}
+                  </Typography>
+                )}
+
+                {/* Actions */}
+                {canWrite && (
+                  <Stack direction="row" gap={1}>
+                    <ActionButton variant="outlined" onClick={() => startEdit(sa as Record<string, unknown>)} sx={{ flex: 1, fontSize: 12, py: 0.75 }}>
+                      ✏ {t.common.edit}
+                    </ActionButton>
+                    {!sa.status_global.includes('FINALIZAT') && (
+                      <ActionButton onClick={() => finalizeRow(sa as Record<string, unknown>)} disabled={finalizing === sa.id}
+                        sx={{ flex: 1, fontSize: 12, py: 0.75, bgcolor: 'rgba(39,166,68,0.1)', color: '#4ade80', border: '1px solid rgba(39,166,68,0.2)', '&:hover': { bgcolor: 'rgba(39,166,68,0.2)' } }}>
+                        {finalizing === sa.id ? '...' : '✅ Finalizat'}
+                      </ActionButton>
+                    )}
+                  </Stack>
+                )}
+              </Stack>
+            </Card>
+          )
+        ))}
+      </Stack>
     </Stack>
   )
 }

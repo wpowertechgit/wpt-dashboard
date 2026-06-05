@@ -1,8 +1,8 @@
 # Waste Powertech OMS - Ghid de Utilizare
 
-Acest ghid explica pe scurt cum folosesti aplicatia in fiecare zi, ce actualizezi in fiecare ecran si unde vezi rapid daca un proiect intarzie.
+Acest ghid explica ce face site-ul Waste Powertech OMS, cand se foloseste fiecare modul si ce trebuie actualizat in lucru zilnic.
 
-Toate capturile din acest document sunt facute in `Demo Mode`.
+Aplicatia centralizeaza starea proiectelor, fluxul subansamblurilor, blocajele, actiunile PDCA, miscarile zilnice, KPI-urile, sarcinile de birou si stocurile.
 
 ---
 
@@ -13,315 +13,490 @@ La deschidere ai doua variante:
 1. Te autentifici cu emailul si parola primite de la administrator.
 2. Apesi `Versiune demo` daca vrei sa vezi aplicatia fara cont.
 
-![Ecran login](output/playwright/howto/01-login-demo.png)
+Butonul de limba schimba interfata intre romana si engleza. Din Demo Mode iesi cu `Exit Demo`.
 
 ---
 
-## 2. Ce face sistemul
+## 2. Roluri si permisiuni
 
-Waste Powertech OMS este board-ul digital pentru productie. Aplicatia te ajuta sa:
+In meniu vezi doar modulele pentru care ai permisiune.
 
-- vezi starea fiecarui proiect
-- urmaresti fiecare subansamblu pe fluxul `LASER -> ROLAT -> SUDAT -> ASAMBLAT -> VOPSIT`
-- inregistrezi blocaje si actiuni PDCA
-- vezi termenele limita si finalizarile in calendar
-- masori mai clar cat dureaza asamblarea
-
----
-
-## 3. Harta rapida a aplicatiei
-
-In bara de sus gasesti aceste ecrane:
-
-| Ecran | La ce il folosesti |
+| Rol | La ce este folosit |
 |---|---|
-| `Tablou de Bord` | vezi situatia generala in 30-60 secunde |
-| `Proiecte` | creezi proiecte si vezi datele mari de livrare |
-| `Subansambluri` | actualizezi progresul real al fiecarui SA |
-| `Calendar` | vezi ce este due, ce e intarziat, ce s-a terminat |
-| `Blocaje` | loghezi problemele care opresc sau incetinesc lucrul |
-| `PDCA` | urmaresti actiunile corective |
-| `Flux Zilnic` | inregistrezi miscarea SA-urilor intre departamente |
-| `KPI Echipe` | urmaresti eficienta, calitatea si lead time-ul |
+| `admin` | Acces complet, gestionare utilizatori si permisiuni |
+| `production` | Module de productie, inventar in mod citire |
+| `office` | Sarcini de birou si modul de stocuri |
+| `office_production` | Acces combinat la productie si birou |
+| `viewer` | Vizualizare fara modificari |
+
+Daca nu vezi un modul sau nu poti salva, probabil contul tau nu are permisiunea necesara. Cere verificare de la administrator.
 
 ---
 
-## 4. Tablou de Bord
+## 3. Harta rapida: ce modul folosesti si cand
 
-Acesta este ecranul pe care merita sa il deschizi primul in fiecare dimineata.
+| Modul | Cand il folosesti | Scop principal |
+|---|---|---|
+| `Tablou de Bord` / `Dashboard` | Primul ecran in fiecare zi | Vedere rapida asupra productiei |
+| `Proiecte` / `Projects` | Cand pornesti sau modifici un proiect | Proiecte, termene, responsabili |
+| `Subansambluri` / `Subassemblies` | Pentru actualizarea zilnica in productie | Statusuri SA, finalizare rapida, reset si etape de productie |
+| `Calendar` | Pentru planificare si verificarea termenelor | Due, overdue, completed |
+| `Blocaje` / `Blockages` | Cand o problema opreste sau incetineste lucrul | Inregistrarea problemelor blocante |
+| `PDCA` | Cand problema necesita actiune | Actiuni corective si preventive |
+| `Flux Zilnic` / `Daily Flow` | Cand un SA trece intre departamente | Jurnalul miscarilor zilnice |
+| `KPI Echipe` / `Team KPIs` | Inainte de review-ul saptamanal | Indicatori de performanta pe echipe |
+| `Sarcini` / `Tasks` | Pentru sarcini interne de birou | Atribuire si urmarire task-uri |
+| `Stocuri` / `Inventory` | Pentru materiale, produse finite si miscari | Gestiune stocuri |
+| `Admin` | Cand schimbi utilizatori sau permisiuni | Conturi, roluri, permisiuni |
 
-Ce vezi aici:
+---
+
+## 4. Rutina recomandata de lucru
+
+### Dimineata, la inceput de schimb sau meeting
+
+1. Deschide `Dashboard`.
+2. Verifica starea globala: total SA, finalizate, in lucru, blocate, intarziate.
+3. Verifica progresul pe proiecte si heatmap-ul pe departamente.
+4. Deschide `Calendar` si verifica elementele `Overdue` si `Upcoming`.
+5. Daca exista blocaje deschise, intra in `Blockages`.
+
+### In timpul zilei
+
+1. In `Subassemblies`, actualizeaza statusul real.
+2. Daca un SA trece in departamentul urmator, noteaza miscarea in `Daily Flow`.
+3. Daca apare o problema, creeaza imediat un `Blockage`.
+4. Daca problema cere actiune urmaribila, creeaza sau actualizeaza PDCA.
+
+### La finalul zilei
+
+1. Verifica daca fiecare SA terminat are completat `Done`.
+2. Verifica daca fiecare etapa finalizata are data corecta: `PROIECTARE Done`, `LASER Done`, `VIROLAT Done`, `SUDAT Done`, `ASAMBLAT Done`, `VOPSIT Done`.
+3. Inchide blocajele rezolvate.
+4. Actualizeaza statusul sarcinilor de birou, daca esti implicat.
+
+---
+
+## 5. Dashboard
+
+Acesta este ecranul pentru o vedere rapida asupra productiei.
+
+Iti arata:
 
 - numarul total de subansambluri
-- cate sunt finalizate, in lucru sau blocate
-- progresul pe proiect
+- cate sunt finalizate, in lucru, blocate sau intarziate
+- progresul pe proiecte
 - blocajele active
 - heatmap-ul pe departamente
 
 Cum il folosesti:
 
-1. Verifica daca exista proiecte cu progres mic sau cu blocaje active.
+1. Verifica ce proiect are progres slab sau blocaje.
 2. Verifica departamentele unde apar blocaje repetate.
-3. Intra apoi in `Subansambluri`, `Blocaje` sau `Calendar` pentru actiune.
-
-![Tablou de Bord](output/playwright/howto/02-dashboard.png)
+3. Intra apoi in `Subassemblies`, `Calendar`, `Blockages` sau `PDCA` pentru actiune.
 
 ---
 
-## 5. Proiecte
+## 6. Projects
 
-In `Proiecte` creezi proiectele noi si urmaresti datele mari:
+Aici creezi proiecte noi sau modifici datele proiectelor existente.
 
-- `Data Start`
-- `Data Target`
-- `Data Finalizare`
-- responsabilul
-- prioritatea
-- numarul total de subansambluri
+Campuri importante:
 
-Important:
+- `ID Proiect`: identificator proiect, de exemplu `WP1000-11`
+- `Client`: clientul
+- `Responsabil`: persoana responsabila
+- `Data Start`: data de start
+- `Data Target`: termenul planificat
+- `Data Finalizare`: data reala de inchidere
+- `Total Subansambluri`: numar SA
+- `Buget Ore`: buget de ore
+- `Prioritate`: `NORMAL`, `RIDICAT`, `CRITIC`
+- `Status`: `IN PRODUCTIE`, `IN LIVRARE`, `LIVRAT`, `BLOCAJE ACTIVE`
 
-- cand creezi un proiect nou, cele 19 subansambluri standard se adauga automat
-- `Data Target` este termenul proiectului
-- `Data Finalizare` se completeaza cand proiectul este inchis efectiv
-
-Cum lucrezi aici:
+Creare proiect:
 
 1. Apasa `+ Proiect Nou`.
-2. Completeaza ID-ul proiectului, clientul si responsabilul.
-3. Seteaza datele principale.
-4. Salveaza proiectul.
+2. Completeaza ID-ul, clientul, responsabilul si datele.
+3. Seteaza prioritatea si statusul.
+4. Salveaza.
 
-![Proiecte](output/playwright/howto/03-projects.png)
+Important: la crearea unui proiect nou, sistemul pregateste lista standard de subansambluri pentru urmarirea productiei.
 
 ---
 
-## 6. Subansambluri
+## 7. Subassemblies
 
-Acesta este ecranul operational principal.
+Acesta este ecranul operational principal pentru productie.
+
+Fluxul urmarit este:
+
+`PROIECTARE -> LASER -> VIROLAT -> SUDAT -> ASAMBLAT -> VOPSIT`
+
+Nota: in baza de date etapa `VIROLAT` poate aparea tehnic ca `rolat`, dar in interfata trebuie citita ca `VIROLAT`.
 
 Aici poti:
 
+- cauta dupa numele subansamblului
 - filtra dupa proiect
-- cauta rapid un subansamblu
-- schimba `Status Global`
-- actualiza `Progres`
-- completa `Start`, `Due`, `Done`
-- completa datele de finalizare pe fiecare etapa:
-  `Laser Done`, `Rolat Done`, `Sudat Done`, `Asamblat Done`, `Vopsit Done`
+- filtra dupa `ALL`, `FINALIZAT`, `IN LUCRU`, `BLOCAT`
+- actualiza statusul global
+- actualiza progresul
+- alege rapid progresul: `0%`, `25%`, `50%`, `75%`, `100%`
+- completa date
+- seta statusuri pe departamente
+- scrie comentarii
+- finaliza rapid un SA cu `Finalizat`
+- readuce un SA in lucru cu `Reset`
 
-Cum il folosesti corect:
+Campuri importante:
 
-1. Intra pe proiectul tau.
-2. Gaseste subansamblul.
-3. Apasa `Edit`.
-4. Actualizeaza statusul real si progresul real.
-5. Completeaza datele daca etapa a inceput, are termen sau s-a terminat.
-6. Salveaza.
+- `Status Global`: starea generala a SA-ului
+- `Progres`: progres procentual
+- `Start`: cand a inceput SA-ul
+- `Due`: cand trebuie terminat
+- `Done`: cand a fost terminat real
+- `PROIECTARE Done`, `LASER Done`, `VIROLAT Done`, `SUDAT Done`, `ASAMBLAT Done`, `VOPSIT Done`: date de finalizare pe etapa
+- `Comentarii`: observatii
 
-Recomandare simpla:
+Folosire corecta:
 
-- completeaza `Due` cand stii pana cand trebuie terminat SA-ul
-- completeaza `Done` imediat cand SA-ul este gata
-- completeaza campurile `... Done` pe departamente ca sa poti masura viteza reala pe flux
+1. Gaseste proiectul si SA-ul.
+2. Apasa `Edit`.
+3. Seteaza statusul real.
+4. Actualizeaza progresul manual sau cu butoanele rapide.
+5. Completeaza datele relevante.
+6. Seteaza statusul pe departamente: `Neinceput`, `In lucru`, `Finalizat`, `Blocat` sau `N/A`.
+7. Salveaza.
 
-![Subansambluri](output/playwright/howto/04-subassemblies.png)
+Folosire rapida `Finalizat`:
+
+1. Apasa `Finalizat` doar daca SA-ul este complet terminat in realitate.
+2. Sistemul seteaza progresul la `100%`, completeaza datele lipsa pe etape cu data curenta si seteaza statusul global ca finalizat.
+3. Foloseste acest buton doar cand toate etapele necesare sunt inchise.
+
+Folosire `Reset`:
+
+1. In modul `Edit`, apasa `Reset` daca SA-ul trebuie redeschis.
+2. Sistemul il readuce in `IN LUCRU`, `0%`, fara blocaj.
+3. Statusurile pe departamente revin la `Neinceput`, iar datele de finalizare se sterg.
+
+Regula importanta pentru blocaje:
+
+Daca setezi un SA pe `BLOCAT`, sistemul poate crea automat un `Blockage` deschis. Departamentul se ia din prima etapa marcata `Blocat`; daca nu exista etapa blocata, apare `GENERAL`. Inainte de salvare, scrie cauza clar in `Comentarii`.
+
+Important: daca un SA este terminat, completeaza si `Done`, nu doar statusul textual.
 
 ---
 
-## 7. Calendar
+## 8. Calendar
 
-Acesta este ecranul nou pentru planificare si lead time.
+Calendarul este folosit pentru verificarea termenelor si lead time.
 
 Aici vezi:
 
-- ce este `overdue`
-- ce urmeaza sa ajunga la termen
-- ce s-a finalizat recent
-- o vedere lunara cu datele importante
+- `Overdue`: elemente cu termen depasit si neinchise
+- `Upcoming`: elemente care urmeaza sa ajunga la termen
+- `Recently completed`: elemente inchise recent
+- vedere lunara
+- timeline pentru proiecte si subansambluri
 
-Cand il folosesti:
+Foloseste-l:
 
-1. La inceputul zilei pentru prioritizare.
-2. In sedinta operativa pentru a vedea ce intarzie.
-3. Cand vrei sa compari termenele promise cu termenele reale.
+- dimineata pentru prioritizare
+- in meeting pentru verificarea intarzierilor
+- la final de saptamana pentru analiza lead time
 
-Ce inseamna pe scurt:
-
-- `Overdue` = trebuia terminat si nu este marcat ca gata
-- `Upcoming` = urmeaza sa ajunga la termen
-- `Recently completed` = s-a terminat recent si poti verifica viteza de executie
-
-![Calendar productie](output/playwright/howto/05-planning-calendar.png)
+Daca ceva apare intarziat, verifica in `Subassemblies` campurile `Due` si `Done`.
 
 ---
 
-## 8. Blocaje
+## 9. Blockages
 
-In `Blocaje` inregistrezi imediat orice problema care opreste sau risca sa intarzie productia.
+Aici inregistrezi orice problema care opreste sau incetineste productia.
 
-Cand adaugi un blocaj:
+Campuri pentru blocaj nou:
 
-1. Apasa `+ Blocaj Nou`.
-2. Completeaza:
-   `ID`, `Data Deschidere`, `Proiect`, `Subansamblu`, `Departament`, `Responsabil`, `Impact`.
-3. Scrie clar problema in `Descriere Blocaj`.
-4. Salveaza.
+- `ID Blocare`: de exemplu `BLK-005`
+- `Data Deschidere`: cand s-a deschis
+- `Proiect`: proiectul afectat
+- `Subansamblu`: SA afectat
+- `Departament`: `PROIECTARE`, `LASER`, `VIROLAT`, `SUDAT`, `ASAMBLAT`, `VOPSIT` sau `GENERAL`
+- `Responsabil`: persoana responsabila
+- `Descriere Blocaj`: problema exacta
+- `Impact`: `MEDIU`, `INALT`, `CRITIC`
+- `Observatii`: note
 
-Cand il rezolvi:
+Cand il inregistrezi:
 
-1. Apasa `Rezolvat`.
-2. Sistemul trece blocajul in lista de rezolvate.
+- daca lipseste material sau componenta
+- daca se asteapta o decizie tehnica
+- daca un departament nu poate continua
+- daca termenul este in risc
 
-Regula buna:
+Cand se rezolva, apasa `Rezolvat`. Blocajul trece in lista de blocaje rezolvate.
 
-- daca blocajul exista in realitate, el trebuie sa existe si in sistem
-
-![Blocaje](output/playwright/howto/06-blockages.png)
-
----
-
-## 9. PDCA
-
-In `PDCA` urmaresti actiunile de corectie si prevenire.
-
-Foloseste acest ecran cand:
-
-- un blocaj necesita actiune clara si responsabil
-- exista o problema recurenta
-- vrei termen si urmarire pana la inchidere
-
-Flux simplu:
-
-1. Creezi actiunea PDCA.
-2. Setezi responsabilul si termenul.
-3. Urmaresti statusul.
-4. Inchizi actiunea cand a fost rezolvata.
+Important: daca blocajul a fost creat automat din `Subassemblies`, verifica in `Blockages` daca descrierea, responsabilul si impactul sunt suficient de clare.
 
 ---
 
-## 10. Flux Zilnic
+## 10. PDCA
 
-In `Flux Zilnic` notezi miscarea unui subansamblu intre departamente.
+PDCA transforma problemele in actiuni urmaribile.
 
-Exemple:
+PDCA inseamna:
 
-- `LASER -> ROLAT`
+- `Plan`: definirea problemei
+- `Do`: contramasura
+- `Check`: verificarea rezultatului
+- `Act`: inchidere sau actiune urmatoare
+
+Campuri pentru actiune noua:
+
+- `ID PDCA`: de exemplu `PDCA-006`
+- `Sursa`: sursa, de exemplu `BLK-001`
+- `Data Deschis`: data deschiderii
+- `Proiect`: proiectul afectat sau `TOATE`
+- `Responsabil`: responsabil
+- `Termen`: termen limita
+- `Problema (Plan)`: problema
+- `Contramasura (Do)`: contramasura
+- `Prioritate`: `SCAZUT`, `MEDIU`, `INALT`, `CRITIC`
+
+Foloseste PDCA cand:
+
+- blocajul nu se rezolva printr-un pas simplu imediat
+- problema este recurenta
+- trebuie responsabil si termen
+- actiunea trebuie urmarita in review
+
+---
+
+## 11. Daily Flow
+
+Acesta este jurnalul miscarilor zilnice in productie.
+
+Inregistreaza aici cand un subansamblu trece de la un departament la altul, de exemplu:
+
+- `PROIECTARE -> LASER`
+- `LASER -> VIROLAT`
+- `VIROLAT -> SUDAT`
 - `SUDAT -> ASAMBLAT`
 - `ASAMBLAT -> VOPSIT`
 
-Completeaza acest ecran cand un SA este predat mai departe in flux.
+Campuri:
 
-Campuri utile:
+- `Data`: data
+- `Proiect`: proiect
+- `Subansamblu`: numele SA
+- `De la`: departamentul sursa
+- `La`: departamentul destinatie
+- `Echipa`: echipa
+- `Validat de`: cine a validat
+- `Observatii`: note
 
-- data
-- proiect
-- subansamblu
-- departament sursa
-- departament destinatie
-- echipa
-- validat de
-
----
-
-## 11. KPI Echipe
-
-In `KPI Echipe` urmaresti performanta saptamanala.
-
-Aici completezi:
-
-- SA intrare
-- SA iesire
-- SA blocate
-- SA intarziate
-- eficienta
-- lead time
-- calitate
-
-Foloseste acest ecran mai ales la review-ul saptamanal.
+Foloseste acest modul la fiecare predare reala. Ajuta echipa sa vada cand si unde a avansat productia.
 
 ---
 
-## 12. Rutina recomandata de lucru
+## 12. Team KPIs
 
-### Zilnic
+Pagina KPI este folosita pentru performanta saptamanala.
 
-1. Deschide `Tablou de Bord`.
-2. Verifica `Calendar` pentru overdue si due.
-3. Intra in `Subansambluri` si actualizeaza statusul real.
-4. Daca exista probleme, logheaza-le in `Blocaje`.
-5. Daca SA-ul se muta intre departamente, actualizeaza `Flux Zilnic`.
-6. Daca exista actiuni deschise, verifica `PDCA`.
+Campuri principale:
 
-### Saptamanal
+- `Saptamana`: de exemplu `S-20 (Mai 19)`
+- `Echipa`: departament/echipa
+- `SA Intrare`: SA intrate
+- `SA Iesire`: SA iesite/finalizate
+- `SA Blocate`: SA blocate
+- `SA Intarziate`: SA intarziate
+- `Eficienta %`: eficienta
+- `Lead Time (h)`: timp mediu de trecere
+- `Calitate %`: indicator de calitate
 
-1. Verifica `KPI Echipe`.
-2. Uita-te la proiectele cu multe intarzieri.
-3. Compara `Data Target` cu `Data Finalizare`.
-4. Analizeaza unde apar cele mai multe intarzieri pe etape.
+Foloseste pagina:
 
----
-
-## 13. Cum masori viteza de asamblare
-
-Pentru ca acesta este unul dintre scopurile principale ale aplicatiei, completeaza datele consecvent:
-
-- `Data Start` la proiect si la subansamblu
-- `Data Target` sau `Due` cand exista termen clar
-- `Data Finalizare` sau `Done` cand lucrarea este terminata
-- `Laser Done`, `Rolat Done`, `Sudat Done`, `Asamblat Done`, `Vopsit Done` cand fiecare etapa se incheie
-
-Daca aceste campuri sunt actualizate corect, poti vedea:
-
-- cat a durat un SA cap-coada
-- unde a stat cel mai mult
-- ce proiecte intra in intarziere
-- ce departament incetineste fluxul
+- la inceput de saptamana pentru inchiderea saptamanii trecute
+- inainte de review lunar
+- pentru trenduri si blocaje recurente
 
 ---
 
-## 14. Demo Mode
+## 13. Tasks
 
-`Demo Mode` este util pentru:
+Acesta este modulul pentru sarcini interne de birou.
 
-- training intern
-- prezentari
-- verificare UI
-- testare rapida fara login
+Exista doua vederi:
 
-Cand vrei sa iesi, apasa `Exit Demo`.
+- `Sarcinile mele` / `My Tasks`: sarcini atribuite tie
+- `Create de mine` / `Created by Me`: sarcini create de tine
 
----
+Campuri pentru sarcina noua:
 
-## 15. Probleme frecvente
+- `Titlu`: titlu scurt
+- `Descriere`: descriere detaliata
+- `Atribuie catre`: responsabil
+- `Prioritate`: `LOW`, `NORMAL`, `HIGH`, `URGENT`
+- `Termen`: data limita
 
-### Nu vad tab-ul Admin
+Gestionare sarcina:
 
-Contul tau nu are rol de admin.
-
-### Nu apar date noi in calendar
-
-Verifica daca ai completat campurile de data in `Proiecte` sau `Subansambluri`.
-
-### Un SA pare terminat, dar apare overdue
-
-Completeaza si `Done`, nu doar statusul textual.
-
-### Nu vad subansamblurile dupa creare proiect
-
-La proiectele noi ele se adauga automat. Daca nu apar, da refresh si verifica daca proiectul s-a salvat corect.
+1. Deschide sarcina din tabel.
+2. Seteaza statusul: `TODO`, `IN_PROGRESS`, `DONE`.
+3. Adauga comentariu daca este nevoie de clarificare.
+4. Stergerea este disponibila pentru creator sau utilizator cu permisiune potrivita.
 
 ---
 
-## 16. Regula de aur
+## 14. Inventory
 
-Aplicatia este buna doar daca reflecta realitatea din productie in aceeasi zi.
+Modulul de inventar urmareste materii prime si produse finite.
 
-Pe scurt:
+Exista doua taburi:
+
+- `Materii Prime` / `Raw Materials`
+- `Produse Finite` / `Finished Goods`
+
+Pentru un articol poti inregistra:
+
+- denumire
+- SKU
+- categorie
+- unitate de masura
+- cantitate disponibila
+- stoc minim
+- cost/unitate
+- furnizor
+- locatie
+- note
+
+Operatiuni:
+
+- `+`: receptie
+- `-`: eliberare
+- `Ajustare`: corectie stoc
+- `Log`: istoricul tranzactiilor
+- `Edit`: editare articol
+
+Daca stocul scade sub minim, articolul primeste marcaj `Stoc redus` / `Low stock`.
+
+---
+
+## 15. Admin
+
+Pagina Admin este folosita pentru utilizatori si permisiuni.
+
+Actiuni admin:
+
+- creare cont nou
+- setare email, parola, nume complet, departament si rol
+- modificare rol sau departament pentru utilizator existent
+- adaugare sau revocare permisiuni individuale
+
+Creare utilizator:
+
+1. Apasa `+ Cont Nou`.
+2. Introdu emailul si parola.
+3. Introdu numele complet.
+4. Alege departamentul.
+5. Alege rolul.
+6. Salveaza.
+
+Editare permisiuni:
+
+1. La utilizator, apasa `Perm.`.
+2. Bifeaza sau debifeaza permisiunile necesare.
+3. `Reseteaza la rol` revine la permisiunile standard ale rolului.
+4. Salveaza permisiunile.
+
+---
+
+## 16. Reguli pentru date si lead time
+
+Sistemul poate planifica si masura corect doar daca datele sunt corecte.
+
+Completeaza consecvent:
+
+- proiect `Data Start`
+- proiect `Data Target`
+- proiect `Data Finalizare`, cand este inchis real
+- SA `Start`
+- SA `Due`
+- SA `Done`
+- datele `... Done` pe departamente
+
+Pe baza lor poti vedea:
+
+- ce proiect intarzie
+- ce SA este intarziat
+- unde se opreste fluxul
+- care este lead time-ul real
+- ce departament creeaza blocaj
+
+---
+
+## 17. Ce actualizezi si cand
+
+| Eveniment | Ce actualizezi |
+|---|---|
+| Porneste un proiect nou | `Projects` |
+| SA intra in lucru | `Subassemblies` -> `Start`, status departament |
+| Termenul SA este cunoscut | `Subassemblies` -> `Due` |
+| SA trece la alt departament | `Daily Flow` si `Subassemblies` |
+| Un departament termina etapa | data `... Done` corespunzatoare |
+| SA este complet gata | buton `Finalizat` sau `Status Global`, `Progres`, `Done` |
+| SA a fost inchis/blocat gresit | `Subassemblies` -> `Edit` -> `Reset`, apoi date corecte |
+| Apare problema blocanta | `Subassemblies` -> `BLOCAT` si/sau `Blockages` |
+| Blocajul necesita actiune | `PDCA` |
+| Blocajul se rezolva | `Blockages` -> `Rezolvat` |
+| Se pregatesc indicatorii saptamanali | `Team KPIs` |
+| Apare sarcina de birou | `Tasks` |
+| Intra sau iese material | `Inventory` |
+| Un om nou primeste acces | `Admin` |
+
+---
+
+## 18. Probleme frecvente
+
+### Nu vad un modul
+
+Nu ai permisiunea necesara. Cere verificare de la administrator.
+
+### Ceva apare overdue, desi este gata
+
+Verifica daca `Done` este completat, nu doar statusul.
+
+Daca ai folosit `Finalizat`, verifica si datele pe etape. Sistemul poate completa datele lipsa cu data curenta.
+
+### Nu apar date in Calendar
+
+Verifica datele din `Projects` si `Subassemblies`: `Data Start`, `Data Target`, `Start`, `Due`, `Done`.
+
+### Nu pot salva
+
+Este posibil sa ai doar drept de vizualizare. Cere verificarea rolului sau a permisiunilor individuale.
+
+### Am pus un SA pe BLOCAT si a aparut un blockage nou
+
+Este comportament intentionat. Statusul blocat din `Subassemblies` poate crea automat un blocaj deschis ca problema sa nu se piarda din urmarirea zilnica.
+
+### Stocul pare gresit
+
+Deschide `Log` pentru articolul respectiv si verifica receptiile, eliberarile si ajustarile.
+
+---
+
+## 19. Regula de aur
+
+Aplicatia este utila doar daca reflecta realitatea din productie in aceeasi zi.
+
+Inregistreaza in aceeasi zi:
 
 - status real
 - date reale
 - blocaje reale
 - predari reale
+- miscari reale de stoc
 
-Daca actualizezi aceste 4 lucruri constant, aplicatia devine utila pentru planificare, prioritizare si masurarea vitezei reale de asamblare.
+Daca aceste cinci lucruri sunt actualizate constant, OMS devine util pentru decizii zilnice, prioritizare proiecte, masurare lead time si review de echipa.

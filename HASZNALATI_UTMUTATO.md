@@ -39,7 +39,7 @@ Ha nem látsz egy menüpontot vagy nem tudsz menteni, valószínűleg nincs hozz
 |---|---|---|
 | `Tablou de Bord` / `Dashboard` | Minden nap elsőként | Gyors állapotkép a termelésről |
 | `Proiecte` / `Projects` | Új projekt indításakor vagy projektadat módosításakor | Projektek, határidők, felelősök |
-| `Subansambluri` / `Subassemblies` | Napi termelési frissítéskor | Subassembly státuszok és gyártási lépések |
+| `Subansambluri` / `Subassemblies` | Napi termelési frissítéskor | Subassembly státuszok, gyors lezárás, reset és gyártási lépések |
 | `Calendar` | Napi tervezéskor és határidő-ellenőrzéskor | Due, overdue, completed elemek |
 | `Blocaje` / `Blockages` | Amint egy probléma megakasztja a munkát | Blokkoló problémák rögzítése |
 | `PDCA` | Ha a probléma akciót igényel | Javító/megelőző intézkedések követése |
@@ -71,7 +71,7 @@ Ha nem látsz egy menüpontot vagy nem tudsz menteni, valószínűleg nincs hozz
 ### Nap végén
 
 1. Ellenőrizd, hogy minden elkészült SA-nál ki van-e töltve a `Done` dátum.
-2. Ellenőrizd, hogy minden lezárt gyártási lépésnél megvan-e a megfelelő `Laser Done`, `Rolat Done`, `Sudat Done`, `Asamblat Done`, `Vopsit Done` dátum.
+2. Ellenőrizd, hogy minden lezárt gyártási lépésnél megvan-e a megfelelő `PROIECTARE Done`, `LASER Done`, `VIROLAT Done`, `SUDAT Done`, `ASAMBLAT Done`, `VOPSIT Done` dátum.
 3. Zárd le a megoldott blokkolásokat.
 4. Frissítsd az irodai feladatok státuszát, ha érintett vagy.
 
@@ -131,17 +131,23 @@ Ez a napi termelési munka fő oldala.
 
 A gyártási lánc:
 
-`LASER -> ROLAT -> SUDAT -> ASAMBLAT -> VOPSIT`
+`PROIECTARE -> LASER -> VIROLAT -> SUDAT -> ASAMBLAT -> VOPSIT`
+
+Megjegyzés: az adatbázisban a `VIROLAT` lépés technikai mezőneve `rolat`, de a felületen `VIROLAT` néven jelenik meg.
 
 Itt lehet:
 
 - keresni subassembly név alapján
+- projektre szűrni
 - szűrni `ALL`, `FINALIZAT`, `IN LUCRU`, `BLOCAT` státusz szerint
 - frissíteni a globális státuszt
 - frissíteni a progresszt
+- gyors progresszt választani: `0%`, `25%`, `50%`, `75%`, `100%`
 - dátumokat tölteni
 - részlegenként státuszt állítani
 - megjegyzést írni
+- gyorsan készre zárni egy SA-t a `Finalizat` gombbal
+- visszaállítani egy SA-t a `Reset` gombbal, ha hibásan lett lezárva vagy blokkolva
 
 Legfontosabb mezők:
 
@@ -150,7 +156,7 @@ Legfontosabb mezők:
 - `Start`: mikor indult az SA
 - `Due`: mikorra kell kész lennie
 - `Done`: mikor lett kész ténylegesen
-- `Laser Done`, `Rolat Done`, `Sudat Done`, `Asamblat Done`, `Vopsit Done`: részlegenkénti lezárás dátuma
+- `PROIECTARE Done`, `LASER Done`, `VIROLAT Done`, `SUDAT Done`, `ASAMBLAT Done`, `VOPSIT Done`: részlegenkénti lezárás dátuma
 - `Comentarii`: megjegyzés
 
 Helyes használat:
@@ -158,10 +164,26 @@ Helyes használat:
 1. Keresd meg a projektet és az SA-t.
 2. Kattints az `Edit` gombra.
 3. Állítsd be a valós státuszt.
-4. Frissítsd a progresszt.
+4. Frissítsd a progresszt kézzel vagy a gyors gombokkal.
 5. Töltsd ki a releváns dátumokat.
 6. Állítsd be részlegenként, hogy `Neînceput`, `În lucru`, `Finalizat`, `Blocat` vagy `N/A`.
 7. Mentsd.
+
+Gyors `Finalizat` használata:
+
+1. Ha az SA ténylegesen teljesen kész, kattints a `Finalizat` gombra.
+2. A rendszer `100%` progresszre állítja, kitölti a hiányzó részleglezárási dátumokat a mai nappal, és a globális státuszt készre állítja.
+3. Csak akkor használd, ha minden szükséges gyártási lépés valóban lezárult.
+
+`Reset` használata:
+
+1. Edit módban kattints a `Reset` gombra, ha egy SA-t vissza kell nyitni.
+2. A rendszer visszaállítja `IN LUCRU`, `0%`, nem blokkolt állapotra.
+3. A részleg státuszok `Neînceput` értékre kerülnek, a lezárási dátumok törlődnek.
+
+Blokkolás fontos szabálya:
+
+Ha egy SA-t `BLOCAT` globális státuszra állítasz, a rendszer automatikusan létrehozhat egy nyitott `Blockage` bejegyzést. A blokk részlege az első `Blocat` részleg alapján lesz meghatározva; ha nincs ilyen részleg, `GENERAL` lesz. Ezért blokkolás előtt mindig írd be a pontos megjegyzést a `Comentarii` mezőbe.
 
 Fontos szabály: ha egy SA elkészült, a `Done` dátumot is ki kell tölteni, nem elég csak a státuszt készre állítani.
 
@@ -199,7 +221,7 @@ Minden olyan problémát itt kell rögzíteni, amely megállítja vagy lassítja
 - `Data Deschidere`: mikor nyílt
 - `Proiect`: érintett projekt
 - `Subansamblu`: érintett SA
-- `Departament`: `LASER`, `ROLAT`, `SUDAT`, `ASAMBLAT`, `VOPSIT`
+- `Departament`: `PROIECTARE`, `LASER`, `VIROLAT`, `SUDAT`, `ASAMBLAT`, `VOPSIT` vagy automatikus blokk esetén `GENERAL`
 - `Responsabil`: felelős személy
 - `Descriere Blocaj`: pontos probléma
 - `Impact`: `MEDIU`, `INALT`, `CRITIC`
@@ -213,6 +235,8 @@ Mikor rögzítsd:
 - ha a blokk határidőt veszélyeztet
 
 Megoldáskor kattints a `Rezolvat` gombra. A lezárt bejegyzés átkerül a megoldott blokkolások közé.
+
+Fontos: ha a `Subassemblies` oldalon egy SA-t `BLOCAT` állapotba teszel, a rendszer külön `Blockage` rekordot is nyithat. Ilyenkor ellenőrizd a `Blockages` oldalon, hogy az automatikusan létrejött bejegyzés elég pontos-e, és szükség esetén egészítsd ki felelőssel vagy megjegyzéssel.
 
 ---
 
@@ -254,8 +278,9 @@ Ez a napi gyártási mozgások naplója.
 
 Itt rögzítsd, ha egy subassembly átkerül egyik részlegről a másikra, például:
 
-- `LASER -> ROLAT`
-- `ROLAT -> SUDAT`
+- `PROIECTARE -> LASER`
+- `LASER -> VIROLAT`
+- `VIROLAT -> SUDAT`
 - `SUDAT -> ASAMBLAT`
 - `ASAMBLAT -> VOPSIT`
 
@@ -420,8 +445,9 @@ Ez alapján lehet látni:
 | SA határideje ismert | `Subassemblies` -> `Due` |
 | SA továbbmegy másik részlegre | `Daily Flow` és `Subassemblies` |
 | Egy részleg befejezte a munkát | megfelelő `... Done` dátum |
-| SA teljesen kész | `Status Global`, `Progres`, `Done` |
-| Blokkoló probléma keletkezik | `Blockages` |
+| SA teljesen kész | `Finalizat` gyorsgomb vagy `Status Global`, `Progres`, `Done` |
+| SA hibásan lett zárva/blokkolva | `Subassemblies` -> `Edit` -> `Reset`, majd helyes adatok |
+| Blokkoló probléma keletkezik | `Subassemblies` -> `BLOCAT` és/vagy `Blockages` |
 | Blokkolás intézkedést igényel | `PDCA` |
 | Blokkolás megoldódik | `Blockages` -> `Rezolvat` |
 | Heti mutatók készülnek | `Team KPIs` |
@@ -441,6 +467,8 @@ Nincs hozzá jogosultságod. Kérj adminisztrátori ellenőrzést.
 
 Ellenőrizd, hogy a `Done` dátum is ki van-e töltve, nem csak a státusz.
 
+Ha a gyors `Finalizat` gombbal zártad, nézd meg, hogy minden részlegnél megfelelő-e a lezárási dátum. A rendszer a hiányzó dátumokat a lezárás napjával tölti ki.
+
 ### Nem jelenik meg adat a Calendar oldalon
 
 Ellenőrizd a projekt és SA dátummezőket: `Data Start`, `Data Target`, `Start`, `Due`, `Done`.
@@ -448,6 +476,10 @@ Ellenőrizd a projekt és SA dátummezőket: `Data Start`, `Data Target`, `Start
 ### Nem tudok menteni
 
 Lehet, hogy csak megtekintési jogod van. Ellenőriztesd a szerepkört vagy egyedi jogosultságot.
+
+### Blokkoltra állítottam egy SA-t, és megjelent egy új blockage
+
+Ez szándékos működés. A `Subassemblies` blokk státusza automatikusan nyitott blokkolás rekordot hozhat létre, hogy a probléma ne vesszen el a napi követésben.
 
 ### A készlet rossznak tűnik
 

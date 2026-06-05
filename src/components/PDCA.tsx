@@ -56,10 +56,11 @@ export default function PDCA_View() {
 
   const overdue = data?.filter(p => p.zile_ramas === 'DEPASIT') ?? []
   const projectOptions = buildProjectOptions(projects.data)
+  const rows = data ?? []
 
   return (
     <Stack gap={4}>
-      <PageTitle eyebrow={pd.eyebrow} title={pd.title} subtitle={`${pd.subtitle} - ${data?.length ?? '...'} - ${overdue.length} ${pd.overdueLabel}`} info={pageInfo(lang, 'pdca')} action={canWrite ? <ActionButton variant={showForm ? 'outlined' : 'contained'} onClick={() => setShowForm(s => !s)}>{showForm ? `x ${t.common.cancel}` : pd.newBtn}</ActionButton> : undefined} />
+      <PageTitle eyebrow={pd.eyebrow} title={pd.title} subtitle={`${pd.subtitle} - ${rows.length} - ${overdue.length} ${pd.overdueLabel}`} info={pageInfo(lang, 'pdca')} action={canWrite ? <ActionButton variant={showForm ? 'outlined' : 'contained'} onClick={() => setShowForm(s => !s)}>{showForm ? `x ${t.common.cancel}` : pd.newBtn}</ActionButton> : undefined} />
       {(error || projects.error) && <ErrorBanner message={(error || projects.error) ?? ''} />}
 
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(4, 1fr)' }, gap: 1.5 }}>
@@ -104,24 +105,120 @@ export default function PDCA_View() {
           <Eyebrow>{pd.tableTitle}</Eyebrow>
           {overdue.length > 0 && <Badge tone="error" sx={{ ml: 'auto' }}>{overdue.length} depasite</Badge>}
         </Stack>
-        <DataTable sx={{ overflowX: 'auto' }} head={<TableRow><TableCell>{pd.colId}</TableCell><TableCell>{pd.colSursa}</TableCell><TableCell>{pd.colData}</TableCell><TableCell>{pd.colProiect}</TableCell><TableCell sx={{ minWidth: 200 }}>{pd.colProblema}</TableCell><TableCell sx={{ minWidth: 220 }}>{pd.colContramasura}</TableCell><TableCell>{pd.colResponsabil}</TableCell><TableCell>{pd.colTermen}</TableCell><TableCell>{pd.colStatus}</TableCell><TableCell>{pd.colPrioritate}</TableCell><TableCell>{pd.colZile}</TableCell><TableCell /></TableRow>}>
-          {loading ? <LoadingRows cols={12} /> : (data ?? []).length === 0 ? <EmptyState label={pd.tableTitle} /> : (data ?? []).map(p => (
-            <TableRow key={p.id} sx={p.zile_ramas === 'DEPASIT' ? { bgcolor: 'rgba(239,68,68,0.03)' } : undefined}>
-              <TableCell><Typography variant="body2" sx={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--color-primary)' }}>{p.id}</Typography></TableCell>
-              <TableCell><Typography variant="body2" sx={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--color-ink-subtle)' }}>{p.sursa}</Typography></TableCell>
-              <TableCell sx={{ fontSize: 12, color: 'var(--color-ink-muted)', whiteSpace: 'nowrap' }}>{formatDateLabel(p.data_deschis)}</TableCell>
-              <TableCell><Typography variant="body2" sx={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--color-primary)' }}>{p.proiect}</Typography></TableCell>
-              <TableCell sx={{ fontSize: 12, maxWidth: 240 }}>{p.problema}</TableCell>
-              <TableCell sx={{ fontSize: 12, color: 'var(--color-ink-muted)', maxWidth: 260 }}>{p.contramasura}</TableCell>
-              <TableCell sx={{ fontSize: 12, color: 'var(--color-ink-muted)', whiteSpace: 'nowrap' }}>{p.responsabil}</TableCell>
-              <TableCell sx={{ fontSize: 12, color: 'var(--color-ink-muted)', whiteSpace: 'nowrap' }}>{formatDateLabel(p.termen)}</TableCell>
-              <TableCell>{statusBadge(p.status)}</TableCell>
-              <TableCell>{priorityBadge(p.prioritate)}</TableCell>
-              <TableCell>{p.zile_ramas === 'DEPASIT' ? <Badge tone="error">DEPASIT</Badge> : <Typography variant="body2" sx={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--color-ink-muted)' }}>{p.zile_ramas}</Typography>}</TableCell>
-              <TableCell>{canWrite && p.status !== 'Inchis' && <ActionButton variant="outlined" onClick={() => closeAction(p.id)} sx={{ bgcolor: 'rgba(39,166,68,0.1)', borderColor: 'rgba(39,166,68,0.2)', color: '#4ade80', fontSize: 11, px: 1, py: 0.375, whiteSpace: 'nowrap' }}>Inchide</ActionButton>}</TableCell>
+
+        {/* ── Desktop table (md+) ── */}
+        <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+          <DataTable head={
+            <TableRow>
+              <TableCell>{pd.colId}</TableCell>
+              <TableCell>{pd.colSursa}</TableCell>
+              <TableCell>{pd.colData}</TableCell>
+              <TableCell>{pd.colProiect}</TableCell>
+              <TableCell sx={{ minWidth: 200 }}>{pd.colProblema}</TableCell>
+              <TableCell sx={{ minWidth: 220 }}>{pd.colContramasura}</TableCell>
+              <TableCell>{pd.colResponsabil}</TableCell>
+              <TableCell>{pd.colTermen}</TableCell>
+              <TableCell>{pd.colStatus}</TableCell>
+              <TableCell>{pd.colPrioritate}</TableCell>
+              <TableCell>{pd.colZile}</TableCell>
+              <TableCell />
             </TableRow>
+          }>
+            {loading ? <LoadingRows cols={12} /> : rows.length === 0 ? <EmptyState label={pd.tableTitle} /> : rows.map(p => (
+              <TableRow key={p.id} sx={p.zile_ramas === 'DEPASIT' ? { bgcolor: 'rgba(239,68,68,0.03)' } : undefined}>
+                <TableCell><Typography variant="body2" sx={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--color-primary)' }}>{p.id}</Typography></TableCell>
+                <TableCell><Typography variant="body2" sx={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--color-ink-subtle)' }}>{p.sursa}</Typography></TableCell>
+                <TableCell sx={{ fontSize: 12, color: 'var(--color-ink-muted)', whiteSpace: 'nowrap' }}>{formatDateLabel(p.data_deschis)}</TableCell>
+                <TableCell><Typography variant="body2" sx={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--color-primary)' }}>{p.proiect}</Typography></TableCell>
+                <TableCell sx={{ fontSize: 12, maxWidth: 240 }}>{p.problema}</TableCell>
+                <TableCell sx={{ fontSize: 12, color: 'var(--color-ink-muted)', maxWidth: 260 }}>{p.contramasura}</TableCell>
+                <TableCell sx={{ fontSize: 12, color: 'var(--color-ink-muted)', whiteSpace: 'nowrap' }}>{p.responsabil}</TableCell>
+                <TableCell sx={{ fontSize: 12, color: 'var(--color-ink-muted)', whiteSpace: 'nowrap' }}>{formatDateLabel(p.termen)}</TableCell>
+                <TableCell>{statusBadge(p.status)}</TableCell>
+                <TableCell>{priorityBadge(p.prioritate)}</TableCell>
+                <TableCell>{p.zile_ramas === 'DEPASIT' ? <Badge tone="error">DEPASIT</Badge> : <Typography variant="body2" sx={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--color-ink-muted)' }}>{p.zile_ramas}</Typography>}</TableCell>
+                <TableCell>{canWrite && p.status !== 'Inchis' && <ActionButton variant="outlined" onClick={() => closeAction(p.id)} sx={{ bgcolor: 'rgba(39,166,68,0.1)', borderColor: 'rgba(39,166,68,0.2)', color: '#4ade80', fontSize: 11, px: 1, py: 0.375, whiteSpace: 'nowrap' }}>Inchide</ActionButton>}</TableCell>
+              </TableRow>
+            ))}
+          </DataTable>
+        </Box>
+
+        {/* ── Mobile cards (xs–sm) ── */}
+        <Stack sx={{ display: { xs: 'flex', md: 'none' } }} gap={0}>
+          {loading ? (
+            <Box sx={{ p: 3, textAlign: 'center' }}><Typography sx={{ fontSize: 13, color: 'var(--color-ink-subtle)' }}>Se încarcă...</Typography></Box>
+          ) : rows.length === 0 ? (
+            <Box sx={{ p: 3, textAlign: 'center' }}><Typography sx={{ fontSize: 13, color: 'var(--color-ink-subtle)' }}>{pd.tableTitle}</Typography></Box>
+          ) : rows.map((p, i) => (
+            <Box
+              key={p.id}
+              sx={{
+                p: '14px 16px',
+                borderBottom: i < rows.length - 1 ? '1px solid var(--color-hairline)' : 'none',
+                bgcolor: p.zile_ramas === 'DEPASIT' ? 'rgba(239,68,68,0.03)' : 'transparent',
+              }}
+            >
+              {/* Row 1: ID + badges */}
+              <Stack direction="row" alignItems="center" gap={1} sx={{ mb: 0.75 }} flexWrap="wrap">
+                <Typography sx={{ fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 700, color: 'var(--color-primary)', flexShrink: 0 }}>{p.id}</Typography>
+                {p.sursa && <Typography sx={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--color-ink-subtle)' }}>{p.sursa}</Typography>}
+                {statusBadge(p.status)}
+                {priorityBadge(p.prioritate)}
+                {p.zile_ramas === 'DEPASIT' && <Badge tone="error">DEPASIT</Badge>}
+              </Stack>
+
+              {/* Row 2: project + date + days */}
+              <Stack direction="row" alignItems="center" gap={1.5} sx={{ mb: 1 }} flexWrap="wrap">
+                {p.proiect && (
+                  <Typography sx={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--color-primary)', bgcolor: 'rgba(94,106,210,0.1)', px: '6px', py: '2px', borderRadius: 'var(--radius-xs)' }}>{p.proiect}</Typography>
+                )}
+                {p.data_deschis && (
+                  <Typography sx={{ fontSize: 11, color: 'var(--color-ink-tertiary)' }}>{formatDateLabel(p.data_deschis)}</Typography>
+                )}
+                {p.zile_ramas && p.zile_ramas !== 'DEPASIT' && (
+                  <Typography sx={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--color-ink-muted)' }}>{p.zile_ramas}</Typography>
+                )}
+              </Stack>
+
+              {/* Row 3: problem */}
+              <Box sx={{ mb: p.contramasura ? 0.75 : 1 }}>
+                <Typography sx={{ fontSize: 10, color: 'var(--color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: 0.4, mb: 0.25 }}>PLAN — Problema</Typography>
+                <Typography sx={{ fontSize: 13, color: 'var(--color-ink)', lineHeight: 1.5 }}>{p.problema}</Typography>
+              </Box>
+
+              {/* Row 4: countermeasure */}
+              {p.contramasura && (
+                <Box sx={{ mb: 1 }}>
+                  <Typography sx={{ fontSize: 10, color: 'var(--color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: 0.4, mb: 0.25 }}>DO — Contramasura</Typography>
+                  <Typography sx={{ fontSize: 13, color: 'var(--color-ink-muted)', lineHeight: 1.5 }}>{p.contramasura}</Typography>
+                </Box>
+              )}
+
+              {/* Row 5: responsabil + termen */}
+              <Stack direction="row" gap={2} sx={{ mb: canWrite && p.status !== 'Inchis' ? 1 : 0 }} flexWrap="wrap">
+                {p.responsabil && (
+                  <Stack direction="row" alignItems="center" gap={0.5}>
+                    <Typography sx={{ fontSize: 10, color: 'var(--color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: 0.4 }}>Resp.</Typography>
+                    <Typography sx={{ fontSize: 12, color: 'var(--color-ink-muted)', fontWeight: 500 }}>{p.responsabil}</Typography>
+                  </Stack>
+                )}
+                {p.termen && (
+                  <Stack direction="row" alignItems="center" gap={0.5}>
+                    <Typography sx={{ fontSize: 10, color: 'var(--color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: 0.4 }}>Termen</Typography>
+                    <Typography sx={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>{formatDateLabel(p.termen)}</Typography>
+                  </Stack>
+                )}
+              </Stack>
+
+              {/* Row 6: close button */}
+              {canWrite && p.status !== 'Inchis' && (
+                <ActionButton variant="outlined" onClick={() => closeAction(p.id)} sx={{ width: '100%', bgcolor: 'rgba(39,166,68,0.08)', borderColor: 'rgba(39,166,68,0.25)', color: '#4ade80', fontSize: 12, py: 0.75 }}>
+                  Inchide
+                </ActionButton>
+              )}
+            </Box>
           ))}
-        </DataTable>
+        </Stack>
       </Card>
     </Stack>
   )
