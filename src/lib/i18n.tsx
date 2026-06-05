@@ -27,6 +27,7 @@ const T = {
       save: 'Salvează', cancel: 'Anulează', edit: 'Edit', close: 'Închide',
       saving: 'Se salvează...', add: 'Adaugă', create: 'Creează',
       noData: '—', records: 'înregistrări', loading: 'Se încarcă...',
+      select: '— Selectați —',
     },
     dashboard: {
       eyebrow: 'Ședință Operațională Zilnică · 08:00 · 15–20 MIN',
@@ -42,6 +43,8 @@ const T = {
       colPrioritate: 'PRIORITATE', colProgres: 'PROGRES', colStatus: 'STATUS', colBlocaje: 'BLOCAJE',
       colDept: 'DEPT', colActive: 'ACTIVE', colSubansamblu: 'SUBANSAMBLU',
       colOwner: 'OWNER', colImpact: 'IMPACT',
+      blocateSATitle: '⛔ SUBANSAMBLURI BLOCATE', pdcaOpenTitle: 'PDCA DESCHISE',
+      colMotiv: 'Motiv', depasiteLabel: 'depășite', urgentHighLabel: 'urgente/ridicate',
     },
 	    proiecte: {
 	      eyebrow: 'Registru Proiecte', title: 'Proiecte', newBtn: '+ Proiect Nou',
@@ -57,12 +60,15 @@ const T = {
 	      labelPrioritate: 'Prioritate', labelSA: 'Subansambluri',
 	      blocajeActive: 'blocaje active',
 	      deleteBtn: '✕ Șterge', deleteConfirm: 'Ștergi proiectul {id}? Această acțiune nu poate fi anulată.',
+	      statusLivrat: 'LIVRAT', statusInLivrare: 'IN LIVRARE',
+	      statusInProductie: 'IN PRODUCȚIE', statusBlocajeActive: 'BLOCAJE ACTIVE',
 	    },
 	    subansambluri: {
 	      eyebrow: 'Tracking Subansambluri', title: 'Subansambluri',
 	      search: 'Caută subansamblu...', colProiect: 'Proiect', colNr: '#',
 	      colNume: 'Subansamblu', colStatus: 'Status', colProgres: 'Progres', colTimeline: 'Calendar', colDeptDates: 'Etape',
 	      colComentarii: 'Comentarii', empty: 'Niciun subansamblu găsit',
+	      filterAll: 'Toate', filterDone: 'Finalizat', filterInProgress: 'În Lucru', filterBlocked: 'Blocat',
 	    },
       planning: {
         eyebrow: 'Planificare și Lead Time', title: 'Calendar', subtitle: 'Scadențe, finalizări și elemente întârziate',
@@ -77,7 +83,7 @@ const T = {
     blocaje: {
       eyebrow: 'Registru Blocaje', title: 'Blocaje',
       subtitle: 'Orice blocare se înregistrează IMEDIAT. Fiecare blocare generează un PDCA.',
-      newBtn: '+ Blocaj Nou', formTitle: 'Înregistrare Blocaj Nou', saveBtn: 'Înregistrează Blocaj',
+      newBtn: '+ Blocaj Nou', formTitle: 'Blocaj Nou', saveBtn: 'Înregistrează Blocaj',
       resolveBtn: '✅ Rezolvat', activeTitle: 'Blocaje Active', resolvedTitle: 'Blocaje Rezolvate',
       openCount: 'deschise', closedCount: 'închise',
       idBlocare: 'ID Blocare', dataDeschidere: 'Data Deschidere', proiect: 'Proiect',
@@ -89,6 +95,7 @@ const T = {
       colRezolvat: 'Rezolvat',
       deschise: 'Blocaje Deschise', deschiseHint: 'necesită acțiune',
       rezolvate: 'Rezolvate', rezolvateHint: 'închise',
+      emptyActive: 'Niciun blocaj activ', emptyResolved: 'Niciun blocaj rezolvat',
     },
     pdca: {
       eyebrow: 'Hoshin Kanri Action Tracker', title: 'PDCA',
@@ -102,6 +109,9 @@ const T = {
       colId: 'ID', colSursa: 'Sursă', colData: 'Data', colProiect: 'Proiect',
       colProblema: 'Problemă', colContramasura: 'Contramasură', colResponsabil: 'Responsabil',
       colTermen: 'Termen', colStatus: 'Status', colPrioritate: 'Prioritate', colZile: 'Zile',
+      planDesc: 'Identificare problemă', doDesc: 'Contramasuri',
+      checkDesc: 'Verificare rezultate', actDesc: 'Acțiune următoare',
+      autoGenerate: 'Auto-generează',
     },
     flux: {
       eyebrow: 'Log Operațional', title: 'Flux Zilnic de Producție',
@@ -158,6 +168,7 @@ const T = {
       officeDesc: 'Acces la zona de birou: sarcini și inventar.',
       officeProdDesc: 'Acces la ambele zone (producție + birou).',
       viewerDesc: 'Acces de citire la toate zonele, fără modificări.',
+      resetPassword: '✉ Reset Parolă', resetSent: 'Email de resetare trimis la',
     },
     logs: {
       title: 'Jurnal Activitate', subtitle: 'Toate acțiunile utilizatorilor înregistrate',
@@ -179,6 +190,8 @@ const T = {
       noTasks: 'Nicio sarcină', noComments: 'Niciun comentariu',
       noActiveTasks: 'Nicio sarcină activă', activeTasks: 'sarcini active',
       overdueShort: 'întârziate', viewAll: 'Vezi toate',
+      titlePlaceholder: 'Titlu sarcină...', doneNote: 'Note opționale despre rezolvare...',
+      doneConfirm: '✓ Gata', doneAction: 'Finalizezi',
       colTitle: 'Titlu', colAssignee: 'Atribuit', colCreatedBy: 'Creat de', colPriority: 'Prioritate',
       colDue: 'Termen', colStatus: 'Status',
       deleteConfirm: 'Ștergi această sarcină?',
@@ -195,7 +208,7 @@ const T = {
       receive: '+ Recepție', issue: '- Eliberare', adjust: 'Ajustare',
       txTitle: 'Tranzacții', txType: 'Tip', txQty: 'Cantitate', txRef: 'Referință', txDate: 'Data',
       txIn: 'Recepție', txOut: 'Eliberare', txAdjustment: 'Ajustare', txReservation: 'Rezervare',
-      lowStock: 'Stoc redus', lowStockHint: 'sub nivelul minim',
+      lowStock: 'Stoc redus', lowStockHint: 'sub nivelul minim', allGood: 'stocuri în regulă',
       colName: 'Articol', colSku: 'SKU', colCategory: 'Categorie', colUnit: 'UM',
       colQty: 'Disponibil', colReserved: 'Rezervat', colMin: 'Min', colLocation: 'Locație',
       colCost: 'Cost/UM', colSupplier: 'Furnizor',
@@ -228,6 +241,7 @@ const T = {
       save: 'Save', cancel: 'Cancel', edit: 'Edit', close: 'Close',
       saving: 'Saving...', add: 'Add', create: 'Create',
       noData: '—', records: 'records', loading: 'Loading...',
+      select: '— Select —',
     },
     dashboard: {
       eyebrow: 'Daily Operations Meeting · 08:00 · 15–20 MIN',
@@ -243,6 +257,8 @@ const T = {
       colPrioritate: 'PRIORITY', colProgres: 'PROGRESS', colStatus: 'STATUS', colBlocaje: 'BLOCKAGES',
       colDept: 'DEPT', colActive: 'ACTIVE', colSubansamblu: 'SUBASSEMBLY',
       colOwner: 'OWNER', colImpact: 'IMPACT',
+      blocateSATitle: '⛔ BLOCKED SUBASSEMBLIES', pdcaOpenTitle: 'OPEN PDCA ACTIONS',
+      colMotiv: 'Reason', depasiteLabel: 'overdue', urgentHighLabel: 'urgent/high priority',
     },
 	    proiecte: {
 	      eyebrow: 'Project Registry', title: 'Projects', newBtn: '+ New Project',
@@ -258,12 +274,15 @@ const T = {
 	      labelPrioritate: 'Priority', labelSA: 'Subassemblies',
 	      blocajeActive: 'active blockages',
 	      deleteBtn: '✕ Delete', deleteConfirm: 'Delete project {id}? This action cannot be undone.',
+	      statusLivrat: 'DELIVERED', statusInLivrare: 'IN DELIVERY',
+	      statusInProductie: 'IN PRODUCTION', statusBlocajeActive: 'ACTIVE BLOCKAGES',
 	    },
 	    subansambluri: {
 	      eyebrow: 'Subassembly Tracking', title: 'Subassemblies',
 	      search: 'Search subassembly...', colProiect: 'Project', colNr: '#',
 	      colNume: 'Subassembly', colStatus: 'Status', colProgres: 'Progress', colTimeline: 'Timeline', colDeptDates: 'Milestones',
 	      colComentarii: 'Comments', empty: 'No subassemblies found',
+	      filterAll: 'All', filterDone: 'Done', filterInProgress: 'In Progress', filterBlocked: 'Blocked',
 	    },
       planning: {
         eyebrow: 'Planning and Lead Time', title: 'Calendar', subtitle: 'Due dates, completions, and overdue work',
@@ -278,7 +297,7 @@ const T = {
     blocaje: {
       eyebrow: 'Blockage Registry', title: 'Blockages',
       subtitle: 'Every blockage must be logged IMMEDIATELY. Each blockage generates a PDCA.',
-      newBtn: '+ New Blockage', formTitle: 'Log New Blockage', saveBtn: 'Log Blockage',
+      newBtn: '+ New Blockage', formTitle: 'New Blockage', saveBtn: 'Register Blockage',
       resolveBtn: '✅ Resolved', activeTitle: 'Active Blockages', resolvedTitle: 'Resolved Blockages',
       openCount: 'open', closedCount: 'closed',
       idBlocare: 'Blockage ID', dataDeschidere: 'Open Date', proiect: 'Project',
@@ -290,6 +309,7 @@ const T = {
       colRezolvat: 'Resolved',
       deschise: 'Open Blockages', deschiseHint: 'requires action',
       rezolvate: 'Resolved', rezolvateHint: 'closed',
+      emptyActive: 'No active blockages', emptyResolved: 'No resolved blockages',
     },
     pdca: {
       eyebrow: 'Hoshin Kanri Action Tracker', title: 'PDCA',
@@ -303,6 +323,9 @@ const T = {
       colId: 'ID', colSursa: 'Source', colData: 'Date', colProiect: 'Project',
       colProblema: 'Problem', colContramasura: 'Countermeasure', colResponsabil: 'Owner',
       colTermen: 'Due Date', colStatus: 'Status', colPrioritate: 'Priority', colZile: 'Days',
+      planDesc: 'Problem identification', doDesc: 'Countermeasures',
+      checkDesc: 'Results verification', actDesc: 'Next action',
+      autoGenerate: 'Auto-generate',
     },
     flux: {
       eyebrow: 'Operational Log', title: 'Daily Production Flow',
@@ -359,6 +382,7 @@ const T = {
       officeDesc: 'Office zone access: tasks and inventory.',
       officeProdDesc: 'Access to both zones (production + office).',
       viewerDesc: 'Read-only access to all zones, no edits.',
+      resetPassword: '✉ Reset Password', resetSent: 'Reset email sent to',
     },
     logs: {
       title: 'Activity Log', subtitle: 'All user actions recorded',
@@ -380,6 +404,8 @@ const T = {
       noTasks: 'No tasks', noComments: 'No comments yet',
       noActiveTasks: 'No active tasks', activeTasks: 'active tasks',
       overdueShort: 'overdue', viewAll: 'View all',
+      titlePlaceholder: 'Task title...', doneNote: 'Optional notes about resolution...',
+      doneConfirm: '✓ Done', doneAction: 'Finishing',
       colTitle: 'Title', colAssignee: 'Assignee', colCreatedBy: 'Created by', colPriority: 'Priority',
       colDue: 'Due', colStatus: 'Status',
       deleteConfirm: 'Delete this task?',
@@ -396,7 +422,7 @@ const T = {
       receive: '+ Receive', issue: '- Issue', adjust: 'Adjust',
       txTitle: 'Transactions', txType: 'Type', txQty: 'Qty', txRef: 'Reference', txDate: 'Date',
       txIn: 'Receipt', txOut: 'Issue', txAdjustment: 'Adjustment', txReservation: 'Reservation',
-      lowStock: 'Low stock', lowStockHint: 'below minimum level',
+      lowStock: 'Low stock', lowStockHint: 'below minimum level', allGood: 'all good',
       colName: 'Item', colSku: 'SKU', colCategory: 'Category', colUnit: 'Unit',
       colQty: 'On Hand', colReserved: 'Reserved', colMin: 'Min', colLocation: 'Location',
       colCost: 'Cost/Unit', colSupplier: 'Supplier',

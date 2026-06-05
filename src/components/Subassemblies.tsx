@@ -200,11 +200,15 @@ export default function Subansambluri() {
     setEditRow(row)
   }
 
-  const pills = (opts: string[], val: string, set: (v: string) => void) => (
+  const pills = (opts: (string | { value: string; label: string })[], val: string, set: (v: string) => void) => (
     <Stack direction="row" gap={0.5} sx={{ bgcolor: 'var(--color-surface-1)', borderRadius: 'var(--radius-pill)', p: 0.375, border: '1px solid var(--color-hairline)', flexWrap: 'wrap' }}>
-      {opts.map(o => (
-        <ActionButton key={o} variant="outlined" onClick={() => set(o)} sx={{ px: 1.5, py: 0.5, borderRadius: 'var(--radius-pill)', border: 'none', bgcolor: val === o ? 'var(--color-surface-3)' : 'transparent', color: val === o ? 'var(--color-ink)' : 'var(--color-ink-subtle)', fontSize: 12, fontWeight: val === o ? 500 : 400, '&:hover': { bgcolor: 'var(--color-surface-3)' } }}>{o}</ActionButton>
-      ))}
+      {opts.map(o => {
+        const v = typeof o === 'string' ? o : o.value
+        const label = typeof o === 'string' ? o : o.label
+        return (
+          <ActionButton key={v} variant="outlined" onClick={() => set(v)} sx={{ px: 1.5, py: 0.5, borderRadius: 'var(--radius-pill)', border: 'none', bgcolor: val === v ? 'var(--color-surface-3)' : 'transparent', color: val === v ? 'var(--color-ink)' : 'var(--color-ink-subtle)', fontSize: 12, fontWeight: val === v ? 500 : 400, '&:hover': { bgcolor: 'var(--color-surface-3)' } }}>{label}</ActionButton>
+        )
+      })}
     </Stack>
   )
 
@@ -282,7 +286,12 @@ export default function Subansambluri() {
         <AppField type="text" placeholder={s.search} value={search} onChange={e => setSearch(e.target.value)} />
         <Stack direction="row" gap={1} flexWrap="wrap">
           {projects.length > 1 && pills(projects, filterProiect, v => setFilterProiect(v))}
-          {pills(['ALL', 'FINALIZAT', 'IN LUCRU', 'BLOCAT'], filterStatus, v => setFilterStatus(v as FilterStatus))}
+          {pills([
+            { value: 'ALL', label: s.filterAll },
+            { value: 'FINALIZAT', label: s.filterDone },
+            { value: 'IN LUCRU', label: s.filterInProgress },
+            { value: 'BLOCAT', label: s.filterBlocked },
+          ], filterStatus, v => setFilterStatus(v as FilterStatus))}
         </Stack>
       </Stack>
 

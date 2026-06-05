@@ -191,7 +191,7 @@ function TaskForm({ users, userId, onSave, onCancel }: TaskFormProps) {
       <Eyebrow sx={{ mb: 2 }}>{tk.formTitle}</Eyebrow>
       {error && <ErrorBanner message={error} />}
       <UiStack component="form" onSubmit={submit} gap={1.5}>
-        <AppField label={`${tk.title_} *`} required value={form.title} onChange={e => setF('title', e.target.value)} placeholder="Titlu sarcină..." />
+        <AppField label={`${tk.title_} *`} required value={form.title} onChange={e => setF('title', e.target.value)} placeholder={tk.titlePlaceholder} />
         <AppField label={tk.description} value={form.description} onChange={e => setF('description', e.target.value)} multiline rows={3} />
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' }, gap: 1.5 }}>
           <AppSelect label={tk.assignTo} value={form.assigned_to} onChange={e => setF('assigned_to', e.target.value)}
@@ -343,7 +343,7 @@ export default function TaskBoard({ userId }: { userId: string | null }) {
                 <Stack direction="row" alignItems="center" gap={1} sx={{ mb: 0.75 }} flexWrap="wrap">
                   <Badge tone={PRIORITY_TONE[task.priority]}>{priorityLabel(task.priority, t)}</Badge>
                   <Badge tone={STATUS_TONE[task.status]}>{statusLabel(task.status, t)}</Badge>
-                  {isOverdue && <Badge tone="error">Depășit</Badge>}
+                  {isOverdue && <Badge tone="error">{tk.overdueShort}</Badge>}
                 </Stack>
 
                 {/* Row 2: title */}

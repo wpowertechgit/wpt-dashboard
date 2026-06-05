@@ -14,10 +14,11 @@ function priorityBadge(p: string) {
   return <Badge tone="success">🟢 NORMAL</Badge>
 }
 
-function statusBadge(s: string) {
-  if (s === 'LIVRAT') return <Badge tone="success">✅ LIVRAT</Badge>
-  if (s === 'IN LIVRARE') return <Badge tone="warning">🟡 IN LIVRARE</Badge>
-  if (s === 'BLOCAJE ACTIVE') return <Badge tone="error">⛔ BLOCAJE ACTIVE</Badge>
+function statusBadge(s: string, p: { statusLivrat: string; statusInLivrare: string; statusInProductie: string; statusBlocajeActive: string }) {
+  if (s === 'LIVRAT') return <Badge tone="success">✅ {p.statusLivrat}</Badge>
+  if (s === 'IN LIVRARE') return <Badge tone="warning">🟡 {p.statusInLivrare}</Badge>
+  if (s === 'IN PRODUCTIE') return <Badge>{p.statusInProductie}</Badge>
+  if (s === 'BLOCAJE ACTIVE') return <Badge tone="error">⛔ {p.statusBlocajeActive}</Badge>
   return <Badge>{s}</Badge>
 }
 
@@ -61,6 +62,7 @@ const DEPT_DB: Record<string, string> = { VIROLAT: 'rolat', LASER: 'laser', SUDA
 export default function Dashboard({ userId }: { userId?: string | null }) {
   const { t, lang } = useLang()
   const d = t.dashboard
+  const pr = t.proiecte
   const navigate = useNavigate()
   const { hasPermission } = usePermissions()
   const proiecte = useQuery(fetchProiecte)
@@ -146,8 +148,8 @@ export default function Dashboard({ userId }: { userId?: string | null }) {
                   </Typography>
                   <Typography variant="body2" sx={{ fontSize: 12, color: 'var(--color-ink-subtle)' }}>
                     {pendingTasks.filter(tk => tk.priority === 'URGENT' || tk.priority === 'HIGH').length > 0
-                      ? `${pendingTasks.filter(tk => tk.priority === 'URGENT' || tk.priority === 'HIGH').length} urgente/ridicate`
-                      : 'sarcini active'}
+                      ? `${pendingTasks.filter(tk => tk.priority === 'URGENT' || tk.priority === 'HIGH').length} ${d.urgentHighLabel}`
+                      : t.tasks.activeTasks}
                   </Typography>
                 </Stack>
                 <Typography sx={{ fontSize: 24 }}>📋</Typography>
@@ -163,7 +165,7 @@ export default function Dashboard({ userId }: { userId?: string | null }) {
                     {lowStockItems.length}
                   </Typography>
                   <Typography variant="body2" sx={{ fontSize: 12, color: 'var(--color-ink-subtle)' }}>
-                    {lowStockItems.length > 0 ? t.inventory.lowStockHint : 'stocuri în regulă'}
+                    {lowStockItems.length > 0 ? t.inventory.lowStockHint : t.inventory.allGood}
                   </Typography>
                 </Stack>
                 <Typography sx={{ fontSize: 24 }}>📦</Typography>
@@ -179,10 +181,10 @@ export default function Dashboard({ userId }: { userId?: string | null }) {
           {blocateSA_list.length > 0 && (
             <Card sx={{ p: 0, overflow: 'hidden' }}>
               <Stack direction="row" alignItems="center" sx={{ p: '16px 20px', borderBottom: '1px solid var(--color-hairline)' }}>
-                <Eyebrow>⛔ SUBANSAMBLURI BLOCATE</Eyebrow>
+                <Eyebrow>{d.blocateSATitle}</Eyebrow>
                 <Badge tone="error" sx={{ ml: 'auto' }}>{blocateSA_list.length}</Badge>
               </Stack>
-              <DataTable head={<TableRow><TableCell>ID</TableCell><TableCell>Subansamblu</TableCell><TableCell>Motiv</TableCell></TableRow>}>
+              <DataTable head={<TableRow><TableCell>ID</TableCell><TableCell>{d.colSubansamblu}</TableCell><TableCell>{d.colMotiv}</TableCell></TableRow>}>
                 {blocateSA_list.map(b => (
                   <TableRow key={b.id}>
                     <TableCell><Typography variant="body2" sx={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--color-primary)' }}>{b.proiect} #{b.nr}</Typography></TableCell>
@@ -197,16 +199,16 @@ export default function Dashboard({ userId }: { userId?: string | null }) {
           {pdcaOpen.length > 0 && (
             <Card sx={{ p: 0, overflow: 'hidden' }}>
               <Stack direction="row" alignItems="center" sx={{ p: '16px 20px', borderBottom: '1px solid var(--color-hairline)' }}>
-                <Eyebrow>PDCA DESCHISE</Eyebrow>
-                {pdcaOverdue.length > 0 && <Badge tone="error" sx={{ ml: 'auto' }}>{pdcaOverdue.length} depășite</Badge>}
+                <Eyebrow>{d.pdcaOpenTitle}</Eyebrow>
+                {pdcaOverdue.length > 0 && <Badge tone="error" sx={{ ml: 'auto' }}>{pdcaOverdue.length} {d.depasiteLabel}</Badge>}
               </Stack>
-              <DataTable head={<TableRow><TableCell>ID</TableCell><TableCell>Problemă</TableCell><TableCell>Responsabil</TableCell><TableCell>Zile</TableCell></TableRow>}>
+              <DataTable head={<TableRow><TableCell>ID</TableCell><TableCell>{t.pdca.colProblema}</TableCell><TableCell>{t.pdca.colResponsabil}</TableCell><TableCell>{t.pdca.colZile}</TableCell></TableRow>}>
                 {pdcaOpen.slice(0, 8).map(p => (
                   <TableRow key={p.id} sx={p.zile_ramas === 'DEPASIT' ? { bgcolor: 'rgba(239,68,68,0.03)' } : undefined}>
                     <TableCell><Typography variant="body2" sx={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--color-primary)' }}>{p.id}</Typography></TableCell>
                     <TableCell sx={{ fontSize: 12, maxWidth: 200 }}>{p.problema}</TableCell>
                     <TableCell sx={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>{p.responsabil}</TableCell>
-                    <TableCell>{p.zile_ramas === 'DEPASIT' ? <Badge tone="error">DEPĂȘIT</Badge> : <Typography variant="body2" sx={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{p.zile_ramas}</Typography>}</TableCell>
+                    <TableCell>{p.zile_ramas === 'DEPASIT' ? <Badge tone="error">{t.pdca.overdueLabel.toUpperCase()}</Badge> : <Typography variant="body2" sx={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{p.zile_ramas}</Typography>}</TableCell>
                   </TableRow>
                 ))}
               </DataTable>
@@ -227,7 +229,7 @@ export default function Dashboard({ userId }: { userId?: string | null }) {
               <TableCell sx={{ color: 'var(--color-ink-muted)' }}>{p.responsabil}</TableCell>
               <TableCell>{priorityBadge(p.prioritate)}</TableCell>
               <TableCell sx={{ minWidth: 160 }}><ProgressBar value={Number(p.progres)} /></TableCell>
-              <TableCell>{statusBadge(p.status)}</TableCell>
+              <TableCell>{statusBadge(p.status, pr)}</TableCell>
               <TableCell sx={{ textAlign: 'center' }}>{p.blocaje_active > 0 ? <Badge tone="error">{p.blocaje_active}</Badge> : <Typography variant="body2" sx={{ color: 'var(--color-ink-tertiary)' }}>–</Typography>}</TableCell>
             </TableRow>
           ))}

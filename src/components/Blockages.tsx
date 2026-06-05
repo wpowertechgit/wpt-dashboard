@@ -61,15 +61,15 @@ export default function Blocaje() {
 
   const formFields = (
     <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: 1.5, mb: 1.5 }}>
-      <AppField label="ID Blocare *" required value={form.id} onChange={e => setF('id', e.target.value)} placeholder="BLK-005" />
-      <AppField label="Data Deschidere" type="date" value={form.data_deschidere} onChange={e => setF('data_deschidere', e.target.value)} />
-      <AppSelect label="Proiect" value={form.proiect} onChange={e => setF('proiect', e.target.value)} options={[{ value: '', label: '- Selectati -' }, ...projectOptions]} />
-      <AppField label="Subansamblu" value={form.subansamblu} onChange={e => setF('subansamblu', e.target.value)} />
-      <AppSelect label="Departament" value={form.departament} onChange={e => setF('departament', e.target.value)} options={['PROIECTARE','LASER','VIROLAT','SUDAT','ASAMBLAT','VOPSIT']} />
-      <AppField label="Responsabil" value={form.responsabil} onChange={e => setF('responsabil', e.target.value)} />
-      <AppField label="Descriere Blocaj *" required value={form.descriere} onChange={e => setF('descriere', e.target.value)} sx={{ gridColumn: '1 / -1' }} />
-      <AppSelect label="Impact" value={form.impact} onChange={e => setF('impact', e.target.value)} options={['MEDIU','INALT','CRITIC']} />
-      <AppField label="Observatii" value={form.observatii} onChange={e => setF('observatii', e.target.value)} />
+      <AppField label={`${b.idBlocare} *`} required value={form.id} onChange={e => setF('id', e.target.value)} placeholder="BLK-005" />
+      <AppField label={b.dataDeschidere} type="date" value={form.data_deschidere} onChange={e => setF('data_deschidere', e.target.value)} />
+      <AppSelect label={b.proiect} value={form.proiect} onChange={e => setF('proiect', e.target.value)} options={[{ value: '', label: t.common.select }, ...projectOptions]} />
+      <AppField label={b.subansamblu} value={form.subansamblu} onChange={e => setF('subansamblu', e.target.value)} />
+      <AppSelect label={b.departament} value={form.departament} onChange={e => setF('departament', e.target.value)} options={['PROIECTARE','LASER','VIROLAT','SUDAT','ASAMBLAT','VOPSIT']} />
+      <AppField label={b.responsabil} value={form.responsabil} onChange={e => setF('responsabil', e.target.value)} />
+      <AppField label={`${b.descriere} *`} required value={form.descriere} onChange={e => setF('descriere', e.target.value)} sx={{ gridColumn: '1 / -1' }} />
+      <AppSelect label={b.impact} value={form.impact} onChange={e => setF('impact', e.target.value)} options={['MEDIU','INALT','CRITIC']} />
+      <AppField label={b.observatii} value={form.observatii} onChange={e => setF('observatii', e.target.value)} />
     </Box>
   )
 
@@ -104,15 +104,15 @@ export default function Blocaje() {
         ))}
       </Box>
 
-      <BlockageTable title={b.activeTitle} counter={<Badge tone="error">{open.length + blocateSA.length} {b.openCount}</Badge>} loading={loading} rows={open} saRows={blocateSA} empty="Niciun blocaj activ" onResolve={canWrite ? resolveBlockage : undefined} labels={b} />
-      <BlockageTable title={b.resolvedTitle} counter={<Badge tone="success">{resolved.length} {b.closedCount}</Badge>} loading={loading} rows={resolved} empty="Niciun blocaj rezolvat" labels={b} resolved />
+      <BlockageTable title={b.activeTitle} counter={<Badge tone="error">{open.length + blocateSA.length} {b.openCount}</Badge>} loading={loading} rows={open} saRows={blocateSA} empty={b.emptyActive} onResolve={canWrite ? resolveBlockage : undefined} labels={b} loadingLabel={t.common.loading} />
+      <BlockageTable title={b.resolvedTitle} counter={<Badge tone="success">{resolved.length} {b.closedCount}</Badge>} loading={loading} rows={resolved} empty={b.emptyResolved} labels={b} resolved loadingLabel={t.common.loading} />
     </Stack>
   )
 }
 
-function BlockageTable({ title, counter, loading, rows, saRows = [], empty, labels, resolved, onResolve }: {
+function BlockageTable({ title, counter, loading, rows, saRows = [], empty, labels, resolved, onResolve, loadingLabel }: {
   title: string; counter: ReactNode; loading: boolean; rows: any[]; saRows?: any[]
-  empty: string; labels: any; resolved?: boolean; onResolve?: (id: string) => void
+  empty: string; labels: any; resolved?: boolean; onResolve?: (id: string) => void; loadingLabel?: string
 }) {
   const idColor = resolved ? 'var(--color-primary)' : '#f87171'
   const totalEmpty = rows.length === 0 && saRows.length === 0
@@ -190,7 +190,7 @@ function BlockageTable({ title, counter, loading, rows, saRows = [], empty, labe
       <Stack sx={{ display: { xs: 'flex', md: 'none' } }} gap={0}>
         {loading ? (
           <Box sx={{ p: 3, textAlign: 'center' }}>
-            <Typography variant="body2" sx={{ fontSize: 13, color: 'var(--color-ink-subtle)' }}>Se încarcă...</Typography>
+            <Typography variant="body2" sx={{ fontSize: 13, color: 'var(--color-ink-subtle)' }}>{loadingLabel ?? 'Loading...'}</Typography>
           </Box>
         ) : totalEmpty ? (
           <Box sx={{ p: 3, textAlign: 'center' }}>

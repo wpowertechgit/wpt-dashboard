@@ -264,7 +264,7 @@ export default function Admin() {
     setSaveError(null)
     try {
       await sendPasswordReset(email)
-      setResetSuccess(`Email de resetare trimis la ${email}`)
+      setResetSuccess(`${a.resetSent} ${email}`)
       setTimeout(() => setResetSuccess(null), 5000)
     } catch (err: unknown) {
       setSaveError(err instanceof Error ? err.message : String(err))
@@ -345,7 +345,7 @@ export default function Admin() {
                       <ActionButton onClick={() => saveEdit(p.id)} sx={{ px: 1.25, py: 0.5, fontSize: 11 }}>{t.common.save}</ActionButton>
                       <ActionButton variant="outlined" onClick={() => handlePasswordReset(p.email)}
                         sx={{ px: 1.25, py: 0.5, fontSize: 11, color: '#fbbf24', borderColor: 'rgba(251,191,36,0.3)', '&:hover': { borderColor: '#fbbf24', bgcolor: 'rgba(251,191,36,0.06)' } }}>
-                        ✉ Reset Parolă
+                        {a.resetPassword}
                       </ActionButton>
                       <ActionButton variant="outlined" onClick={() => setEditId(null)} sx={{ px: 1, py: 0.5, fontSize: 11 }}>✕</ActionButton>
                     </Stack>

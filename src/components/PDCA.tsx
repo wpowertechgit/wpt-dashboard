@@ -65,10 +65,10 @@ export default function PDCA_View() {
 
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(4, 1fr)' }, gap: 1.5 }}>
         {[
-          { phase: 'PLAN', color: '#818cf8', bg: 'rgba(94,106,210,0.08)', desc: 'Identificare problema' },
-          { phase: 'DO', color: '#fbbf24', bg: 'rgba(245,158,11,0.08)', desc: 'Contramasuri' },
-          { phase: 'CHECK', color: '#4ade80', bg: 'rgba(39,166,68,0.08)', desc: 'Verificare rezultate' },
-          { phase: 'ACT', color: '#f87171', bg: 'rgba(239,68,68,0.08)', desc: 'Actiune urmatoare' },
+          { phase: 'PLAN', color: '#818cf8', bg: 'rgba(94,106,210,0.08)', desc: pd.planDesc },
+          { phase: 'DO', color: '#fbbf24', bg: 'rgba(245,158,11,0.08)', desc: pd.doDesc },
+          { phase: 'CHECK', color: '#4ade80', bg: 'rgba(39,166,68,0.08)', desc: pd.checkDesc },
+          { phase: 'ACT', color: '#f87171', bg: 'rgba(239,68,68,0.08)', desc: pd.actDesc },
         ].map(({ phase, color, bg, desc }) => (
           <Box key={phase} sx={{ bgcolor: bg, border: `1px solid ${color}22`, borderRadius: 'var(--radius-lg)', p: '14px 16px', textAlign: 'center' }}>
             <Typography variant="body2" sx={{ fontSize: 12, fontWeight: 600, color, letterSpacing: 0.3 }}>{phase}</Typography>
@@ -83,17 +83,17 @@ export default function PDCA_View() {
           <Stack component="form" onSubmit={submit} gap={1.5}>
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: 1.5 }}>
               <Box>
-                <AppField label="ID PDCA *" required value={form.id} onChange={e => setF('id', e.target.value)} placeholder="PDCA-006" />
-                <ActionButton variant="outlined" onClick={autoGenerateId} sx={{ mt: 0.5, fontSize: 11, px: 1, py: 0.375 }}>Auto-generează</ActionButton>
+                <AppField label={`${pd.idPDCA} *`} required value={form.id} onChange={e => setF('id', e.target.value)} placeholder="PDCA-006" />
+                <ActionButton variant="outlined" onClick={autoGenerateId} sx={{ mt: 0.5, fontSize: 11, px: 1, py: 0.375 }}>{pd.autoGenerate}</ActionButton>
               </Box>
-              <AppField label="Sursa" value={form.sursa} onChange={e => setF('sursa', e.target.value)} placeholder="BLK-001" />
-              <AppField label="Data Deschis" type="date" value={form.data_deschis} onChange={e => setF('data_deschis', e.target.value)} />
-              <AppSelect label="Proiect" value={form.proiect} onChange={e => setF('proiect', e.target.value)} options={[{ value: '', label: '- Selectati -' }, ...projectOptions, 'TOATE']} />
-              <AppField label="Responsabil" value={form.responsabil} onChange={e => setF('responsabil', e.target.value)} />
-              <AppField label="Termen" type="date" value={form.termen} onChange={e => setF('termen', e.target.value)} />
-              <AppField label="Problema (Plan) *" required value={form.problema} onChange={e => setF('problema', e.target.value)} sx={{ gridColumn: '1 / -1' }} />
-              <AppField label="Contramasura (Do)" value={form.contramasura} onChange={e => setF('contramasura', e.target.value)} sx={{ gridColumn: '1 / -1' }} />
-              <AppSelect label="Prioritate" value={form.prioritate} onChange={e => setF('prioritate', e.target.value)} options={['SCAZUT','MEDIU','INALT','CRITIC']} />
+              <AppField label={pd.sursa} value={form.sursa} onChange={e => setF('sursa', e.target.value)} placeholder="BLK-001" />
+              <AppField label={pd.dataDeschis} type="date" value={form.data_deschis} onChange={e => setF('data_deschis', e.target.value)} />
+              <AppSelect label={pd.proiect} value={form.proiect} onChange={e => setF('proiect', e.target.value)} options={[{ value: '', label: t.common.select }, ...projectOptions, 'TOATE']} />
+              <AppField label={pd.responsabil} value={form.responsabil} onChange={e => setF('responsabil', e.target.value)} />
+              <AppField label={pd.termen} type="date" value={form.termen} onChange={e => setF('termen', e.target.value)} />
+              <AppField label={`${pd.problema} *`} required value={form.problema} onChange={e => setF('problema', e.target.value)} sx={{ gridColumn: '1 / -1' }} />
+              <AppField label={pd.contramasura} value={form.contramasura} onChange={e => setF('contramasura', e.target.value)} sx={{ gridColumn: '1 / -1' }} />
+              <AppSelect label={pd.prioritate} value={form.prioritate} onChange={e => setF('prioritate', e.target.value)} options={['SCAZUT','MEDIU','INALT','CRITIC']} />
             </Box>
             <ActionButton type="submit" disabled={saving} sx={{ alignSelf: 'flex-start' }}>{saving ? t.common.saving : pd.saveBtn}</ActionButton>
           </Stack>
@@ -103,7 +103,7 @@ export default function PDCA_View() {
       <Card sx={{ p: 0, overflow: 'hidden' }}>
         <Stack direction="row" alignItems="center" sx={{ p: '20px 24px 16px', borderBottom: '1px solid var(--color-hairline)' }}>
           <Eyebrow>{pd.tableTitle}</Eyebrow>
-          {overdue.length > 0 && <Badge tone="error" sx={{ ml: 'auto' }}>{overdue.length} depasite</Badge>}
+          {overdue.length > 0 && <Badge tone="error" sx={{ ml: 'auto' }}>{overdue.length} {pd.overdueLabel}</Badge>}
         </Stack>
 
         {/* ── Desktop table (md+) ── */}
@@ -137,7 +137,7 @@ export default function PDCA_View() {
                 <TableCell>{statusBadge(p.status)}</TableCell>
                 <TableCell>{priorityBadge(p.prioritate)}</TableCell>
                 <TableCell>{p.zile_ramas === 'DEPASIT' ? <Badge tone="error">DEPASIT</Badge> : <Typography variant="body2" sx={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--color-ink-muted)' }}>{p.zile_ramas}</Typography>}</TableCell>
-                <TableCell>{canWrite && p.status !== 'Inchis' && <ActionButton variant="outlined" onClick={() => closeAction(p.id)} sx={{ bgcolor: 'rgba(39,166,68,0.1)', borderColor: 'rgba(39,166,68,0.2)', color: '#4ade80', fontSize: 11, px: 1, py: 0.375, whiteSpace: 'nowrap' }}>Inchide</ActionButton>}</TableCell>
+                <TableCell>{canWrite && p.status !== 'Inchis' && <ActionButton variant="outlined" onClick={() => closeAction(p.id)} sx={{ bgcolor: 'rgba(39,166,68,0.1)', borderColor: 'rgba(39,166,68,0.2)', color: '#4ade80', fontSize: 11, px: 1, py: 0.375, whiteSpace: 'nowrap' }}>{pd.closeBtn}</ActionButton>}</TableCell>
               </TableRow>
             ))}
           </DataTable>
@@ -146,7 +146,7 @@ export default function PDCA_View() {
         {/* ── Mobile cards (xs–sm) ── */}
         <Stack sx={{ display: { xs: 'flex', md: 'none' } }} gap={0}>
           {loading ? (
-            <Box sx={{ p: 3, textAlign: 'center' }}><Typography sx={{ fontSize: 13, color: 'var(--color-ink-subtle)' }}>Se încarcă...</Typography></Box>
+            <Box sx={{ p: 3, textAlign: 'center' }}><Typography sx={{ fontSize: 13, color: 'var(--color-ink-subtle)' }}>{t.common.loading}</Typography></Box>
           ) : rows.length === 0 ? (
             <Box sx={{ p: 3, textAlign: 'center' }}><Typography sx={{ fontSize: 13, color: 'var(--color-ink-subtle)' }}>{pd.tableTitle}</Typography></Box>
           ) : rows.map((p, i) => (
@@ -182,14 +182,14 @@ export default function PDCA_View() {
 
               {/* Row 3: problem */}
               <Box sx={{ mb: p.contramasura ? 0.75 : 1 }}>
-                <Typography sx={{ fontSize: 10, color: 'var(--color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: 0.4, mb: 0.25 }}>PLAN — Problema</Typography>
+                <Typography sx={{ fontSize: 10, color: 'var(--color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: 0.4, mb: 0.25 }}>PLAN — {pd.colProblema}</Typography>
                 <Typography sx={{ fontSize: 13, color: 'var(--color-ink)', lineHeight: 1.5 }}>{p.problema}</Typography>
               </Box>
 
               {/* Row 4: countermeasure */}
               {p.contramasura && (
                 <Box sx={{ mb: 1 }}>
-                  <Typography sx={{ fontSize: 10, color: 'var(--color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: 0.4, mb: 0.25 }}>DO — Contramasura</Typography>
+                  <Typography sx={{ fontSize: 10, color: 'var(--color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: 0.4, mb: 0.25 }}>DO — {pd.colContramasura}</Typography>
                   <Typography sx={{ fontSize: 13, color: 'var(--color-ink-muted)', lineHeight: 1.5 }}>{p.contramasura}</Typography>
                 </Box>
               )}
@@ -198,13 +198,13 @@ export default function PDCA_View() {
               <Stack direction="row" gap={2} sx={{ mb: canWrite && p.status !== 'Inchis' ? 1 : 0 }} flexWrap="wrap">
                 {p.responsabil && (
                   <Stack direction="row" alignItems="center" gap={0.5}>
-                    <Typography sx={{ fontSize: 10, color: 'var(--color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: 0.4 }}>Resp.</Typography>
+                    <Typography sx={{ fontSize: 10, color: 'var(--color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: 0.4 }}>{pd.responsabil.slice(0, 5)}.</Typography>
                     <Typography sx={{ fontSize: 12, color: 'var(--color-ink-muted)', fontWeight: 500 }}>{p.responsabil}</Typography>
                   </Stack>
                 )}
                 {p.termen && (
                   <Stack direction="row" alignItems="center" gap={0.5}>
-                    <Typography sx={{ fontSize: 10, color: 'var(--color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: 0.4 }}>Termen</Typography>
+                    <Typography sx={{ fontSize: 10, color: 'var(--color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: 0.4 }}>{pd.termen}</Typography>
                     <Typography sx={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>{formatDateLabel(p.termen)}</Typography>
                   </Stack>
                 )}
@@ -213,7 +213,7 @@ export default function PDCA_View() {
               {/* Row 6: close button */}
               {canWrite && p.status !== 'Inchis' && (
                 <ActionButton variant="outlined" onClick={() => closeAction(p.id)} sx={{ width: '100%', bgcolor: 'rgba(39,166,68,0.08)', borderColor: 'rgba(39,166,68,0.25)', color: '#4ade80', fontSize: 12, py: 0.75 }}>
-                  Inchide
+                  {pd.closeBtn}
                 </ActionButton>
               )}
             </Box>

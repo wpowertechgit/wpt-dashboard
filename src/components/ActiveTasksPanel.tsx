@@ -97,7 +97,7 @@ export default function ActiveTasksPanel({ userId }: { userId: string }) {
         cursor: 'pointer', zIndex: 300, userSelect: 'none',
       }}
     >
-      <span style={{ fontSize: 22 }}>📋</span>
+      <span style={{ fontSize: 32 }}>📋</span>
       {activeTasks.length > 0 && (
         <span style={{
           position: 'absolute', top: 0, right: 0,
@@ -195,13 +195,13 @@ export default function ActiveTasksPanel({ userId }: { userId: string }) {
                 onClick={e => e.stopPropagation()}
               >
                 <div style={{ fontSize: 11, color: '#4ade80', fontWeight: 600, marginBottom: 6 }}>
-                  Finalizezi „{task.title}"?
+                  {t.tasks.doneAction} „{task.title}"?
                 </div>
                 <textarea
                   autoFocus
                   value={note}
                   onChange={e => setNote(e.target.value)}
-                  placeholder="Note opționale despre rezolvare..."
+                  placeholder={t.tasks.doneNote}
                   rows={2}
                   style={{
                     width: '100%', boxSizing: 'border-box',
@@ -215,14 +215,14 @@ export default function ActiveTasksPanel({ userId }: { userId: string }) {
                     onClick={cancelConfirm}
                     style={{ fontSize: 11, padding: '4px 10px', borderRadius: 5, background: 'transparent', border: '1px solid var(--color-hairline)', color: 'var(--color-ink-muted)', cursor: 'pointer' }}
                   >
-                    Anulează
+                    {t.common.cancel}
                   </button>
                   <button
                     onClick={e => submitDone(e, task)}
                     disabled={saving}
                     style={{ fontSize: 11, padding: '4px 10px', borderRadius: 5, background: 'rgba(39,166,68,0.15)', border: '1px solid rgba(39,166,68,0.3)', color: '#4ade80', cursor: 'pointer', fontWeight: 600 }}
                   >
-                    {saving ? '...' : '✓ Gata'}
+                    {saving ? '...' : t.tasks.doneConfirm}
                   </button>
                 </div>
               </div>
