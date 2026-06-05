@@ -18,7 +18,7 @@ export function logActivity(action: string, entityType: string, entityId: string
       entity_id: entityId,
       entity_label: entityLabel,
       details: details ?? null,
-    })
+    }).then()
   })
 }
 
