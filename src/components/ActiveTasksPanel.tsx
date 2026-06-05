@@ -1,167 +1,199 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useQuery } from '../lib/useQuery'
 import { fetchTasksForUser, updateTask } from '../lib/api'
 import type { Task } from '../lib/api'
 import { useLang } from '../lib/i18n'
-import { Box, Stack, Typography } from '@mui/material'
+import { Stack, Typography, Box } from '@mui/material'
 import { Badge } from './Ui'
 
-const PRIORITY_TONE: Record<string, 'error' | 'warning' | 'info' | undefined> = {
-  URGENT: 'error', HIGH: 'warning', NORMAL: 'info',
-}
-
-function priorityLabel(p: string) {
-  if (p === 'URGENT') return '🔴'
-  if (p === 'HIGH') return '🟠'
-  if (p === 'NORMAL') return '🔵'
-  return '⚪'
-}
-
 function isOverdue(task: Task) {
-  return task.due_date && new Date(task.due_date) < new Date() && task.status !== 'DONE'
+  return !!task.due_date && new Date(task.due_date) < new Date() && task.status !== 'DONE'
 }
 
-export default function ActiveTasksPanel({ userId, onClose, onCountChange }: { userId: string; onClose: () => void; onCountChange?: (n: number) => void }) {
+function PriorityDot({ p }: { p: string }) {
+  const color = p === 'URGENT' ? '#f87171' : p === 'HIGH' ? '#fb923c' : p === 'NORMAL' ? '#818cf8' : '#6b7280'
+  return <Box sx={{ width: 7, height: 7, borderRadius: '50%', bgcolor: color, flexShrink: 0, mt: '5px' }} />
+}
+
+export default function ActiveTasksPanel({ userId, onCountChange }: { userId: string; onCountChange?: (n: number) => void }) {
   const { t } = useLang()
   const navigate = useNavigate()
   const { data, refetch } = useQuery(() => fetchTasksForUser(userId))
 
   const activeTasks = (data?.assigned ?? []).filter(t => t.status !== 'DONE')
-  const overdue = activeTasks.filter(isOverdue)
+  const overdueCount = activeTasks.filter(isOverdue).length
+
+  // collapsed = bubble, expanded = card
+  const [collapsed, setCollapsed] = useState(false)
+
+  // auto-collapse after 10s
+  useEffect(() => {
+    const id = setTimeout(() => setCollapsed(true), 10000)
+    return () => clearTimeout(id)
+  }, [])
 
   useEffect(() => {
     onCountChange?.(activeTasks.length)
-  }, [activeTasks.length, onCountChange])
+  }, [activeTasks.length]) // eslint-disable-line
 
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [onClose])
-
-  async function markDone(task: Task) {
+  async function markDone(e: React.MouseEvent, task: Task) {
+    e.stopPropagation()
     await updateTask(task.id, { status: 'DONE' })
     refetch()
   }
 
   return (
-    <>
-      {/* Backdrop (mobile only) */}
-      <Box
-        onClick={onClose}
-        sx={{
-          display: { xs: 'block', lg: 'none' },
-          position: 'fixed', inset: 0, bgcolor: 'rgba(0,0,0,0.4)', zIndex: 199,
-        }}
-      />
-
-      {/* Panel */}
-      <Box sx={{
-        position: 'fixed',
-        top: { xs: 0, lg: '56px' },
-        right: 0,
-        bottom: 0,
-        width: { xs: '100vw', sm: 340 },
-        maxWidth: '100vw',
-        bgcolor: 'var(--color-canvas)',
-        borderLeft: '1px solid var(--color-hairline)',
-        boxShadow: '-6px 0 32px rgba(0,0,0,0.25)',
-        zIndex: 200,
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-      }}>
-        {/* Header */}
-        <Stack direction="row" alignItems="center" sx={{ p: '14px 16px', borderBottom: '1px solid var(--color-hairline)', flexShrink: 0 }}>
-          <Box>
-            <Typography sx={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink)', letterSpacing: 0.2 }}>
+    <AnimatePresence mode="wait">
+      {collapsed ? (
+        /* ── Bubble ── */
+        <motion.div
+          key="bubble"
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0, opacity: 0 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+          onClick={() => setCollapsed(false)}
+          style={{
+            position: 'fixed',
+            bottom: 24,
+            right: 24,
+            width: '10vw',
+            height: '10vw',
+            minWidth: 56,
+            minHeight: 56,
+            maxWidth: 80,
+            maxHeight: 80,
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, #5e6ad2, #818cf8)',
+            boxShadow: '0 4px 24px rgba(94,106,210,0.45)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            zIndex: 300,
+            userSelect: 'none',
+          }}
+        >
+          <span style={{ fontSize: 22 }}>📋</span>
+          {activeTasks.length > 0 && (
+            <span style={{
+              position: 'absolute', top: 0, right: 0,
+              minWidth: 18, height: 18, borderRadius: 9,
+              background: '#f87171', color: '#fff',
+              fontSize: 10, fontWeight: 700,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              padding: '0 4px',
+            }}>
+              {activeTasks.length}
+            </span>
+          )}
+        </motion.div>
+      ) : (
+        /* ── Card ── */
+        <motion.div
+          key="card"
+          initial={{ opacity: 0, y: 40, scale: 0.92 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 20, scale: 0.9, borderRadius: '50%' }}
+          transition={{ type: 'spring', stiffness: 260, damping: 24 }}
+          style={{
+            position: 'fixed',
+            bottom: 24,
+            right: 24,
+            width: 300,
+            maxHeight: 420,
+            borderRadius: 14,
+            background: 'var(--color-canvas)',
+            border: '1px solid var(--color-hairline)',
+            boxShadow: '0 8px 40px rgba(0,0,0,0.28)',
+            zIndex: 300,
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+          }}
+        >
+          {/* Header */}
+          <div style={{ padding: '12px 14px 10px', borderBottom: '1px solid var(--color-hairline)', display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+            <span style={{ fontSize: 15 }}>📋</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink)', flex: 1 }}>
               {t.tasks.myTasks}
-            </Typography>
-            {overdue.length > 0 && (
-              <Typography sx={{ fontSize: 11, color: '#f87171', mt: 0.125 }}>
-                {overdue.length} {t.tasks.overdueShort ?? 'overdue'}
-              </Typography>
+              {activeTasks.length > 0 && (
+                <span style={{ marginLeft: 6, fontSize: 11, fontWeight: 600, color: 'var(--color-ink-subtle)' }}>
+                  ({activeTasks.length})
+                </span>
+              )}
+            </span>
+            {overdueCount > 0 && (
+              <span style={{ fontSize: 10, fontWeight: 700, color: '#f87171', background: 'rgba(239,68,68,0.1)', padding: '2px 6px', borderRadius: 6 }}>
+                {overdueCount} {t.tasks.overdueShort}
+              </span>
             )}
-          </Box>
-          <Stack direction="row" alignItems="center" gap={1} sx={{ ml: 'auto' }}>
-            <Box
-              component="button"
-              onClick={() => { navigate('/tasks'); onClose() }}
-              sx={{ fontSize: 11, color: 'var(--color-primary)', bgcolor: 'transparent', border: 'none', cursor: 'pointer', textDecoration: 'underline', p: 0 }}
-            >
-              {t.tasks.viewAll ?? 'View all'}
-            </Box>
-            <Box
-              component="button"
-              onClick={onClose}
-              sx={{ width: 26, height: 26, display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'var(--color-surface)', border: '1px solid var(--color-hairline)', borderRadius: 'var(--radius-sm)', cursor: 'pointer', color: 'var(--color-ink-subtle)', fontSize: 14, '&:hover': { color: 'var(--color-ink)' } }}
+            <button
+              onClick={() => setCollapsed(true)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-ink-tertiary)', fontSize: 14, padding: '2px 4px', borderRadius: 4, lineHeight: 1 }}
             >
               ✕
-            </Box>
-          </Stack>
-        </Stack>
+            </button>
+          </div>
 
-        {/* Task list */}
-        <Box sx={{ flex: 1, overflowY: 'auto' }}>
-          {activeTasks.length === 0 ? (
-            <Box sx={{ p: '32px 16px', textAlign: 'center' }}>
-              <Typography sx={{ fontSize: 28, mb: 1 }}>✅</Typography>
-              <Typography sx={{ fontSize: 13, color: 'var(--color-ink-subtle)' }}>
-                {t.tasks.noActiveTasks ?? 'No active tasks'}
-              </Typography>
-            </Box>
-          ) : activeTasks.map((task, i) => (
-            <Box
-              key={task.id}
-              sx={{
-                p: '12px 16px',
-                borderBottom: i < activeTasks.length - 1 ? '1px solid var(--color-hairline)' : 'none',
-                bgcolor: isOverdue(task) ? 'rgba(239,68,68,0.03)' : 'transparent',
-                '&:hover': { bgcolor: 'var(--color-surface)' },
-                cursor: 'pointer',
-              }}
-              onClick={() => { navigate('/tasks'); onClose() }}
-            >
-              <Stack direction="row" alignItems="flex-start" gap={1}>
-                <Typography sx={{ fontSize: 14, flexShrink: 0, mt: 0.125 }}>{priorityLabel(task.priority)}</Typography>
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography sx={{ fontSize: 13, fontWeight: 500, color: 'var(--color-ink)', lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {/* Task list */}
+          <div style={{ flex: 1, overflowY: 'auto' }}>
+            {activeTasks.length === 0 ? (
+              <div style={{ padding: '24px 16px', textAlign: 'center' }}>
+                <div style={{ fontSize: 24, marginBottom: 8 }}>✅</div>
+                <div style={{ fontSize: 12, color: 'var(--color-ink-subtle)' }}>{t.tasks.noActiveTasks}</div>
+              </div>
+            ) : activeTasks.map((task, i) => (
+              <div
+                key={task.id}
+                style={{
+                  padding: '9px 12px',
+                  borderBottom: i < activeTasks.length - 1 ? '1px solid var(--color-hairline)' : 'none',
+                  background: isOverdue(task) ? 'rgba(239,68,68,0.03)' : 'transparent',
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 8,
+                  cursor: 'pointer',
+                }}
+                onClick={() => { navigate('/tasks') }}
+              >
+                <PriorityDot p={task.priority} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--color-ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.4 }}>
                     {task.title}
-                  </Typography>
-                  <Stack direction="row" alignItems="center" gap={1} sx={{ mt: 0.5 }} flexWrap="wrap">
-                    <Badge tone={task.status === 'IN_PROGRESS' ? 'info' : undefined} sx={{ fontSize: 10, px: '5px', py: '1px' }}>
-                      {task.status === 'IN_PROGRESS' ? 'In progress' : 'Todo'}
-                    </Badge>
-                    {task.due_date && (
-                      <Typography sx={{ fontSize: 11, color: isOverdue(task) ? '#f87171' : 'var(--color-ink-tertiary)', fontFamily: 'var(--font-mono)' }}>
-                        {isOverdue(task) ? '⚠ ' : ''}{task.due_date}
-                      </Typography>
-                    )}
-                  </Stack>
-                </Box>
-                <Box
-                  component="button"
-                  onClick={e => { e.stopPropagation(); markDone(task) }}
+                  </div>
+                  {task.due_date && (
+                    <div style={{ fontSize: 10, color: isOverdue(task) ? '#f87171' : 'var(--color-ink-tertiary)', marginTop: 2, fontFamily: 'var(--font-mono)' }}>
+                      {isOverdue(task) ? '⚠ ' : ''}{task.due_date}
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={e => markDone(e, task)}
                   title="Mark done"
-                  sx={{ flexShrink: 0, width: 26, height: 26, display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'rgba(39,166,68,0.08)', border: '1px solid rgba(39,166,68,0.2)', borderRadius: 'var(--radius-sm)', cursor: 'pointer', color: '#4ade80', fontSize: 13, '&:hover': { bgcolor: 'rgba(39,166,68,0.18)' } }}
+                  style={{ flexShrink: 0, width: 22, height: 22, borderRadius: 5, background: 'rgba(39,166,68,0.1)', border: '1px solid rgba(39,166,68,0.25)', cursor: 'pointer', color: '#4ade80', fontSize: 11, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 >
                   ✓
-                </Box>
-              </Stack>
-            </Box>
-          ))}
-        </Box>
+                </button>
+              </div>
+            ))}
+          </div>
 
-        {/* Footer count */}
-        {activeTasks.length > 0 && (
-          <Box sx={{ p: '10px 16px', borderTop: '1px solid var(--color-hairline)', flexShrink: 0 }}>
-            <Typography sx={{ fontSize: 11, color: 'var(--color-ink-tertiary)', textAlign: 'center' }}>
-              {activeTasks.length} {t.tasks.activeTasks ?? 'active tasks'}
-            </Typography>
-          </Box>
-        )}
-      </Box>
-    </>
+          {/* Footer */}
+          <div
+            style={{ padding: '8px 12px', borderTop: '1px solid var(--color-hairline)', display: 'flex', justifyContent: 'flex-end', flexShrink: 0 }}
+          >
+            <button
+              onClick={() => navigate('/tasks')}
+              style={{ fontSize: 11, color: 'var(--color-primary)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', padding: 0 }}
+            >
+              {t.tasks.viewAll} →
+            </button>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   )
 }

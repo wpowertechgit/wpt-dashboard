@@ -264,7 +264,7 @@ function MobileShell({ profile, demoMode, onExitDemo }: { profile: Profile | nul
   )
 }
 
-function AppNav({ profile, demoMode, onExitDemo, tasksOpen, onToggleTasks, taskCount }: { profile: Profile | null; demoMode: boolean; onExitDemo: () => void; tasksOpen: boolean; onToggleTasks: () => void; taskCount: number }) {
+function AppNav({ profile, demoMode, onExitDemo }: { profile: Profile | null; demoMode: boolean; onExitDemo: () => void }) {
   const { t, lang, toggle } = useLang()
   const navigate = useNavigate()
   const { hasPermission } = usePermissions()
@@ -326,18 +326,6 @@ function AppNav({ profile, demoMode, onExitDemo, tasksOpen, onToggleTasks, taskC
         ) : (
           <>
             <StatusPill label={t.status.active} />
-            {hasPermission('view_tasks') && (
-              <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-                <SmallButton onClick={onToggleTasks}>
-                  📋
-                </SmallButton>
-                {taskCount > 0 && (
-                  <Box sx={{ position: 'absolute', top: -4, right: -4, minWidth: 16, height: 16, bgcolor: '#f87171', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: '#fff', px: '3px', pointerEvents: 'none' }}>
-                    {taskCount > 99 ? '99+' : taskCount}
-                  </Box>
-                )}
-              </Box>
-            )}
             <SmallButton onClick={toggle}><LanguageFlag code={lang === 'ro' ? 'en' : 'ro'} /></SmallButton>
             <Stack direction="row" alignItems="center" gap={1} sx={{ borderLeft: '1px solid var(--color-hairline)', pl: 1.25 }}>
               <Box sx={{ textAlign: 'right' }}>
@@ -391,14 +379,12 @@ function AnyPermGuard({ perms, children }: { perms: Parameters<ReturnType<typeof
 }
 
 function AppShell({ session, profile, demoMode, onExitDemo }: { session: Session | null; profile: Profile | null; demoMode: boolean; onExitDemo: () => void }) {
-  const [tasksOpen, setTasksOpen] = useState(true)
-  const [taskCount, setTaskCount] = useState(0)
   const canViewTasks = !demoMode && !!profile?.id
 
   return (
     <PermissionsProvider role={profile?.role ?? null} userId={profile?.id ?? null} demoMode={demoMode}>
       <Stack sx={{ minHeight: '100vh', bgcolor: 'var(--color-canvas)' }}>
-        <AppNav profile={profile} demoMode={demoMode} onExitDemo={onExitDemo} tasksOpen={tasksOpen} onToggleTasks={() => setTasksOpen(o => !o)} taskCount={taskCount} />
+        <AppNav profile={profile} demoMode={demoMode} onExitDemo={onExitDemo} />
         <MobileShell profile={profile} demoMode={demoMode} onExitDemo={onExitDemo} />
 
         <Box component="main" sx={{ flex: 1, p: { xs: '16px 12px 32px', md: '20px 20px 40px', lg: '24px 24px 48px' }, maxWidth: 1400, width: '100%', mx: 'auto' }}>
@@ -420,12 +406,8 @@ function AppShell({ session, profile, demoMode, onExitDemo }: { session: Session
           </Routes>
         </Box>
 
-        {canViewTasks && tasksOpen && (
-          <ActiveTasksPanel
-            userId={profile!.id}
-            onClose={() => setTasksOpen(false)}
-            onCountChange={setTaskCount}
-          />
+        {canViewTasks && (
+          <ActiveTasksPanel userId={profile!.id} />
         )}
       </Stack>
     </PermissionsProvider>
