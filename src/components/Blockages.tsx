@@ -89,8 +89,8 @@ export default function Blocaje() {
 
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(2, 1fr)' }, gap: 1.5 }}>
         {[
-          { val: open.length + blocateSA.length, label: 'Blocaje Deschise', sub: 'necesita actiune', color: '#f87171' },
-          { val: resolved.length, label: 'Rezolvate', sub: 'inchise', color: '#4ade80' },
+          { val: open.length + blocateSA.length, label: b.deschise, sub: b.deschiseHint, color: '#f87171' },
+          { val: resolved.length, label: b.rezolvate, sub: b.rezolvateHint, color: '#4ade80' },
         ].map(({ val, label, sub, color }) => (
           <Card key={label} sx={{ p: '14px 20px' }}>
             <Stack direction="row" alignItems="center" gap={1.5}>
