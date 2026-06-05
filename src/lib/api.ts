@@ -4,6 +4,56 @@ import { DEMO } from '../data/demo'
 import { buildDefaultSubassemblies, stripEmptyDateFields, withDefaultProjectTotals } from './projectDefaults'
 import type { PermissionKey, PermissionOverride } from './permissions'
 
+// ── Activity logging (fire-and-forget, never throws) ───────────────────────────
+
+export function logActivity(action: string, entityType: string, entityId: string, entityLabel: string, details?: Record<string, unknown>) {
+  if (isDemoMode()) return
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    if (!session?.user) return
+    supabase.from('activity_logs').insert({
+      user_id: session.user.id,
+      user_email: session.user.email ?? '',
+      action,
+      entity_type: entityType,
+      entity_id: entityId,
+      entity_label: entityLabel,
+      details: details ?? null,
+    })
+  })
+}
+
+export interface ActivityLog {
+  id: string
+  user_id: string | null
+  user_email: string | null
+  action: string
+  entity_type: string | null
+  entity_id: string | null
+  entity_label: string | null
+  details: Record<string, unknown> | null
+  created_at: string
+}
+
+export async function fetchLogs(): Promise<ActivityLog[]> {
+  const { data, error } = await supabase
+    .from('activity_logs')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(1000)
+  if (error) throw error
+  return data as ActivityLog[]
+}
+
+export async function deleteLog(id: string) {
+  const { error } = await supabase.from('activity_logs').delete().eq('id', id)
+  if (error) throw error
+}
+
+export async function clearAllLogs() {
+  const { error } = await supabase.from('activity_logs').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+  if (error) throw error
+}
+
 function friendlySupabaseError(error: { message?: string } | null | undefined) {
   const message = error?.message ?? 'Unknown database error'
   if (message.includes('schema cache') || message.includes("Could not find the '")) {
@@ -25,12 +75,14 @@ export async function deleteProiect(id: string) {
   if (isDemoMode()) return
   const { error } = await supabase.from('proiecte').delete().eq('id', id)
   if (error) throw friendlySupabaseError(error)
+  logActivity('delete', 'project', id, `Proiect: ${id}`)
 }
 
 export async function updateProiect(id: string, row: Record<string, unknown>) {
   if (isDemoMode()) return
   const { error } = await supabase.from('proiecte').update(stripEmptyDateFields(row)).eq('id', id)
   if (error) throw friendlySupabaseError(error)
+  logActivity('update', 'project', id, `Proiect: ${id}`)
 }
 
 export async function insertProiect(row: Record<string, unknown>) {
@@ -46,7 +98,10 @@ export async function insertProiect(row: Record<string, unknown>) {
     .from('subansambluri')
     .insert(buildDefaultSubassemblies(projectId))
 
-  if (!subassemblyError) return
+  if (!subassemblyError) {
+    logActivity('create', 'project', projectId, `Proiect: ${projectId}`)
+    return
+  }
 
   await supabase.from('proiecte').delete().eq('id', projectId)
   throw friendlySupabaseError(subassemblyError)
@@ -81,6 +136,8 @@ export async function updateSubansamblu(id: number, row: Record<string, unknown>
   if (isDemoMode()) return
   const { error } = await supabase.from('subansambluri').update(sanitizeSaRow(row)).eq('id', id)
   if (error) throw friendlySupabaseError(error)
+  const label = row.status_global ? `SA #${id} → ${row.status_global}` : `SA #${id}`
+  logActivity('update', 'subassembly', String(id), label)
 }
 
 export async function fetchBlocaje() {
@@ -94,12 +151,15 @@ export async function insertBlocaj(row: Record<string, unknown>) {
   if (isDemoMode()) return
   const { error } = await supabase.from('blocaje').insert(row)
   if (error) throw error
+  logActivity('create', 'blocaj', String(row.id ?? ''), `Blocaj: ${row.id} — ${row.proiect ?? ''}`)
 }
 
 export async function updateBlocaj(id: string, row: Record<string, unknown>) {
   if (isDemoMode()) return
   const { error } = await supabase.from('blocaje').update(row).eq('id', id)
   if (error) throw error
+  const action = row.status === 'Rezolvat' ? 'resolve' : 'update'
+  logActivity(action, 'blocaj', id, `Blocaj: ${id}`)
 }
 
 export async function fetchPDCA() {
@@ -113,12 +173,15 @@ export async function insertPDCA(row: Record<string, unknown>) {
   if (isDemoMode()) return
   const { error } = await supabase.from('pdca').insert(row)
   if (error) throw error
+  logActivity('create', 'pdca', String(row.id ?? ''), `PDCA: ${row.id} — ${row.proiect ?? ''}`)
 }
 
 export async function updatePDCA(id: string, row: Record<string, unknown>) {
   if (isDemoMode()) return
   const { error } = await supabase.from('pdca').update(row).eq('id', id)
   if (error) throw error
+  const action = row.status === 'Inchis' ? 'close' : 'update'
+  logActivity(action, 'pdca', id, `PDCA: ${id}`)
 }
 
 export async function fetchFluxZilnic() {
@@ -132,18 +195,21 @@ export async function insertFluxZilnic(row: Record<string, unknown>) {
   if (isDemoMode()) return
   const { error } = await supabase.from('flux_zilnic').insert(row)
   if (error) throw error
+  logActivity('create', 'flux', '', `Flux: ${row.dept_origine} → ${row.dept_destinatie} (${row.proiect ?? ''})`)
 }
 
 export async function updateFluxZilnic(id: string, row: Record<string, unknown>) {
   if (isDemoMode()) return
   const { error } = await supabase.from('flux_zilnic').update(row).eq('id', id)
   if (error) throw error
+  logActivity('update', 'flux', id, `Flux #${id}`)
 }
 
 export async function deleteFluxZilnic(id: string) {
   if (isDemoMode()) return
   const { error } = await supabase.from('flux_zilnic').delete().eq('id', id)
   if (error) throw error
+  logActivity('delete', 'flux', id, `Flux #${id}`)
 }
 
 export async function fetchKpiEchipe() {
@@ -157,6 +223,7 @@ export async function upsertKpiEchipe(row: Record<string, unknown>) {
   if (isDemoMode()) return
   const { error } = await supabase.from('kpi_echipe').upsert(row, { onConflict: 'saptamana,echipa' })
   if (error) throw error
+  logActivity('update', 'kpi', '', `KPI: ${row.echipa ?? ''} — ${row.saptamana ?? ''}`)
 }
 
 // ── Users & Profiles ───────────────────────────────────────────────────────────
@@ -179,6 +246,7 @@ export async function createUserAccount(row: Record<string, unknown>) {
   if (isDemoMode()) return
   const { data, error } = await supabase.functions.invoke('create-user', { body: row })
   if (error) throw error
+  logActivity('create', 'user', String(row.email ?? ''), `Utilizator nou: ${row.email ?? ''}`)
   return data
 }
 
@@ -186,6 +254,7 @@ export async function updateProfile(id: string, row: Record<string, unknown>) {
   if (isDemoMode()) return
   const { error } = await supabase.from('profiles').update(row).eq('id', id)
   if (error) throw error
+  logActivity('update', 'user', id, `Profil actualizat: ${row.full_name ?? row.role ?? id}`)
 }
 
 export async function sendPasswordReset(email: string) {
@@ -194,6 +263,7 @@ export async function sendPasswordReset(email: string) {
     redirectTo: 'https://oms.wpowertech.ro/reset-password',
   })
   if (error) throw error
+  logActivity('reset_password', 'user', email, `Reset parolă: ${email}`)
 }
 
 // ── Permissions ────────────────────────────────────────────────────────────────
@@ -211,11 +281,13 @@ export async function fetchUserPermissionOverrides(userId: string): Promise<Perm
 export async function saveUserPermissionOverrides(userId: string, overrides: { permission_key: PermissionKey; granted: boolean }[]) {
   if (isDemoMode()) return
   await supabase.from('user_permission_overrides').delete().eq('user_id', userId)
-  if (overrides.length === 0) return
-  const { error } = await supabase.from('user_permission_overrides').insert(
-    overrides.map(o => ({ user_id: userId, permission_key: o.permission_key, granted: o.granted }))
-  )
-  if (error) throw error
+  if (overrides.length > 0) {
+    const { error } = await supabase.from('user_permission_overrides').insert(
+      overrides.map(o => ({ user_id: userId, permission_key: o.permission_key, granted: o.granted }))
+    )
+    if (error) throw error
+  }
+  logActivity('update_permissions', 'user', userId, `Permisiuni actualizate: ${overrides.length} override-uri`)
 }
 
 // ── Tasks ──────────────────────────────────────────────────────────────────────
@@ -263,6 +335,7 @@ export async function createTask(row: Omit<Task, 'id' | 'created_at' | 'updated_
   if (isDemoMode()) throw new Error('Not available in demo mode')
   const { data, error } = await supabase.from('tasks').insert(row).select().single()
   if (error) throw error
+  logActivity('create', 'task', data.id, `Task: ${row.title}`)
   return data as Task
 }
 
@@ -270,12 +343,15 @@ export async function updateTask(id: string, row: Partial<Task>) {
   if (isDemoMode()) return
   const { error } = await supabase.from('tasks').update(row).eq('id', id)
   if (error) throw error
+  const action = row.status === 'DONE' ? 'complete' : 'update'
+  logActivity(action, 'task', id, `Task #${id}${row.status ? ` → ${row.status}` : ''}`)
 }
 
 export async function deleteTask(id: string) {
   if (isDemoMode()) return
   const { error } = await supabase.from('tasks').delete().eq('id', id)
   if (error) throw error
+  logActivity('delete', 'task', id, `Task #${id}`)
 }
 
 export async function fetchTaskComments(taskId: string): Promise<TaskComment[]> {
@@ -297,6 +373,7 @@ export async function createTaskComment(taskId: string, authorId: string, conten
     .select()
     .single()
   if (error) throw error
+  logActivity('comment', 'task', taskId, `Comentariu pe task #${taskId}`)
   return data as TaskComment
 }
 
@@ -351,6 +428,7 @@ export async function createInventoryCategory(row: Omit<InventoryCategory, 'id' 
   if (isDemoMode()) throw new Error('Not available in demo mode')
   const { data, error } = await supabase.from('inventory_categories').insert(row).select().single()
   if (error) throw error
+  logActivity('create', 'inventory', data.id, `Categorie stoc: ${row.name}`)
   return data as InventoryCategory
 }
 
@@ -367,6 +445,7 @@ export async function createInventoryItem(row: Omit<InventoryItem, 'id' | 'creat
   if (isDemoMode()) throw new Error('Not available in demo mode')
   const { data, error } = await supabase.from('inventory_items').insert(row).select().single()
   if (error) throw error
+  logActivity('create', 'inventory', data.id, `Stoc: ${row.name} (${row.sku ?? ''})`)
   return data as InventoryItem
 }
 
@@ -374,12 +453,14 @@ export async function updateInventoryItem(id: string, row: Partial<InventoryItem
   if (isDemoMode()) return
   const { error } = await supabase.from('inventory_items').update(row).eq('id', id)
   if (error) throw error
+  logActivity('update', 'inventory', id, `Stoc actualizat: ${row.name ?? id}`)
 }
 
 export async function deleteInventoryItem(id: string) {
   if (isDemoMode()) return
   const { error } = await supabase.from('inventory_items').delete().eq('id', id)
   if (error) throw error
+  logActivity('delete', 'inventory', id, `Stoc șters: ${id}`)
 }
 
 export async function fetchInventoryTransactions(itemId: string): Promise<InventoryTransaction[]> {
@@ -397,6 +478,7 @@ export async function createInventoryTransaction(row: Omit<InventoryTransaction,
   if (isDemoMode()) throw new Error('Not available in demo mode')
   const { data, error } = await supabase.from('inventory_transactions').insert(row).select().single()
   if (error) throw error
+  logActivity('transaction', 'inventory', row.item_id, `Tranzacție stoc: ${row.type} ${row.quantity} (${row.reference ?? ''})`)
   return data as InventoryTransaction
 }
 

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, type ReactNode } from 'react'
+﻿import { createContext, useContext, useState, type ReactNode } from 'react'
 
 export type Lang = 'ro' | 'en'
 
@@ -20,7 +20,7 @@ const T = {
 	    nav: {
 	      dashboard: 'Tablou de Bord', proiecte: 'Proiecte', subansambluri: 'Subansambluri',
 	      planning: 'Calendar', blocaje: 'Blocaje', pdca: 'PDCA', flux: 'Flux Zilnic', kpi: 'KPI Echipe', admin: 'Admin',
-	      tasks: 'Sarcini', inventory: 'Stocuri',
+	      tasks: 'Sarcini', inventory: 'Stocuri', logs: 'Jurnal',
 	    },
     status: { active: 'Producție Activă', signOut: 'Ieșire' },
     common: {
@@ -159,6 +159,13 @@ const T = {
       officeProdDesc: 'Acces la ambele zone (producție + birou).',
       viewerDesc: 'Acces de citire la toate zonele, fără modificări.',
     },
+    logs: {
+      title: 'Jurnal Activitate', subtitle: 'Toate acțiunile utilizatorilor înregistrate',
+      tableTitle: 'Înregistrări', noLogs: 'Nicio înregistrare',
+      colTime: 'Data/Ora', colUser: 'Utilizator', colAction: 'Acțiune', colEntity: 'Tip', colLabel: 'Detaliu',
+      search: 'Caută...', allActions: 'Toate acțiunile', allEntities: 'Toate tipurile',
+      clearAll: '✕ Șterge tot', confirmClear: 'Confirmare: șterge tot?',
+    },
     tasks: {
       eyebrow: 'Zona Birou · Sarcini', title: 'Sarcini',
       myTasks: 'Sarcinile mele', createdByMe: 'Create de mine',
@@ -212,7 +219,7 @@ const T = {
 	    nav: {
 	      dashboard: 'Dashboard', proiecte: 'Projects', subansambluri: 'Subassemblies',
 	      planning: 'Calendar', blocaje: 'Blockages', pdca: 'PDCA', flux: 'Daily Flow', kpi: 'Team KPIs', admin: 'Admin',
-	      tasks: 'Tasks', inventory: 'Inventory',
+	      tasks: 'Tasks', inventory: 'Inventory', logs: 'Log',
 	    },
     status: { active: 'Production Active', signOut: 'Sign Out' },
     common: {
@@ -351,6 +358,13 @@ const T = {
       officeProdDesc: 'Access to both zones (production + office).',
       viewerDesc: 'Read-only access to all zones, no edits.',
     },
+    logs: {
+      title: 'Activity Log', subtitle: 'All user actions recorded',
+      tableTitle: 'Records', noLogs: 'No records found',
+      colTime: 'Date/Time', colUser: 'User', colAction: 'Action', colEntity: 'Type', colLabel: 'Detail',
+      search: 'Search...', allActions: 'All actions', allEntities: 'All types',
+      clearAll: '✕ Clear all', confirmClear: 'Confirm: delete all?',
+    },
     tasks: {
       eyebrow: 'Office Zone · Tasks', title: 'Tasks',
       myTasks: 'My Tasks', createdByMe: 'Created by Me',
@@ -414,3 +428,4 @@ export function LangProvider({ children }: { children: ReactNode }) {
 }
 
 export const useLang = () => useContext(LangContext)
+

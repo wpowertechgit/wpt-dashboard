@@ -33,6 +33,7 @@ import Admin from './components/Admin'
 import PlanningCalendar from './components/PlanningCalendar'
 import TaskBoard from './components/TaskBoard'
 import Inventory from './components/Inventory'
+import LogsPage from './components/Logs'
 import { LanguageFlag } from './components/Ui'
 
 interface Profile {
@@ -121,6 +122,7 @@ const NAV_ICONS: Record<string, ComponentType<{ sx?: object }>> = {
   '/kpi': BarChartOutlinedIcon,
   '/tasks': AssignmentOutlinedIcon,
   '/inventory': StorageOutlinedIcon,
+  '/logs': BarChartOutlinedIcon,
   '/admin': SettingsOutlinedIcon,
 }
 
@@ -143,6 +145,7 @@ function MobileShell({ profile, demoMode, onExitDemo }: { profile: Profile | nul
     hasPermission('view_kpi')            && { path: '/kpi',           label: t.nav.kpi },
     hasPermission('view_tasks')          && { path: '/tasks',         label: t.nav.tasks },
     hasPermission('view_inventory')      && { path: '/inventory',     label: t.nav.inventory },
+    hasPermission('view_logs')           && { path: '/logs',          label: t.nav.logs, admin: true },
     hasPermission('manage_users')        && { path: '/admin',         label: t.nav.admin, admin: true },
   ].filter(Boolean) as { path: string; label: string; admin?: boolean }[]
 
@@ -304,6 +307,9 @@ function AppNav({ profile, demoMode, onExitDemo }: { profile: Profile | null; de
         {navItems.map(({ path, label }) => (
           <NavButton key={path} path={path} label={label} />
         ))}
+        {hasPermission('view_logs') && (
+          <NavButton path="/logs" label={t.nav.logs} admin />
+        )}
         {hasPermission('manage_users') && (
           <NavButton path="/admin" label={t.nav.admin} admin />
         )}
@@ -391,6 +397,7 @@ function AppShell({ session, profile, demoMode, onExitDemo }: { session: Session
             <Route path="/kpi"           element={<PermGuard perm="view_kpi"><TeamKPI /></PermGuard>} />
             <Route path="/tasks"         element={<PermGuard perm="view_tasks"><TaskBoard userId={profile?.id ?? null} /></PermGuard>} />
             <Route path="/inventory"     element={<PermGuard perm="view_inventory"><Inventory userId={profile?.id ?? null} /></PermGuard>} />
+            <Route path="/logs"          element={<PermGuard perm="view_logs"><LogsPage /></PermGuard>} />
             <Route path="/admin"         element={<PermGuard perm="manage_users"><Admin /></PermGuard>} />
             <Route path="*"             element={<Navigate to="/" replace />} />
           </Routes>
