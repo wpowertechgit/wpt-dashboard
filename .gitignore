@@ -1,14 +1,32 @@
-node_modules
-dist
-.env.local
-.env
-tmp
-~$WastePowertech_OMS_1.xlsx
-reader.py
+node_modules/
+dist/
+tmp/
 
-# wrangler files
-.wrangler
+# Environment and secrets
+.env
+.env.*
+!.env.example
 .dev.vars*
 !.dev.vars.example
-!.env.example
-screenshots
+
+# Cloudflare / Wrangler
+.wrangler/
+
+# Local editor and agent tooling
+.vscode/
+.claude/
+.playwright-cli/
+.codex/
+docs/superpowers/
+
+# Generated logs and scratch output
+*.log
+reader.py
+screenshots/
+!docs/screenshots/
+!docs/screenshots/*.png
+output/
+
+# Local source/import files
+~$WastePowertech_OMS_1.xlsx
+WastePowertech_OMS_1.xlsx
