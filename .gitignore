@@ -23,8 +23,6 @@ docs/superpowers/
 *.log
 reader.py
 screenshots/
-!docs/screenshots/
-!docs/screenshots/*.png
 output/
 
 # Local source/import files

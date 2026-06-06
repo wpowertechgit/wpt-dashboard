@@ -17,16 +17,6 @@ npm run dev
 
 Then open the local Vite URL and use the demo entry on the login screen.
 
-Screenshots:
-
-| Dashboard | Projects | Planning |
-| --- | --- | --- |
-| ![Dashboard screenshot](docs/screenshots/02-dashboard.png) | ![Projects screenshot](docs/screenshots/03-projects.png) | ![Planning calendar screenshot](docs/screenshots/05-planning-calendar.png) |
-
-| Subassemblies | Blockages |
-| --- | --- |
-| ![Subassemblies screenshot](docs/screenshots/04-subassemblies.png) | ![Blockages screenshot](docs/screenshots/06-blockages.png) |
-
 ## Architecture
 
 ```mermaid

@@ -93,7 +93,7 @@ test('buildCalendarTimeline combines production due dates and assigned tasks', (
       { id: 'WP1000-11', client: 'Client Nou', data_start: '2026-05-01', data_target: '2026-05-20', data_done: '' },
     ],
     subassemblies: [
-      { proiect: 'WP1000-11', nr: 1, nume: 'Structura metalica', data_start: '2026-05-02', data_due: '2026-05-18', data_done: '' },
+      { proiect: 'WP1000-11', nr: 1, nume: 'Subassembly 01', data_start: '2026-05-02', data_due: '2026-05-18', data_done: '' },
     ],
     tasks: [
       {
@@ -115,7 +115,7 @@ test('buildCalendarTimeline combines production due dates and assigned tasks', (
     timeline.rows.map(row => ({ source: row.source, label: row.label })),
     [
       { source: 'production', label: 'WP1000-11' },
-      { source: 'production', label: 'Structura metalica' },
+      { source: 'production', label: 'Subassembly 01' },
       { source: 'task', label: 'Review quote' },
     ],
   )

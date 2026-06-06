@@ -37,20 +37,20 @@ test('buildPlanningBuckets derives calendar items for projects and subassemblies
       { id: 'WP1000-11', client: 'Client Nou', data_target: '2026-05-20', data_done: '' },
     ],
     subansambluri: [
-      { proiect: 'WP1000-11', nr: 1, nume: 'Structura metalica', data_due: '2026-05-18', data_done: '' },
-      { proiect: 'WP1000-11', nr: 2, nume: 'Scara metalica', data_due: '2026-05-21', data_done: '2026-05-19' },
+      { proiect: 'WP1000-11', nr: 1, nume: 'Subassembly 01', data_due: '2026-05-18', data_done: '' },
+      { proiect: 'WP1000-11', nr: 2, nume: 'Subassembly 02', data_due: '2026-05-21', data_done: '2026-05-19' },
     ],
   })
 
   assert.equal(result.overdue.length, 1)
-  assert.equal(result.overdue[0].title, 'WP1000-11 · Structura metalica')
+  assert.equal(result.overdue[0].title, 'WP1000-11 · Subassembly 01')
   assert.equal(result.upcoming.length, 1)
   assert.equal(result.completed.length, 1)
   assert.deepEqual(
     result.calendarItems.map(item => ({ date: item.date, tone: item.tone, title: item.title })),
     [
-      { date: '2026-05-18', tone: 'danger', title: 'WP1000-11 · Structura metalica' },
-      { date: '2026-05-19', tone: 'success', title: 'WP1000-11 · Scara metalica' },
+      { date: '2026-05-18', tone: 'danger', title: 'WP1000-11 · Subassembly 01' },
+      { date: '2026-05-19', tone: 'success', title: 'WP1000-11 · Subassembly 02' },
       { date: '2026-05-20', tone: 'warning', title: 'WP1000-11 · Client Nou' },
     ],
   )
