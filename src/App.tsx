@@ -36,6 +36,7 @@ import TaskBoard from './components/TaskBoard'
 import Inventory from './components/Inventory'
 import LogsPage from './components/Logs'
 import ReportsPage from './components/Reports'
+import ProfilePage from './components/Profile'
 import ActiveTasksPanel from './components/ActiveTasksPanel'
 import { LanguageFlag } from './components/Ui'
 import NotificationBell from './components/NotificationBell'
@@ -46,6 +47,7 @@ interface Profile {
   full_name: string | null
   role: AppRole
   departament: string | null
+  avatar_url: string | null
 }
 
 function AdminDropdown({ items }: { items: { path: string; label: string }[] }) {
@@ -196,6 +198,7 @@ const NAV_ICONS: Record<string, ComponentType<{ sx?: object }>> = {
   '/logs': BarChartOutlinedIcon,
   '/reports': BarChartOutlinedIcon,
   '/admin': SettingsOutlinedIcon,
+  '/profile': SettingsOutlinedIcon,
 }
 
 function MobileShell({ profile, demoMode, onExitDemo }: { profile: Profile | null; demoMode: boolean; onExitDemo: () => void }) {
@@ -220,6 +223,7 @@ function MobileShell({ profile, demoMode, onExitDemo }: { profile: Profile | nul
     hasPermission('view_logs')           && { path: '/logs',          label: t.nav.logs, admin: true },
     hasPermission('view_reports')        && { path: '/reports',       label: 'Reports', admin: true },
     hasPermission('manage_users')        && { path: '/admin',         label: t.nav.admin, admin: true },
+    { path: '/profile', label: 'My Profile' },
   ].filter(Boolean) as { path: string; label: string; admin?: boolean }[]
 
   const defaultPath = navItems[0]?.path ?? '/login'
@@ -402,11 +406,24 @@ function AppNav({ profile, demoMode, onExitDemo }: { profile: Profile | null; de
             <SmallButton onClick={toggle}><LanguageFlag code={lang === 'ro' ? 'en' : 'ro'} /></SmallButton>
             <NotificationBell userId={profile?.id ?? null} />
             <Stack direction="row" alignItems="center" gap={1} sx={{ borderLeft: '1px solid var(--color-hairline)', pl: 1.25 }}>
-              <Box sx={{ textAlign: 'right' }}>
-                <Typography variant="body2" sx={{ fontSize: 12, color: 'var(--color-ink-subtle)', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {profile?.full_name || profile?.email}
-                </Typography>
-                {profile?.departament && <Typography variant="body2" sx={{ fontSize: 10, color: 'var(--color-ink-tertiary)', textAlign: 'right' }}>{profile.departament}</Typography>}
+              <Box
+                component={NavLink}
+                to="/profile"
+                sx={{ display: 'flex', alignItems: 'center', gap: 1, textDecoration: 'none', cursor: 'pointer', borderRadius: 'var(--radius-md)', px: 0.75, py: 0.25, '&:hover': { bgcolor: 'var(--color-surface-2)' } }}
+              >
+                <Box
+                  component="img"
+                  src={profile?.avatar_url || '/user.png'}
+                  alt="avatar"
+                  onError={(e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.src = '/user.png' }}
+                  sx={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--color-hairline)', flexShrink: 0 }}
+                />
+                <Box sx={{ textAlign: 'right' }}>
+                  <Typography variant="body2" sx={{ fontSize: 12, color: 'var(--color-ink-subtle)', maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {profile?.full_name || profile?.email}
+                  </Typography>
+                  {profile?.departament && <Typography variant="body2" sx={{ fontSize: 10, color: 'var(--color-ink-tertiary)', textAlign: 'right' }}>{profile.departament}</Typography>}
+                </Box>
               </Box>
               <SmallButton onClick={() => supabase.auth.signOut().then(() => navigate('/', { replace: true }))}>{t.status.signOut}</SmallButton>
             </Stack>
@@ -453,7 +470,7 @@ function AnyPermGuard({ perms, children }: { perms: Parameters<ReturnType<typeof
 }
 
 
-function AppShell({ session, profile, demoMode, onExitDemo }: { session: Session | null; profile: Profile | null; demoMode: boolean; onExitDemo: () => void }) {
+function AppShell({ session, profile, demoMode, onExitDemo, onProfileUpdated }: { session: Session | null; profile: Profile | null; demoMode: boolean; onExitDemo: () => void; onProfileUpdated: () => void }) {
   const canViewTasks = !demoMode && !!profile?.id
 
   return (
@@ -478,6 +495,7 @@ function AppShell({ session, profile, demoMode, onExitDemo }: { session: Session
             <Route path="/logs"          element={<PermGuard perm="view_logs"><LogsPage /></PermGuard>} />
             <Route path="/reports"       element={<PermGuard perm="view_reports"><ReportsPage /></PermGuard>} />
             <Route path="/admin"         element={<PermGuard perm="manage_users"><Admin /></PermGuard>} />
+            <Route path="/profile"       element={profile ? <ProfilePage profile={profile} onUpdated={onProfileUpdated} /> : null} />
             <Route path="*"             element={<Navigate to="/" replace />} />
           </Routes>
         </Box>
@@ -567,7 +585,7 @@ export default function App() {
     </Box>
   )
 
-  if (demoMode) return <AppShell session={null} profile={null} demoMode={demoMode} onExitDemo={handleExitDemo} />
+  if (demoMode) return <AppShell session={null} profile={null} demoMode={demoMode} onExitDemo={handleExitDemo} onProfileUpdated={() => {}} />
 
   // Still resolving initial auth state
   if (session === undefined) return spinner
@@ -588,5 +606,5 @@ export default function App() {
   // Session exists but profile not yet fetched
   if (profile === undefined) return spinner
 
-  return <AppShell session={session} profile={profile} demoMode={demoMode} onExitDemo={handleExitDemo} />
+  return <AppShell session={session} profile={profile} demoMode={demoMode} onExitDemo={handleExitDemo} onProfileUpdated={() => profile && loadProfile(profile.id)} />
 }

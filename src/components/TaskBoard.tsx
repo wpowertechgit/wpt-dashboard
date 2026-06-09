@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import type React from 'react'
 import {
   Box, Stack, Typography, Dialog, DialogContent, DialogTitle,
   TextField, IconButton, CircularProgress, Tabs, Tab, Divider,
@@ -22,6 +23,19 @@ import { ErrorBanner } from './StateViews'
 type TaskStatus = Task['status']
 type TaskPriority = Task['priority']
 
+function UserAvatar({ user, size = 22 }: { user: UserOption | undefined; size?: number }) {
+  const src = user?.avatar_url || '/user.png'
+  return (
+    <Box
+      component="img"
+      src={src}
+      alt={user?.label ?? ''}
+      onError={(e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.src = '/user.png' }}
+      sx={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--color-hairline)', flexShrink: 0 }}
+    />
+  )
+}
+
 const PRIORITY_TONE = { LOW: 'default', NORMAL: 'info', HIGH: 'warning', URGENT: 'error' } as const
 const STATUS_TONE = { TODO: 'default', IN_PROGRESS: 'info', DONE: 'success' } as const
 
@@ -33,7 +47,7 @@ function statusLabel(s: TaskStatus, t: ReturnType<typeof useLang>['t']) {
   return { TODO: t.tasks.statusTodo, IN_PROGRESS: t.tasks.statusInProgress, DONE: t.tasks.statusDone }[s]
 }
 
-interface UserOption { id: string; label: string }
+interface UserOption { id: string; label: string; avatar_url?: string | null }
 
 interface TaskDetailProps {
   task: Task
@@ -234,7 +248,7 @@ export default function TaskBoard({ userId }: { userId: string | null }) {
       const [taskData, userList] = await Promise.all([fetchTasksForUser(userId), fetchAllUsers()])
       setAssigned(taskData.assigned)
       setCreated(taskData.created)
-      setUsers(userList.map(u => ({ id: u.id, label: u.full_name || u.email })))
+      setUsers(userList.map(u => ({ id: u.id, label: u.full_name || u.email, avatar_url: u.avatar_url })))
     } catch (e: unknown) { setError(e instanceof Error ? e.message : String(e)) }
     setLoading(false)
   }, [userId])
@@ -284,7 +298,8 @@ export default function TaskBoard({ userId }: { userId: string | null }) {
             ) : displayTasks.length === 0 ? (
               <TableRow><TableCell colSpan={6} sx={{ textAlign: 'center', py: 4, color: 'var(--color-ink-tertiary)', fontSize: 13 }}>{tk.noTasks}</TableCell></TableRow>
             ) : displayTasks.map(task => {
-              const assigneeName = users.find(u => u.id === task.assigned_to)?.label ?? tk.unassigned
+              const assigneeUser = users.find(u => u.id === task.assigned_to)
+              const assigneeName = assigneeUser?.label ?? tk.unassigned
               const isDeleting = deleting === task.id
               const isOverdue = task.due_date && new Date(task.due_date) < new Date() && task.status !== 'DONE'
               return (
@@ -293,7 +308,12 @@ export default function TaskBoard({ userId }: { userId: string | null }) {
                     <UiTypo sx={{ fontSize: 13, fontWeight: 500, color: task.status === 'DONE' ? 'var(--color-ink-tertiary)' : 'var(--color-ink)', textDecoration: task.status === 'DONE' ? 'line-through' : 'none' }}>{task.title}</UiTypo>
                     {task.description && <UiTypo sx={{ fontSize: 11, color: 'var(--color-ink-tertiary)', mt: 0.25, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 260 }}>{task.description}</UiTypo>}
                   </TableCell>
-                  <TableCell sx={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>{assigneeName}</TableCell>
+                  <TableCell>
+                    <Stack direction="row" alignItems="center" gap={0.75}>
+                      <UserAvatar user={assigneeUser} />
+                      <UiTypo sx={{ fontSize: 12, color: 'var(--color-ink-muted)' }}>{assigneeName}</UiTypo>
+                    </Stack>
+                  </TableCell>
                   <TableCell><Badge tone={PRIORITY_TONE[task.priority]}>{priorityLabel(task.priority, t)}</Badge></TableCell>
                   <TableCell sx={{ fontSize: 12, color: isOverdue ? '#f87171' : 'var(--color-ink-tertiary)' }}>{task.due_date ?? '—'}</TableCell>
                   <TableCell><Badge tone={STATUS_TONE[task.status]}>{statusLabel(task.status, t)}</Badge></TableCell>
@@ -324,7 +344,8 @@ export default function TaskBoard({ userId }: { userId: string | null }) {
           ) : displayTasks.length === 0 ? (
             <Box sx={{ p: 3, textAlign: 'center' }}><UiTypo sx={{ fontSize: 13, color: 'var(--color-ink-tertiary)' }}>{tk.noTasks}</UiTypo></Box>
           ) : displayTasks.map((task, i) => {
-            const assigneeName = users.find(u => u.id === task.assigned_to)?.label ?? tk.unassigned
+            const assigneeUser = users.find(u => u.id === task.assigned_to)
+            const assigneeName = assigneeUser?.label ?? tk.unassigned
             const isDeleting = deleting === task.id
             const isOverdue = task.due_date && new Date(task.due_date) < new Date() && task.status !== 'DONE'
             const isDone = task.status === 'DONE'
@@ -361,7 +382,7 @@ export default function TaskBoard({ userId }: { userId: string | null }) {
                 {/* Row 4: assignee + due date */}
                 <Stack direction="row" gap={2} sx={{ mb: 1 }} flexWrap="wrap">
                   <Stack direction="row" alignItems="center" gap={0.5}>
-                    <UiTypo sx={{ fontSize: 10, color: 'var(--color-ink-tertiary)', textTransform: 'uppercase', letterSpacing: 0.4 }}>{tk.colAssignee}</UiTypo>
+                    <UserAvatar user={assigneeUser} size={18} />
                     <UiTypo sx={{ fontSize: 12, color: 'var(--color-ink-muted)', fontWeight: 500 }}>{assigneeName}</UiTypo>
                   </Stack>
                   {task.due_date && (

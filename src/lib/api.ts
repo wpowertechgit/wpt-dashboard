@@ -251,9 +251,25 @@ export async function fetchProfiles() {
 
 export async function fetchAllUsers() {
   if (isDemoMode()) return []
-  const { data, error } = await supabase.from('profiles').select('id, full_name, email, role, departament').order('full_name')
+  const { data, error } = await supabase.from('profiles').select('id, full_name, email, role, departament, avatar_url').order('full_name')
   if (error) throw error
-  return data as { id: string; full_name: string | null; email: string; role: string; departament: string | null }[]
+  return data as { id: string; full_name: string | null; email: string; role: string; departament: string | null; avatar_url: string | null }[]
+}
+
+export async function uploadAvatar(userId: string, file: File): Promise<string> {
+  const ext = file.name.split('.').pop() ?? 'png'
+  const path = `${userId}.${ext}`
+  const { error } = await supabase.storage.from('Profiles').upload(path, file, { upsert: true })
+  if (error) throw error
+  const { data } = supabase.storage.from('Profiles').getPublicUrl(path)
+  return data.publicUrl
+}
+
+export async function updateOwnProfile(userId: string, fields: { full_name?: string; departament?: string; avatar_url?: string }) {
+  if (isDemoMode()) return
+  const { error } = await supabase.from('profiles').update(fields).eq('id', userId)
+  if (error) throw error
+  logActivity('update', 'user', userId, `Profil actualizat: ${fields.full_name ?? userId}`)
 }
 
 export async function createUserAccount(row: Record<string, unknown>) {

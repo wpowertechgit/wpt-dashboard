@@ -1,12 +1,12 @@
 # Waste Powertech OMS - Használati Útmutató
 
-Ez az útmutató azt magyarázza el, hogy a Waste Powertech OMS oldalt mikor, mire és hogyan kell használni a napi működésben.
+Ez az útmutató azt mutatja be, hogy a Waste Powertech OMS rendszert mikor, mire és hogyan érdemes használni a napi működésben.
 
-Az alkalmazás célja, hogy egy helyen lásd a projektek állapotát, a subassembly-k gyártási útját, a blokkoló problémákat, a PDCA akciókat, a napi mozgásokat, a KPI-okat, az irodai feladatokat és a készleteket.
+Az alkalmazás egy helyen kezeli a projekteket, subassembly-ket, gyártási határidőket, blokkolásokat, PDCA akciókat, napi átadásokat, KPI-okat, irodai feladatokat, készletmozgásokat, felhasználókat, aktivitási naplókat és webes riportokat.
 
 ---
 
-## 1. Belépés
+## 1. Belépés és fiók
 
 Az oldal megnyitásakor két lehetőség van:
 
@@ -15,21 +15,27 @@ Az oldal megnyitásakor két lehetőség van:
 
 A jobb felső nyelvi gombbal román és angol felület között lehet váltani. Demo módból az `Exit Demo` gombbal lehet kilépni.
 
+Ha elfelejtetted a jelszavadat, használd a jelszó-visszaállítási folyamatot. Az új jelszót a `Reset Password` oldalon lehet megadni. A jelszó és a megerősítés mezőnek egyeznie kell.
+
+Bejelentkezés után a fejlécben látod a saját nevedet, részlegedet és profilképedet. A profilképre vagy a `My Profile` menüpontra kattintva módosíthatod a saját nevedet, részlegedet és profilképedet.
+
 ---
 
 ## 2. Szerepkörök és jogosultságok
 
-A menüben csak azokat a modulokat látod, amelyekhez jogosultságod van.
+A menüben csak azokat a modulokat látod, amelyekhez jogosultságod van. Ha egy oldal nem látható, vagy egy mentés nem elérhető, akkor valószínűleg hiányzik a megfelelő jogosultság.
 
 | Szerepkör | Mire való |
 |---|---|
-| `admin` | Teljes hozzáférés, felhasználók és jogosultságok kezelése |
-| `production` | Termelési modulok kezelése, készlet megtekintése |
+| `admin` | Teljes hozzáférés, felhasználók, jogosultságok, naplók és riportok kezelése |
+| `production` | Termelési modulok szerkesztése, készlet megtekintése |
 | `office` | Irodai feladatok és készletmodul kezelése |
 | `office_production` | Termelési és irodai modulok együtt |
-| `viewer` | Megtekintés, módosítás nélkül |
+| `viewer` | Megtekintés módosítás nélkül |
 
-Ha nem látsz egy menüpontot vagy nem tudsz menteni, valószínűleg nincs hozzá jogosultságod. Ilyenkor adminisztrátort kell kérni.
+Az admin egyedi jogosultságokat is adhat vagy visszavonhat. Ez azt jelenti, hogy két azonos szerepkörű felhasználó között is lehet eltérés, ha valakinél egyedi engedély lett beállítva.
+
+Demo módban a rendszer tesztadatokkal működik, és a módosítások bemutatási célra szolgálnak.
 
 ---
 
@@ -37,17 +43,20 @@ Ha nem látsz egy menüpontot vagy nem tudsz menteni, valószínűleg nincs hozz
 
 | Modul | Mikor használd | Fő cél |
 |---|---|---|
-| `Tablou de Bord` / `Dashboard` | Minden nap elsőként | Gyors állapotkép a termelésről |
-| `Proiecte` / `Projects` | Új projekt indításakor vagy projektadat módosításakor | Projektek, határidők, felelősök |
-| `Subansambluri` / `Subassemblies` | Napi termelési frissítéskor | Subassembly státuszok, gyors lezárás, reset és gyártási lépések |
-| `Calendar` | Napi tervezéskor és határidő-ellenőrzéskor | Due, overdue, completed elemek |
-| `Blocaje` / `Blockages` | Amint egy probléma megakasztja a munkát | Blokkoló problémák rögzítése |
-| `PDCA` | Ha a probléma akciót igényel | Javító/megelőző intézkedések követése |
-| `Flux Zilnic` / `Daily Flow` | Amikor egy SA átkerül egyik részlegről a másikra | Napi mozgások naplózása |
-| `KPI Echipe` / `Team KPIs` | Heti review előtt | Csapat teljesítménymutatók |
-| `Sarcini` / `Tasks` | Irodai belső feladatoknál | Feladatkiadás és követés |
-| `Stocuri` / `Inventory` | Anyagok, késztermékek és mozgások követésére | Készletkezelés |
-| `Admin` | Felhasználó vagy jogosultság változásakor | Fiókok, szerepek, jogosultságok |
+| `Dashboard` / `Tablou de Bord` | Minden nap elsőként | Gyors termelési állapotkép |
+| `Projects` / `Proiecte` | Új projekt indításakor vagy projektadat módosításakor | Projektek, határidők, felelősök, órabüdzsé |
+| `Subassemblies` / `Subansambluri` | Napi termelési frissítéskor | SA státuszok, progressz, gyártási lépések |
+| `Planning` / `Calendar` | Napi tervezéskor és határidő-ellenőrzéskor | Overdue, upcoming, completed elemek és timeline |
+| `Blockages` / `Blocaje` | Amikor egy probléma megakasztja a munkát | Blokkoló problémák rögzítése |
+| `PDCA` | Ha a probléma követhető akciót igényel | Javító és megelőző intézkedések |
+| `Daily Flow` / `Flux Zilnic` | Amikor egy SA átkerül egyik részlegről a másikra | Napi mozgások naplózása |
+| `Team KPIs` / `KPI Echipe` | Heti vagy havi review előtt | Csapat teljesítménymutatók |
+| `Tasks` / `Sarcini` | Irodai belső feladatoknál | Feladatkiadás, követés, kommentek |
+| `Inventory` / `Stocuri` | Anyagok, késztermékek és mozgások követésére | Készletkezelés |
+| `Logs` | Admin ellenőrzéskor | Aktivitási napló, audit, CSV export |
+| `Reports` | Webes forgalmi riport készítésekor | Cloudflare látogatottsági és forgalmi riport |
+| `Admin` | Felhasználó vagy jogosultság változásakor | Fiókok, szerepek, egyedi engedélyek |
+| `My Profile` | Saját adatok módosításakor | Név, részleg, profilkép |
 
 ---
 
@@ -58,22 +67,25 @@ Ha nem látsz egy menüpontot vagy nem tudsz menteni, valószínűleg nincs hozz
 1. Nyisd meg a `Dashboard` oldalt.
 2. Nézd meg a globális állapotot: összes SA, kész, folyamatban, blokkolt, késésben.
 3. Ellenőrizd a projektprogresszt és a department heatmapet.
-4. Nyisd meg a `Calendar` oldalt, és nézd meg az `Overdue` és `Upcoming` elemeket.
+4. Nyisd meg a `Planning` oldalt, és nézd meg az `Overdue` és `Upcoming` elemeket.
 5. Ha van nyitott blokkolás, menj a `Blockages` oldalra.
+6. Ha vannak saját nyitott feladataid, nézd meg a `Tasks` oldalt vagy az aktív feladat panelt.
 
 ### Munka közben
 
 1. A `Subassemblies` oldalon frissítsd a valós státuszt.
 2. Ha egy SA átment a következő részlegre, rögzítsd a mozgást a `Daily Flow` oldalon.
-3. Ha probléma van, azonnal nyiss `Blockage` bejegyzést.
+3. Ha probléma van, azonnal nyiss `Blockage` bejegyzést, vagy állítsd az SA-t `BLOCAT` állapotra.
 4. Ha a probléma intézkedést igényel, hozz létre vagy frissíts PDCA akciót.
+5. Ha anyag érkezik vagy fogy, rögzítsd a készletmozgást az `Inventory` modulban.
 
 ### Nap végén
 
 1. Ellenőrizd, hogy minden elkészült SA-nál ki van-e töltve a `Done` dátum.
-2. Ellenőrizd, hogy minden lezárt gyártási lépésnél megvan-e a megfelelő `PROIECTARE Done`, `LASER Done`, `VIROLAT Done`, `SUDAT Done`, `ASAMBLAT Done`, `VOPSIT Done` dátum.
+2. Ellenőrizd, hogy minden lezárt gyártási lépésnél megvan-e a megfelelő `... Done` dátum.
 3. Zárd le a megoldott blokkolásokat.
 4. Frissítsd az irodai feladatok státuszát, ha érintett vagy.
+5. Admin felhasználóként szükség esetén nézd át a `Logs` oldalt.
 
 ---
 
@@ -83,17 +95,17 @@ Ezt az oldalt gyors helyzetképhez használd.
 
 Itt látod:
 
-- összes subassembly számát
-- kész, folyamatban lévő, blokkolt és késő elemeket
+- az összes subassembly számát
+- a kész, folyamatban lévő, blokkolt és késő elemeket
 - projektek progresszét
 - aktív blokkolásokat
 - department heatmapet
 
 Használat:
 
-1. Nézd meg, melyik projekt áll rosszul.
+1. Nézd meg, melyik projekt áll rosszul vagy csúszik.
 2. Nézd meg, hol van sok blokkolás.
-3. Döntsd el, melyik modulba kell továbbmenni: `Subassemblies`, `Calendar`, `Blockages` vagy `PDCA`.
+3. Döntsd el, melyik modulba kell továbbmenni: `Subassemblies`, `Planning`, `Blockages` vagy `PDCA`.
 
 ---
 
@@ -129,11 +141,11 @@ Fontos: új projekt létrehozásakor a rendszer előkészíti a standard subasse
 
 Ez a napi termelési munka fő oldala.
 
-A gyártási lánc:
+A követett gyártási lánc:
 
 `PROIECTARE -> LASER -> VIROLAT -> SUDAT -> ASAMBLAT -> VOPSIT`
 
-Megjegyzés: az adatbázisban a `VIROLAT` lépés technikai mezőneve `rolat`, de a felületen `VIROLAT` néven jelenik meg.
+Megjegyzés: az adatbázisban a `VIROLAT` lépés technikai mezőneve előfordulhat `rolat` néven, de a felületen `VIROLAT` néven kell értelmezni.
 
 Itt lehet:
 
@@ -154,8 +166,8 @@ Legfontosabb mezők:
 - `Status Global`: teljes SA állapota
 - `Progres`: százalékos haladás
 - `Start`: mikor indult az SA
-- `Due`: mikorra kell kész lennie
-- `Done`: mikor lett kész ténylegesen
+- `Due`: mikorra kell készen lennie
+- `Done`: mikor lett ténylegesen kész
 - `PROIECTARE Done`, `LASER Done`, `VIROLAT Done`, `SUDAT Done`, `ASAMBLAT Done`, `VOPSIT Done`: részlegenkénti lezárás dátuma
 - `Comentarii`: megjegyzés
 
@@ -166,48 +178,49 @@ Helyes használat:
 3. Állítsd be a valós státuszt.
 4. Frissítsd a progresszt kézzel vagy a gyors gombokkal.
 5. Töltsd ki a releváns dátumokat.
-6. Állítsd be részlegenként, hogy `Neînceput`, `În lucru`, `Finalizat`, `Blocat` vagy `N/A`.
+6. Állítsd be részlegenként, hogy `Neinceput`, `In lucru`, `Finalizat`, `Blocat` vagy `N/A`.
 7. Mentsd.
 
 Gyors `Finalizat` használata:
 
-1. Ha az SA ténylegesen teljesen kész, kattints a `Finalizat` gombra.
+1. Csak akkor kattints a `Finalizat` gombra, ha az SA ténylegesen teljesen kész.
 2. A rendszer `100%` progresszre állítja, kitölti a hiányzó részleglezárási dátumokat a mai nappal, és a globális státuszt készre állítja.
-3. Csak akkor használd, ha minden szükséges gyártási lépés valóban lezárult.
+3. Ellenőrizd utána, hogy a dátumok a valóságot tükrözik-e.
 
 `Reset` használata:
 
 1. Edit módban kattints a `Reset` gombra, ha egy SA-t vissza kell nyitni.
 2. A rendszer visszaállítja `IN LUCRU`, `0%`, nem blokkolt állapotra.
-3. A részleg státuszok `Neînceput` értékre kerülnek, a lezárási dátumok törlődnek.
+3. A részleg státuszok `Neinceput` értékre kerülnek, a lezárási dátumok törlődnek.
 
 Blokkolás fontos szabálya:
 
-Ha egy SA-t `BLOCAT` globális státuszra állítasz, a rendszer automatikusan létrehozhat egy nyitott `Blockage` bejegyzést. A blokk részlege az első `Blocat` részleg alapján lesz meghatározva; ha nincs ilyen részleg, `GENERAL` lesz. Ezért blokkolás előtt mindig írd be a pontos megjegyzést a `Comentarii` mezőbe.
+Ha egy SA-t `BLOCAT` globális státuszra állítasz, a rendszer automatikusan létrehozhat egy nyitott `Blockage` bejegyzést. A blokk részlege az első `Blocat` részleg alapján lesz meghatározva; ha nincs ilyen részleg, `GENERAL` lesz. Blokkolás előtt mindig írd be a pontos okot a `Comentarii` mezőbe.
 
-Fontos szabály: ha egy SA elkészült, a `Done` dátumot is ki kell tölteni, nem elég csak a státuszt készre állítani.
+Fontos: ha egy SA elkészült, a `Done` dátumot is ki kell tölteni, nem elég csak a státuszt készre állítani.
 
 ---
 
-## 8. Calendar
+## 8. Planning
 
-A naptár a határidők és a lead time ellenőrzésére való.
+A `Planning` oldal a határidők, befejezések, késések és timeline áttekintésére való.
 
 Itt látod:
 
 - `Overdue`: lejárt határidejű, de még nem lezárt elemek
 - `Upcoming`: hamarosan esedékes elemek
 - `Recently completed`: nemrég lezárt elemek
-- havi naptárnézetet
-- timeline nézetet projektekhez és subassembly-khez
+- projektek, subassembly-k és jogosultságtól függően feladatok idővonalát
+- vízszintes timeline nézetet görgetéssel és zoommal
 
 Használd:
 
 - reggel prioritásállításhoz
 - meeting közben késések áttekintésére
 - hét végén lead time elemzéshez
+- irodai feladatok határidőinek ellenőrzéséhez, ha van `view_tasks` jogosultságod
 
-Ha valami késésben van, ellenőrizd a `Subassemblies` oldalon a `Due` és `Done` dátumokat.
+Ha valami késésben van, ellenőrizd a `Projects`, `Subassemblies` vagy `Tasks` oldalon a kapcsolódó dátumokat.
 
 ---
 
@@ -236,7 +249,7 @@ Mikor rögzítsd:
 
 Megoldáskor kattints a `Rezolvat` gombra. A lezárt bejegyzés átkerül a megoldott blokkolások közé.
 
-Fontos: ha a `Subassemblies` oldalon egy SA-t `BLOCAT` állapotba teszel, a rendszer külön `Blockage` rekordot is nyithat. Ilyenkor ellenőrizd a `Blockages` oldalon, hogy az automatikusan létrejött bejegyzés elég pontos-e, és szükség esetén egészítsd ki felelőssel vagy megjegyzéssel.
+Fontos: ha a `Subassemblies` oldalon egy SA-t `BLOCAT` állapotba teszel, a rendszer külön `Blockage` rekordot is nyithat. Ilyenkor ellenőrizd a `Blockages` oldalon, hogy az automatikusan létrejött bejegyzés elég pontos-e.
 
 ---
 
@@ -301,14 +314,14 @@ Használd minden tényleges átadásnál. Ez segít visszanézni, mikor és hol 
 
 ## 12. Team KPIs
 
-A KPI oldalt heti teljesítményrögzítésre használd.
+A KPI oldalt heti teljesítményrögzítésre és review-ra használd.
 
 Fő mezők:
 
 - `Saptamana`: hét megnevezése, például `S-20 (Mai 19)`
 - `Echipa`: részleg/csapat
 - `SA Intrare`: beérkező SA-k száma
-- `SA Iesire`: kimenő/kész SA-k száma
+- `SA Iesire`: kimenő vagy kész SA-k száma
 - `SA Blocate`: blokkolt SA-k száma
 - `SA Intarziate`: késő SA-k száma
 - `Eficienta %`: hatékonyság
@@ -327,7 +340,7 @@ Mikor használd:
 
 Ez az irodai feladatkezelő.
 
-Két nézet van:
+Két fő nézet van:
 
 - `Sarcinile mele` / `My Tasks`: neked kiosztott feladatok
 - `Create de mine` / `Created by Me`: általad létrehozott feladatok
@@ -346,6 +359,8 @@ Feladat kezelése:
 2. Állítsd a státuszt: `TODO`, `IN_PROGRESS`, `DONE`.
 3. Írj kommentet, ha egyeztetés vagy kiegészítés kell.
 4. Törölni csak a létrehozó vagy a megfelelő jogosultságú felhasználó tud.
+
+Az aktív feladat panel bejelentkezett felhasználóknál automatikusan megjelenhet. Ez a saját, még nem kész feladatokat mutatja, kiemeli a lejártakat, és gyors lezárást is enged megjegyzéssel.
 
 ---
 
@@ -383,7 +398,81 @@ Ha a készlet a minimum alá esik, az elem `Stoc redus` / `Low stock` jelzést k
 
 ---
 
-## 15. Admin
+## 15. Notifications
+
+A felső sávban található értesítési ikon a felhasználóhoz kapcsolódó üzeneteket mutatja.
+
+Itt láthatod például:
+
+- újonnan kiosztott feladatokat
+- rendszer- vagy email-értesítéseket
+- még olvasatlan eseményeket
+
+Használat:
+
+1. Kattints az értesítési ikonra.
+2. Nézd meg az olvasatlan tételeket.
+3. Jelöld olvasottnak az egyes értesítéseket, vagy használd az összes olvasottra állítását.
+
+Demo módban az értesítési funkció nem jelenik meg ugyanúgy, mint valódi bejelentkezésnél.
+
+---
+
+## 16. Logs
+
+A `Logs` oldal admin ellenőrzésre és audit célra szolgál.
+
+Itt látható:
+
+- ki jelentkezett be vagy ki
+- milyen rekord jött létre, módosult vagy törlődött
+- feladat-, készlet-, PDCA-, blokk- és riportesemények
+- rendszeresemények, email és értesítési események
+
+Funkciók:
+
+- keresés felhasználó, művelet vagy rekord címke alapján
+- szűrés művelettípus szerint
+- szűrés entitástípus szerint
+- `Export CSV`
+- napló törlése vagy teljes törlés, ha van `delete_logs` jogosultság
+
+Fontos: a napló törlése audit szempontból érzékeny művelet. Csak akkor törölj, ha erre belső szabály vagy admin döntés van.
+
+---
+
+## 17. Reports
+
+A `Reports` oldal a Cloudflare webes forgalmi adataiból készít riportot.
+
+Itt beállítható:
+
+- `Last 7 days`
+- `Last 30 days`
+- egyedi kezdő és záró dátum
+
+A riportban látható:
+
+- `Unique Visitors`
+- `Page Views`
+- `Total Requests`
+- `Bandwidth`
+- `Threats Blocked`
+- napi bontás
+- országok szerinti forgalmi megoszlás, ha van adat
+
+Használat:
+
+1. Válassz időszakot.
+2. Kattints a `Generate Report` gombra.
+3. Ellenőrizd az összesítő kártyákat és táblázatokat.
+4. Ha kell, használd a `Download PDF` gombot.
+
+A riport csak akkor működik, ha a Cloudflare riport funkcióhoz szükséges backend és jogosultság be van állítva.
+
+---
+
+## 18. Admin
 
 Az admin oldal felhasználók és jogosultságok kezelésére való.
 
@@ -412,7 +501,28 @@ Jogosultság szerkesztése:
 
 ---
 
-## 16. Dátumok és lead time szabályok
+## 19. My Profile
+
+A `My Profile` oldalon minden bejelentkezett felhasználó saját adatait kezelheti.
+
+Módosítható:
+
+- teljes név
+- részleg
+- profilkép
+
+Profilkép feltöltése:
+
+1. Kattints az `Upload Photo` gombra.
+2. Válassz JPG, PNG vagy WebP képet.
+3. Várd meg a feltöltést.
+4. Kattints a `Save Changes` gombra.
+
+Az email cím itt csak megjelenik, nem szerkeszthető.
+
+---
+
+## 20. Dátumok és lead time szabályok
 
 A rendszer akkor tud jól tervezni és mérni, ha a dátumok pontosak.
 
@@ -425,18 +535,20 @@ Mindig töltsd ki:
 - SA `Due`
 - SA `Done`
 - részlegenkénti `... Done` dátumok
+- feladat `Termen`, ha irodai taskról van szó
 
 Ez alapján lehet látni:
 
 - melyik projekt csúszik
 - melyik SA van késésben
+- melyik feladat lejárt
 - hol áll meg a folyamat
 - mennyi a valós lead time
 - melyik részleg okoz szűk keresztmetszetet
 
 ---
 
-## 17. Mit mikor kell frissíteni
+## 21. Mit mikor kell frissíteni
 
 | Esemény | Mit frissíts |
 |---|---|
@@ -446,18 +558,22 @@ Ez alapján lehet látni:
 | SA továbbmegy másik részlegre | `Daily Flow` és `Subassemblies` |
 | Egy részleg befejezte a munkát | megfelelő `... Done` dátum |
 | SA teljesen kész | `Finalizat` gyorsgomb vagy `Status Global`, `Progres`, `Done` |
-| SA hibásan lett zárva/blokkolva | `Subassemblies` -> `Edit` -> `Reset`, majd helyes adatok |
+| SA hibásan lett zárva vagy blokkolva | `Subassemblies` -> `Edit` -> `Reset`, majd helyes adatok |
 | Blokkoló probléma keletkezik | `Subassemblies` -> `BLOCAT` és/vagy `Blockages` |
 | Blokkolás intézkedést igényel | `PDCA` |
 | Blokkolás megoldódik | `Blockages` -> `Rezolvat` |
 | Heti mutatók készülnek | `Team KPIs` |
 | Irodai feladat keletkezik | `Tasks` |
+| Feladat elkészül | `Tasks` vagy aktív feladat panel -> `DONE` |
 | Anyag érkezik vagy fogy | `Inventory` |
 | Új ember kap hozzáférést | `Admin` |
+| Audit vagy ellenőrzés kell | `Logs` |
+| Webes forgalmi riport kell | `Reports` |
+| Saját név, részleg vagy kép változik | `My Profile` |
 
 ---
 
-## 18. Gyakori problémák
+## 22. Gyakori problémák
 
 ### Nem látok egy menüpontot
 
@@ -467,11 +583,11 @@ Nincs hozzá jogosultságod. Kérj adminisztrátori ellenőrzést.
 
 Ellenőrizd, hogy a `Done` dátum is ki van-e töltve, nem csak a státusz.
 
-Ha a gyors `Finalizat` gombbal zártad, nézd meg, hogy minden részlegnél megfelelő-e a lezárási dátum. A rendszer a hiányzó dátumokat a lezárás napjával tölti ki.
+Ha a gyors `Finalizat` gombbal zártad, nézd meg, hogy minden részlegnél megfelelő-e a lezárási dátum. A rendszer a hiányzó dátumokat a lezárás napjával töltheti ki.
 
-### Nem jelenik meg adat a Calendar oldalon
+### Nem jelenik meg adat a Planning oldalon
 
-Ellenőrizd a projekt és SA dátummezőket: `Data Start`, `Data Target`, `Start`, `Due`, `Done`.
+Ellenőrizd a projekt, SA és feladat dátummezőket: `Data Start`, `Data Target`, `Start`, `Due`, `Done`, `Termen`.
 
 ### Nem tudok menteni
 
@@ -485,9 +601,17 @@ Ez szándékos működés. A `Subassemblies` blokk státusza automatikusan nyito
 
 Nézd meg az adott tétel `Log` nézetét, és ellenőrizd a bevételezés, kiadás és korrekció tranzakciókat.
 
+### Nem jön létre riport
+
+Ellenőrizd, hogy van-e `view_reports` jogosultságod, és hogy a Cloudflare riport funkció be van-e állítva a backendben.
+
+### Nem látok értesítéseket
+
+Az értesítések csak valódi bejelentkezett felhasználónál működnek teljesen. Ellenőrizd, hogy be vagy-e jelentkezve, és van-e hozzád kapcsolódó új esemény.
+
 ---
 
-## 19. Aranyszabály
+## 23. Aranyszabály
 
 A rendszer annyira pontos, amennyire a napi adatok pontosak.
 
@@ -498,5 +622,6 @@ Mindig ugyanazon a napon rögzítsd:
 - valós blokkolás
 - valós átadás
 - valós készletmozgás
+- valós feladatállapot
 
-Ha ez az öt dolog naprakész, az OMS használható lesz napi döntésekhez, projektprioritáshoz, lead time méréshez és csapat review-hoz.
+Ha ezek naprakészek, az OMS használható lesz napi döntésekhez, projektprioritáshoz, lead time méréshez, csapat review-hoz, auditáláshoz és vezetői riportokhoz.
