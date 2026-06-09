@@ -11,6 +11,18 @@ export interface AppNotification {
   created_at: string
 }
 
+function logSystem(action: string, entityType: string, entityId: string, entityLabel: string, details?: Record<string, unknown>) {
+  supabase.from('activity_logs').insert({
+    user_id: null,
+    user_email: 'system',
+    action,
+    entity_type: entityType,
+    entity_id: entityId,
+    entity_label: entityLabel,
+    details: details ?? null,
+  }).then()
+}
+
 export function insertNotification(userId: string, message: string, type: string, taskId?: string | null) {
   supabase.from('notifications').insert({
     user_id: userId,
@@ -18,6 +30,7 @@ export function insertNotification(userId: string, message: string, type: string
     type,
     task_id: taskId ?? null,
   }).then()
+  logSystem('notification', 'notification', userId, message, { type, task_id: taskId ?? null })
 }
 
 async function loadNotifications(userId: string): Promise<AppNotification[]> {

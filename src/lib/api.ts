@@ -258,8 +258,14 @@ export async function fetchAllUsers() {
 
 export async function createUserAccount(row: Record<string, unknown>) {
   if (isDemoMode()) return
-  const { data, error } = await supabase.functions.invoke('create-user', { body: row })
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session?.access_token) throw new Error('Not authenticated')
+  const { data, error } = await supabase.functions.invoke('create-user', {
+    body: row,
+    headers: { Authorization: `Bearer ${session.access_token}` },
+  })
   if (error) throw error
+  if (data?.error) throw new Error(data.error)
   logActivity('create', 'user', String(row.email ?? ''), `Utilizator nou: ${row.email ?? ''}`)
   return data
 }

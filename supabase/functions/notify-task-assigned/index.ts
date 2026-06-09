@@ -123,5 +123,19 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return json({ error: errText }, 500)
   }
 
+  // Log the email as a system action
+  const supa = createClient(supabaseUrl, serviceRoleKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  })
+  await supa.from('activity_logs').insert({
+    user_id: null,
+    user_email: 'system',
+    action: 'email_sent',
+    entity_type: 'email',
+    entity_id: task.id ?? '',
+    entity_label: `To: ${assigneeEmail} — ${title}`,
+    details: { subject: `New task: ${title}`, to: assigneeEmail, from: creatorName },
+  })
+
   return json({ ok: true, to: assigneeEmail })
 })

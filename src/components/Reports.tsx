@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { logActivity } from '../lib/api'
 import { ActionButton, Box, Card, DataTable, Eyebrow, PageTitle, Stack, TableCell, TableRow, Typography } from './Ui'
 import { ErrorBanner } from './StateViews'
 
@@ -346,6 +347,7 @@ export default function ReportsPage() {
 
   function downloadPdf() {
     if (!report) return
+    logActivity('pdf_export', 'report', `cf-${report.from}-${report.to}`, `Cloudflare PDF: ${report.from} → ${report.to}`, { from: report.from, to: report.to })
     const logoUrl = `${window.location.origin}/wpt%20logo-01.png`
     const html = buildPrintHtml(report, logoUrl)
 

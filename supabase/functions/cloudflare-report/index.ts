@@ -26,6 +26,15 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const authHeader = req.headers.get('Authorization')
   if (!authHeader) return json({ error: 'Missing authorization' }, 401)
 
+  // Decode the Supabase JWT to get the requesting user's identity
+  function getUserFromToken(header: string): { id: string; email: string } | null {
+    try {
+      const payload = JSON.parse(atob(header.replace('Bearer ', '').split('.')[1]))
+      return { id: payload.sub ?? '', email: payload.email ?? '' }
+    } catch { return null }
+  }
+  const requestingUser = getUserFromToken(authHeader)
+
   let from: string, to: string
   try {
     const body = await req.json()
@@ -138,6 +147,30 @@ Deno.serve(async (req: Request): Promise<Response> => {
     .map(([name, requests]) => ({ name, requests }))
     .sort((a, b) => b.requests - a.requests)
     .slice(0, 10)
+
+  // Log the report generation with the actual requesting user
+  const supabaseUrl2 = Deno.env.get('SUPABASE_URL')
+  const serviceKey   = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+  if (supabaseUrl2 && serviceKey && requestingUser) {
+    fetch(`${supabaseUrl2}/rest/v1/activity_logs`, {
+      method: 'POST',
+      headers: {
+        apikey: serviceKey,
+        Authorization: `Bearer ${serviceKey}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=minimal',
+      },
+      body: JSON.stringify({
+        user_id: requestingUser.id,
+        user_email: requestingUser.email,
+        action: 'report',
+        entity_type: 'report',
+        entity_id: `cf-${from}-${to}`,
+        entity_label: `Cloudflare report: ${from} → ${to}`,
+        details: { from, to, days: days.length },
+      }),
+    }).then()
+  }
 
   return json({
     from, to,

@@ -8,9 +8,9 @@ import { ErrorBanner } from './StateViews'
 import { ActionButton, Badge, Box, Card, DataTable, Eyebrow, PageTitle, Stack, TableCell, TableRow, Typography } from './Ui'
 
 const ACTION_TONE: Record<string, 'error' | 'warning' | 'success' | 'info' | undefined> = {
-  create: 'success', complete: 'success', resolve: 'success', login: 'success',
+  create: 'success', complete: 'success', resolve: 'success', login: 'success', email_sent: 'success',
   delete: 'error',
-  update: 'info', update_permissions: 'info', comment: 'info',
+  update: 'info', update_permissions: 'info', comment: 'info', notification: 'info', report: 'info', pdf_export: 'info',
   close: 'warning', reset_password: 'warning', transaction: 'warning', logout: 'warning',
 }
 
@@ -18,11 +18,20 @@ const ENTITY_COLOR: Record<string, string> = {
   project: '#818cf8', subassembly: '#a78bfa', blocaj: '#f87171',
   pdca: '#fb923c', flux: '#4ade80', kpi: '#facc15',
   task: '#c084fc', inventory: '#22d3ee', user: '#f472b6',
-  session: '#60a5fa',
+  session: '#60a5fa', notification: '#a78bfa', email: '#34d399', report: '#fb923c',
 }
 
 function ActionBadge({ action }: { action: string }) {
   return <Badge tone={ACTION_TONE[action]}>{action}</Badge>
+}
+
+function UserCell({ email }: { email: string | null }) {
+  if (email === 'system') return (
+    <Typography sx={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, color: '#f59e0b', bgcolor: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.25)', px: '6px', py: '2px', borderRadius: 'var(--radius-xs)', whiteSpace: 'nowrap', display: 'inline-block' }}>
+      SYSTEM
+    </Typography>
+  )
+  return <Typography sx={{ fontSize: 12, color: 'var(--color-ink-muted)', whiteSpace: 'nowrap' }}>{email ?? '—'}</Typography>
 }
 
 function EntityBadge({ type }: { type: string | null }) {
@@ -39,8 +48,8 @@ function formatTs(ts: string) {
   return d.toLocaleString('ro-RO', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })
 }
 
-const ACTION_OPTIONS = ['all', 'login', 'logout', 'create', 'update', 'delete', 'complete', 'resolve', 'close', 'comment', 'transaction', 'reset_password', 'update_permissions']
-const ENTITY_OPTIONS = ['all', 'session', 'project', 'subassembly', 'blocaj', 'pdca', 'flux', 'kpi', 'task', 'inventory', 'user']
+const ACTION_OPTIONS = ['all', 'login', 'logout', 'create', 'update', 'delete', 'complete', 'resolve', 'close', 'comment', 'transaction', 'reset_password', 'update_permissions', 'notification', 'email_sent', 'report', 'pdf_export']
+const ENTITY_OPTIONS = ['all', 'session', 'project', 'subassembly', 'blocaj', 'pdca', 'flux', 'kpi', 'task', 'inventory', 'user', 'notification', 'email', 'report']
 
 function exportLogsCSV(logs: ActivityLog[]) {
   const headers = ['Time', 'User', 'Action', 'Entity Type', 'Label']
@@ -181,7 +190,7 @@ export default function LogsPage() {
             ) : logs.map(log => (
               <TableRow key={log.id}>
                 <TableCell sx={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--color-ink-muted)', whiteSpace: 'nowrap' }}>{formatTs(log.created_at)}</TableCell>
-                <TableCell sx={{ fontSize: 12, color: 'var(--color-ink-muted)', whiteSpace: 'nowrap' }}>{log.user_email ?? '—'}</TableCell>
+                <TableCell><UserCell email={log.user_email} /></TableCell>
                 <TableCell><ActionBadge action={log.action} /></TableCell>
                 <TableCell><EntityBadge type={log.entity_type} /></TableCell>
                 <TableCell sx={{ fontSize: 12, color: 'var(--color-ink)', maxWidth: 320 }}>{log.entity_label ?? '—'}</TableCell>
@@ -213,7 +222,7 @@ export default function LogsPage() {
               <Typography sx={{ fontSize: 13, color: 'var(--color-ink)', mb: 0.25 }}>{log.entity_label ?? '—'}</Typography>
               <Stack direction="row" gap={1.5} flexWrap="wrap">
                 <Typography sx={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--color-ink-tertiary)' }}>{formatTs(log.created_at)}</Typography>
-                <Typography sx={{ fontSize: 11, color: 'var(--color-ink-subtle)' }}>{log.user_email ?? '—'}</Typography>
+                <UserCell email={log.user_email} />
               </Stack>
             </Box>
           ))}
