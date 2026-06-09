@@ -3,8 +3,22 @@ import { isDemoMode } from './demo'
 import { DEMO } from '../data/demo'
 import { buildDefaultSubassemblies, stripEmptyDateFields, withDefaultProjectTotals } from './projectDefaults'
 import type { PermissionKey, PermissionOverride } from './permissions'
+import { insertNotification } from './notifications'
 
 // ── Activity logging (fire-and-forget, never throws) ───────────────────────────
+
+export function logAuthEvent(action: 'login' | 'logout', userId: string, userEmail: string) {
+  if (isDemoMode()) return
+  supabase.from('activity_logs').insert({
+    user_id: userId,
+    user_email: userEmail,
+    action,
+    entity_type: 'session',
+    entity_id: userId,
+    entity_label: userEmail,
+    details: null,
+  }).then()
+}
 
 export function logActivity(action: string, entityType: string, entityId: string, entityLabel: string, details?: Record<string, unknown>) {
   if (isDemoMode()) return
@@ -336,6 +350,10 @@ export async function createTask(row: Omit<Task, 'id' | 'created_at' | 'updated_
   const { data, error } = await supabase.from('tasks').insert(row).select().single()
   if (error) throw error
   logActivity('create', 'task', data.id, `Task: ${row.title}`)
+  if (row.assigned_to && row.assigned_to !== row.created_by) {
+    insertNotification(row.assigned_to, `New task assigned to you: ${row.title}`, 'task_assigned', data.id)
+    supabase.functions.invoke('notify-task-assigned', { body: data }).then()
+  }
   return data as Task
 }
 

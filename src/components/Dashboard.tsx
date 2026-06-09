@@ -3,6 +3,7 @@ import { useLang } from '../lib/i18n'
 import { useQuery } from '../lib/useQuery'
 import { fetchProiecte, fetchBlocaje, fetchSubansambluri, fetchPDCA, fetchTasksForUser, fetchLowStockItems } from '../lib/api'
 import { buildProjectOptions } from '../lib/projectOptions'
+import { calcProjectProgress } from '../lib/projectProgress'
 import { pageInfo } from '../lib/pageInfo'
 import { usePermissions } from '../lib/permissionsContext'
 import { ErrorBanner, LoadingRows } from './StateViews'
@@ -222,17 +223,20 @@ export default function Dashboard({ userId }: { userId?: string | null }) {
           <Eyebrow>{d.progresProiecte}</Eyebrow>
         </Box>
         <DataTable head={<TableRow><TableCell>{d.colProiect}</TableCell><TableCell>{d.colClient}</TableCell><TableCell>{d.colResponsabil}</TableCell><TableCell>{d.colPrioritate}</TableCell><TableCell sx={{ minWidth: 160 }}>{d.colProgres}</TableCell><TableCell>{d.colStatus}</TableCell><TableCell>{d.colBlocaje}</TableCell></TableRow>}>
-          {proiecte.loading ? <LoadingRows cols={7} /> : proiecte.data?.map(p => (
+          {proiecte.loading ? <LoadingRows cols={7} /> : proiecte.data?.map(p => {
+            const progresCalculat = calcProjectProgress(sa.data, p.id)
+            return (
             <TableRow key={p.id}>
               <TableCell><Typography variant="body2" sx={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--color-primary)' }}>{p.id}</Typography></TableCell>
               <TableCell sx={{ color: 'var(--color-ink-muted)' }}>{p.client}</TableCell>
               <TableCell sx={{ color: 'var(--color-ink-muted)' }}>{p.responsabil}</TableCell>
               <TableCell>{priorityBadge(p.prioritate)}</TableCell>
-              <TableCell sx={{ minWidth: 160 }}><ProgressBar value={Number(p.progres)} /></TableCell>
+              <TableCell sx={{ minWidth: 160 }}><ProgressBar value={progresCalculat} /></TableCell>
               <TableCell>{statusBadge(p.status, pr)}</TableCell>
               <TableCell sx={{ textAlign: 'center' }}>{p.blocaje_active > 0 ? <Badge tone="error">{p.blocaje_active}</Badge> : <Typography variant="body2" sx={{ color: 'var(--color-ink-tertiary)' }}>–</Typography>}</TableCell>
             </TableRow>
-          ))}
+            )
+          })}
         </DataTable>
       </Card>
 

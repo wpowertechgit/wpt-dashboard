@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import type { ComponentType, ReactNode } from 'react'
 import { Routes, Route, NavLink, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import type { Session } from '@supabase/supabase-js'
@@ -18,6 +18,7 @@ import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined'
 import { supabase } from './lib/supabase'
 import { useLang } from './lib/i18n'
 import { isDemoMode, exitDemo } from './lib/demo'
+import { logAuthEvent } from './lib/api'
 import { PermissionsProvider, usePermissions } from './lib/permissionsContext'
 import type { AppRole } from './lib/permissions'
 import LoginPage from './components/LoginPage'
@@ -36,6 +37,7 @@ import Inventory from './components/Inventory'
 import LogsPage from './components/Logs'
 import ActiveTasksPanel from './components/ActiveTasksPanel'
 import { LanguageFlag } from './components/Ui'
+import NotificationBell from './components/NotificationBell'
 
 interface Profile {
   id: string
@@ -180,6 +182,7 @@ function MobileShell({ profile, demoMode, onExitDemo }: { profile: Profile | nul
           {profile?.full_name || profile?.email || (demoMode ? 'Demo' : '')}
         </Typography>
         <SmallButton onClick={toggle}><LanguageFlag code={lang === 'ro' ? 'en' : 'ro'} /></SmallButton>
+        {!demoMode && <NotificationBell userId={profile?.id ?? null} />}
         {demoMode
           ? <SmallButton onClick={() => { onExitDemo(); navigate('/login', { replace: true }) }}>✕</SmallButton>
           : <SmallButton onClick={() => supabase.auth.signOut().then(() => navigate('/', { replace: true }))}>{t.status.signOut}</SmallButton>
@@ -327,6 +330,7 @@ function AppNav({ profile, demoMode, onExitDemo }: { profile: Profile | null; de
           <>
             <StatusPill label={t.status.active} />
             <SmallButton onClick={toggle}><LanguageFlag code={lang === 'ro' ? 'en' : 'ro'} /></SmallButton>
+            <NotificationBell userId={profile?.id ?? null} />
             <Stack direction="row" alignItems="center" gap={1} sx={{ borderLeft: '1px solid var(--color-hairline)', pl: 1.25 }}>
               <Box sx={{ textAlign: 'right' }}>
                 <Typography variant="body2" sx={{ fontSize: 12, color: 'var(--color-ink-subtle)', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -378,6 +382,7 @@ function AnyPermGuard({ perms, children }: { perms: Parameters<ReturnType<typeof
   return <>{children}</>
 }
 
+
 function AppShell({ session, profile, demoMode, onExitDemo }: { session: Session | null; profile: Profile | null; demoMode: boolean; onExitDemo: () => void }) {
   const canViewTasks = !demoMode && !!profile?.id
 
@@ -425,17 +430,49 @@ export default function App() {
     setDemoMode(false)
   }, [])
 
+  const lastSessionRef = useRef<Session | null>(null)
+
   useEffect(() => {
     if (demoMode) return
     let active = true
 
+    // Load the initial session directly — onAuthStateChange fires INITIAL_SESSION
+    // only once per subscription, so in React StrictMode the second subscription
+    // (after cleanup) never receives it and the user appears logged out on refresh.
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!active) return
+      setSession(session)
+      if (session?.user) {
+        loadProfile(session.user.id)
+        lastSessionRef.current = session
+      } else {
+        setSession(null)
+        setProfile(null)
+      }
+    })
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!active) return
+      // INITIAL_SESSION is already handled by getSession() above
+      if (event === 'INITIAL_SESSION') return
       if (event === 'PASSWORD_RECOVERY') { setIsRecovery(true); setSession(session); return }
       setIsRecovery(false)
       setSession(session)
-      if (session?.user) loadProfile(session.user.id)
-      else { setSession(null); setProfile(null) }
+      if (session?.user) {
+        if (event === 'SIGNED_IN') {
+          logAuthEvent('login', session.user.id, session.user.email ?? '')
+        }
+        loadProfile(session.user.id)
+        lastSessionRef.current = session
+      } else {
+        if (event === 'SIGNED_OUT' && lastSessionRef.current?.user) {
+          const u = lastSessionRef.current.user
+          logAuthEvent('logout', u.id, u.email ?? '')
+        }
+        lastSessionRef.current = null
+        setSession(null)
+        setProfile(null)
+      }
     })
 
     return () => {

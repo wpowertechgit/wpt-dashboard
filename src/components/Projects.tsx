@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useLang } from '../lib/i18n'
 import { useQuery } from '../lib/useQuery'
-import { fetchProiecte, insertProiect, updateProiect, deleteProiect } from '../lib/api'
+import { fetchProiecte, insertProiect, updateProiect, deleteProiect, fetchSubansambluri } from '../lib/api'
+import { calcProjectProgress, calcProjectCounts } from '../lib/projectProgress'
 import { formatDateLabel } from '../lib/dateUtils'
 import { DEFAULT_SUBASSEMBLY_NAMES } from '../lib/projectDefaults'
 import { usePermissions } from '../lib/permissionsContext'
@@ -111,6 +112,7 @@ export default function Proiecte() {
   const { canWrite } = usePermissions()
   const p = t.proiecte
   const { data, loading, error, refetch } = useQuery(fetchProiecte)
+  const sa = useQuery(fetchSubansambluri)
 
   const [mode, setMode] = useState<FormMode>('create')
   const [showForm, setShowForm] = useState(false)
@@ -203,7 +205,10 @@ export default function Proiecte() {
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: 2 }}>
         {loading ? [1, 2, 3].map(i => (
           <Card key={i} sx={{ height: 260, animation: 'pulse 1.4s ease-in-out infinite', bgcolor: 'var(--color-surface-1)' }} />
-        )) : data?.map(proj => (
+        )) : data?.map(proj => {
+          const saProgress = calcProjectProgress(sa.data, proj.id)
+          const saCounts = calcProjectCounts(sa.data, proj.id)
+          return (
           <Card key={proj.id} sx={{ borderTop: `3px solid ${proj.prioritate === 'CRITIC' ? '#f87171' : proj.prioritate === 'RIDICAT' ? '#fbbf24' : '#4ade80'}` }}>
             <Stack direction="row" alignItems="flex-start" justifyContent="space-between" sx={{ mb: 2 }}>
               <Box>
@@ -231,9 +236,9 @@ export default function Proiecte() {
               <Box sx={{ borderTop: '1px solid var(--color-hairline)', pt: 1.25, mt: 0.25 }}>
                 <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.75 }}>
                   <Typography variant="body2" sx={{ fontSize: 12, color: 'var(--color-ink-subtle)' }}>{p.labelSA}</Typography>
-                  <Typography variant="body2" sx={{ fontSize: 12, fontFamily: 'var(--font-mono)', color: 'var(--color-ink-muted)' }}>{proj.finalizate_sa}/{proj.total_sa}</Typography>
+                  <Typography variant="body2" sx={{ fontSize: 12, fontFamily: 'var(--font-mono)', color: 'var(--color-ink-muted)' }}>{saCounts.finalized}/{saCounts.total || proj.total_sa}</Typography>
                 </Stack>
-                <ProgressBar value={Number(proj.progres)} />
+                <ProgressBar value={saProgress} />
               </Box>
               {proj.blocaje_active > 0 && (
                 <Stack direction="row" gap={1} sx={{ bgcolor: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 'var(--radius-sm)', p: '8px 12px' }}>
@@ -254,7 +259,8 @@ export default function Proiecte() {
               )}
             </Stack>
           </Card>
-        ))}
+          )
+        })}
       </Box>
 
       {/* Table view */}
@@ -272,7 +278,10 @@ export default function Proiecte() {
             </TableRow>
           }
         >
-          {loading ? <LoadingRows cols={canWrite ? 13 : 12} /> : data?.map(proj => (
+          {loading ? <LoadingRows cols={canWrite ? 13 : 12} /> : data?.map(proj => {
+            const saProgress = calcProjectProgress(sa.data, proj.id)
+            const saCounts = calcProjectCounts(sa.data, proj.id)
+            return (
             <TableRow key={proj.id}>
               <TableCell><Typography variant="body2" sx={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--color-primary)', fontWeight: 600 }}>{proj.id}</Typography></TableCell>
               <TableCell sx={{ fontWeight: 500 }}>{proj.client}</TableCell>
@@ -281,9 +290,9 @@ export default function Proiecte() {
               <TableCell sx={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--color-ink-muted)' }}>{formatDateLabel(proj.data_start)}</TableCell>
               <TableCell sx={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: proj.status !== 'LIVRAT' ? '#fbbf24' : 'var(--color-ink-muted)' }}>{formatDateLabel(proj.data_target)}</TableCell>
               <TableCell sx={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--color-ink-muted)' }}>{formatDateLabel(proj.data_done)}</TableCell>
-              <TableCell sx={{ textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: 12 }}>{proj.total_sa}</TableCell>
-              <TableCell sx={{ textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: 12 }}>{proj.finalizate_sa}</TableCell>
-              <TableCell sx={{ minWidth: 180 }}><ProgressBar value={Number(proj.progres)} /></TableCell>
+              <TableCell sx={{ textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: 12 }}>{saCounts.total || proj.total_sa}</TableCell>
+              <TableCell sx={{ textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: 12 }}>{saCounts.finalized}</TableCell>
+              <TableCell sx={{ minWidth: 180 }}><ProgressBar value={saProgress} /></TableCell>
               <TableCell sx={{ textAlign: 'center' }}>{proj.blocaje_active > 0 ? <Badge tone="error">{proj.blocaje_active}</Badge> : <Typography variant="body2" sx={{ color: 'var(--color-ink-tertiary)' }}>-</Typography>}</TableCell>
               <TableCell>{statusBadge(proj.status)}</TableCell>
               {canWrite && (
@@ -298,7 +307,8 @@ export default function Proiecte() {
                 </TableCell>
               )}
             </TableRow>
-          ))}
+            )
+          })}
         </DataTable>
       </Card>
     </Stack>
