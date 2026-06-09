@@ -198,7 +198,7 @@ const T = {
       unassigned: 'Neatribuit',
     },
     inventory: {
-      eyebrow: 'Zona Birou · Stocuri', title: 'Inventar',
+      eyebrow: 'Inventar', title: 'Inventar',
       rawMaterials: 'Materii Prime', finishedGoods: 'Produse Finite',
       newItem: '+ Articol Nou', newCategory: '+ Categorie', editItem: 'Editează Articol',
       formTitle: 'Articol Nou',
@@ -412,7 +412,7 @@ const T = {
       unassigned: 'Unassigned',
     },
     inventory: {
-      eyebrow: 'Office Zone · Stock', title: 'Inventory',
+      eyebrow: 'Inventory', title: 'Inventory',
       rawMaterials: 'Raw Materials', finishedGoods: 'Finished Goods',
       newItem: '+ New Item', newCategory: '+ Category', editItem: 'Edit Item',
       formTitle: 'New Item',

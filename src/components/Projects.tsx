@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useLang } from '../lib/i18n'
 import { useQuery } from '../lib/useQuery'
-import { fetchProiecte, insertProiect, updateProiect, deleteProiect, fetchSubansambluri } from '../lib/api'
+import { fetchProiecte, insertProiect, updateProiect, deleteProiect, fetchSubansambluri, fetchBlocaje, fetchFluxZilnic, fetchKpiEchipe } from '../lib/api'
 import { calcProjectProgress, calcProjectCounts } from '../lib/projectProgress'
 import { formatDateLabel } from '../lib/dateUtils'
 import { DEFAULT_SUBASSEMBLY_NAMES } from '../lib/projectDefaults'
@@ -9,6 +9,12 @@ import { usePermissions } from '../lib/permissionsContext'
 import { pageInfo } from '../lib/pageInfo'
 import { ErrorBanner, LoadingRows } from './StateViews'
 import { ActionButton, AppField, AppSelect, Badge, Box, Card, DataTable, Eyebrow, PageTitle, Stack, TableCell, TableRow, Typography } from './Ui'
+import { PiMicrosoftExcelLogoFill } from 'react-icons/pi'
+import ExportDialog from './ExportDialog'
+import { ProjectReportsButton } from './ReportViewer'
+import { buildPerProjectExcel, buildBatchExcel, exportProjectCSV, exportBatchCSV } from '../lib/excelExport'
+import type { Proiect as ExportProiect, Subansamblu as ExportSA, Blocaj as ExportBlocaj, KpiEchipa as ExportKpi, FluxZilnic as ExportFlux } from '../lib/excelExport'
+import { logActivity } from '../lib/api'
 
 function priorityBadge(p: string) {
   if (p === 'CRITIC') return <Badge tone="error">CRITIC</Badge>
@@ -120,6 +126,65 @@ export default function Proiecte() {
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
+  const [exportDialog, setExportDialog] = useState<{ open: boolean; projectId: string | null }>({ open: false, projectId: null })
+  const [reportRefreshKey, setReportRefreshKey] = useState(0)
+
+  function openExportSingle(projectId: string) {
+    setExportDialog({ open: true, projectId })
+  }
+
+  function openExportBatch() {
+    setExportDialog({ open: true, projectId: null })
+  }
+
+  async function handleExport(from: string, to: string, format: 'xlsx' | 'csv') {
+    const isBatch = exportDialog.projectId === null
+    const [blocajeData, fluxData, kpiData] = await Promise.all([
+      fetchBlocaje(),
+      fetchFluxZilnic(),
+      fetchKpiEchipe(),
+    ])
+
+    if (isBatch) {
+      if (format === 'xlsx') {
+        await buildBatchExcel(
+          (data ?? []) as unknown as ExportProiect[],
+          (sa.data ?? []) as unknown as ExportSA[],
+          (blocajeData ?? []) as unknown as ExportBlocaj[],
+          (kpiData ?? []) as unknown as ExportKpi[],
+          { from, to }
+        )
+      } else {
+        exportBatchCSV(
+          (data ?? []) as unknown as ExportProiect[],
+          (sa.data ?? []) as unknown as ExportSA[]
+        )
+      }
+      logActivity('xlsx_export', 'report', 'batch', `Export toate proiectele (${format})`)
+      if (format === 'xlsx') setReportRefreshKey(k => k + 1)
+    } else {
+      const project = data?.find(p => p.id === exportDialog.projectId)
+      if (!project) throw new Error('Proiectul nu a fost gasit')
+      if (format === 'xlsx') {
+        await buildPerProjectExcel(
+          project as unknown as ExportProiect,
+          (sa.data ?? []) as unknown as ExportSA[],
+          (blocajeData ?? []) as unknown as ExportBlocaj[],
+          (kpiData ?? []) as unknown as ExportKpi[],
+          (fluxData ?? []) as unknown as ExportFlux[],
+          { from, to }
+        )
+      } else {
+        exportProjectCSV(
+          project as unknown as ExportProiect,
+          (sa.data ?? []) as unknown as ExportSA[]
+        )
+      }
+      logActivity('xlsx_export', 'report', project.id, `Export proiect ${project.id} (${format})`)
+      if (format === 'xlsx') setReportRefreshKey(k => k + 1)
+    }
+  }
+
   function openCreate() {
     setMode('create')
     setEditTarget(null)
@@ -182,11 +247,30 @@ export default function Proiecte() {
         title={p.title}
         subtitle={`${data?.length ?? '...'} ${t.common.records}`}
         info={pageInfo(lang, 'projects')}
-        action={canWrite ? (
-          <ActionButton variant={showForm && mode === 'create' ? 'outlined' : 'contained'} onClick={() => showForm && mode === 'create' ? setShowForm(false) : openCreate()}>
-            {showForm && mode === 'create' ? `x ${t.common.cancel}` : p.newBtn}
-          </ActionButton>
-        ) : undefined}
+        action={
+          <Stack direction="row" gap={1} alignItems="center">
+            <ActionButton
+              variant="outlined"
+              onClick={openExportBatch}
+              disabled={!data?.length}
+              sx={{ display: 'flex', alignItems: 'center', gap: 0.75, fontSize: 12, py: 0.75, px: 1.5, color: '#1D6F42', borderColor: 'rgba(29,111,66,0.4)', '&:hover': { borderColor: '#1D6F42', bgcolor: 'rgba(29,111,66,0.06)' } }}
+            >
+              <PiMicrosoftExcelLogoFill size={16} />
+              Export Toate
+            </ActionButton>
+            <ProjectReportsButton
+              projectId={null}
+              canDelete={canWrite}
+              refreshKey={reportRefreshKey}
+              label="Rapoarte Batch"
+            />
+            {canWrite && (
+              <ActionButton variant={showForm && mode === 'create' ? 'outlined' : 'contained'} onClick={() => showForm && mode === 'create' ? setShowForm(false) : openCreate()}>
+                {showForm && mode === 'create' ? `x ${t.common.cancel}` : p.newBtn}
+              </ActionButton>
+            )}
+          </Stack>
+        }
       />
 
       {error && <ErrorBanner message={error} />}
@@ -245,23 +329,45 @@ export default function Proiecte() {
                   <Typography variant="body2" sx={{ fontSize: 12, color: '#f87171' }}><strong>{proj.blocaje_active}</strong> {p.blocajeActive}</Typography>
                 </Stack>
               )}
-              {canWrite && (
-                <Stack direction="row" gap={0.75} sx={{ borderTop: '1px solid var(--color-hairline)', pt: 1.25, mt: 0.25 }}>
-                  <ActionButton variant="outlined" onClick={() => openEdit(proj as unknown as Record<string, unknown>)} sx={{ flex: 1, py: 0.5, fontSize: 11 }}>{t.common.edit}</ActionButton>
-                  <ActionButton
-                    onClick={() => handleDelete(proj.id)}
-                    disabled={deletingId === proj.id}
-                    sx={{ flex: 1, py: 0.5, fontSize: 11, color: '#f87171', border: '1px solid rgba(248,113,113,0.3)', '&:hover': { border: '1px solid #f87171', bgcolor: 'rgba(248,113,113,0.08)' } }}
-                  >
-                    {deletingId === proj.id ? '...' : p.deleteBtn}
-                  </ActionButton>
-                </Stack>
-              )}
+              <Stack direction="row" gap={0.75} sx={{ borderTop: '1px solid var(--color-hairline)', pt: 1.25, mt: 0.25 }}>
+                <ActionButton
+                  variant="outlined"
+                  onClick={() => openExportSingle(proj.id)}
+                  sx={{ py: 0.5, fontSize: 11, px: 1, color: '#1D6F42', borderColor: 'rgba(29,111,66,0.35)', '&:hover': { borderColor: '#1D6F42', bgcolor: 'rgba(29,111,66,0.06)' }, display: 'flex', alignItems: 'center', gap: 0.5 }}
+                >
+                  <PiMicrosoftExcelLogoFill size={13} />
+                  Export
+                </ActionButton>
+                <ProjectReportsButton
+                  projectId={proj.id}
+                  canDelete={canWrite}
+                  refreshKey={reportRefreshKey}
+                />
+                {canWrite && (
+                  <>
+                    <ActionButton variant="outlined" onClick={() => openEdit(proj as unknown as Record<string, unknown>)} sx={{ flex: 1, py: 0.5, fontSize: 11 }}>{t.common.edit}</ActionButton>
+                    <ActionButton
+                      onClick={() => handleDelete(proj.id)}
+                      disabled={deletingId === proj.id}
+                      sx={{ flex: 1, py: 0.5, fontSize: 11, color: '#f87171', border: '1px solid rgba(248,113,113,0.3)', '&:hover': { border: '1px solid #f87171', bgcolor: 'rgba(248,113,113,0.08)' } }}
+                    >
+                      {deletingId === proj.id ? '...' : p.deleteBtn}
+                    </ActionButton>
+                  </>
+                )}
+              </Stack>
             </Stack>
           </Card>
           )
         })}
       </Box>
+
+      <ExportDialog
+        open={exportDialog.open}
+        title={exportDialog.projectId ? `Export Proiect: ${exportDialog.projectId}` : 'Export Toate Proiectele'}
+        onClose={() => setExportDialog({ open: false, projectId: null })}
+        onExport={handleExport}
+      />
 
       {/* Table view */}
       <Card sx={{ p: 0, overflow: 'hidden' }}>
@@ -274,7 +380,7 @@ export default function Proiecte() {
               <TableCell>{p.colDone}</TableCell><TableCell>{p.colSATotal}</TableCell><TableCell>{p.colSAFinal}</TableCell>
               <TableCell sx={{ minWidth: 180 }}>{p.colProgres}</TableCell><TableCell>{p.colBlocaje}</TableCell>
               <TableCell>{p.colStatus}</TableCell>
-              {canWrite && <TableCell />}
+              <TableCell />
             </TableRow>
           }
         >
@@ -295,17 +401,31 @@ export default function Proiecte() {
               <TableCell sx={{ minWidth: 180 }}><ProgressBar value={saProgress} /></TableCell>
               <TableCell sx={{ textAlign: 'center' }}>{proj.blocaje_active > 0 ? <Badge tone="error">{proj.blocaje_active}</Badge> : <Typography variant="body2" sx={{ color: 'var(--color-ink-tertiary)' }}>-</Typography>}</TableCell>
               <TableCell>{statusBadge(proj.status)}</TableCell>
-              {canWrite && (
-                <TableCell>
-                  <Stack direction="row" gap={0.5}>
-                    <ActionButton variant="outlined" onClick={() => openEdit(proj as unknown as Record<string, unknown>)} sx={{ px: 1, py: 0.375, fontSize: 11 }}>{t.common.edit}</ActionButton>
-                    <ActionButton onClick={() => handleDelete(proj.id)} disabled={deletingId === proj.id}
-                      sx={{ px: 1, py: 0.375, fontSize: 11, color: '#f87171', border: '1px solid rgba(248,113,113,0.3)', '&:hover': { border: '1px solid #f87171' } }}>
-                      {deletingId === proj.id ? '...' : '✕'}
-                    </ActionButton>
-                  </Stack>
-                </TableCell>
-              )}
+              <TableCell>
+                <Stack direction="row" gap={0.5} alignItems="center">
+                  <ActionButton
+                    variant="outlined"
+                    onClick={() => openExportSingle(proj.id)}
+                    sx={{ px: 1, py: 0.375, fontSize: 11, color: '#1D6F42', borderColor: 'rgba(29,111,66,0.35)', display: 'flex', alignItems: 'center', gap: 0.5, '&:hover': { borderColor: '#1D6F42', bgcolor: 'rgba(29,111,66,0.06)' } }}
+                  >
+                    <PiMicrosoftExcelLogoFill size={12} />
+                  </ActionButton>
+                  <ProjectReportsButton
+                    projectId={proj.id}
+                    canDelete={canWrite}
+                    refreshKey={reportRefreshKey}
+                  />
+                  {canWrite && (
+                    <>
+                      <ActionButton variant="outlined" onClick={() => openEdit(proj as unknown as Record<string, unknown>)} sx={{ px: 1, py: 0.375, fontSize: 11 }}>{t.common.edit}</ActionButton>
+                      <ActionButton onClick={() => handleDelete(proj.id)} disabled={deletingId === proj.id}
+                        sx={{ px: 1, py: 0.375, fontSize: 11, color: '#f87171', border: '1px solid rgba(248,113,113,0.3)', '&:hover': { border: '1px solid #f87171' } }}>
+                        {deletingId === proj.id ? '...' : '✕'}
+                      </ActionButton>
+                    </>
+                  )}
+                </Stack>
+              </TableCell>
             </TableRow>
             )
           })}

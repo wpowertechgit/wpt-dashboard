@@ -8,4 +8,16 @@ export default defineConfig({
   server: {
     historyApiFallback: true,
   },
+  optimizeDeps: {
+    include: ['exceljs', 'chart.js'],
+    rolldownOptions: {
+      define: { global: 'globalThis' },
+    },
+  },
+  build: {
+    commonjsOptions: {
+      include: [/exceljs/, /node_modules/],
+      transformMixedEsModules: true,
+    },
+  },
 })
