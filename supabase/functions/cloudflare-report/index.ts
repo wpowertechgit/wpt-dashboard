@@ -42,11 +42,13 @@ Deno.serve(async (req: Request): Promise<Response> => {
   console.log('fetching CF data for range:', from, '->', to, 'zone:', zoneId)
 
   // Inline dates directly — avoids GraphQL Date scalar issues with some CF API versions
+  const dayCount = Math.ceil((new Date(to).getTime() - new Date(from).getTime()) / 86_400_000) + 2
+
   const query = `{
     viewer {
       zones(filter: { zoneTag: "${zoneId}" }) {
         daily: httpRequests1dGroups(
-          limit: 31
+          limit: ${dayCount}
           filter: { date_geq: "${from}", date_leq: "${to}" }
           orderBy: [date_ASC]
         ) {
