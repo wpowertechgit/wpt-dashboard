@@ -35,6 +35,7 @@ import PlanningCalendar from './components/PlanningCalendar'
 import TaskBoard from './components/TaskBoard'
 import Inventory from './components/Inventory'
 import LogsPage from './components/Logs'
+import ReportsPage from './components/Reports'
 import ActiveTasksPanel from './components/ActiveTasksPanel'
 import { LanguageFlag } from './components/Ui'
 import NotificationBell from './components/NotificationBell'
@@ -45,6 +46,73 @@ interface Profile {
   full_name: string | null
   role: AppRole
   departament: string | null
+}
+
+function AdminDropdown({ items }: { items: { path: string; label: string }[] }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  const location = useLocation()
+  const isActive = items.some(i => location.pathname === i.path)
+
+  useEffect(() => {
+    if (!open) return
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [open])
+
+  return (
+    <Box ref={ref} sx={{ position: 'relative' }}>
+      <Button
+        onClick={() => setOpen(o => !o)}
+        sx={{
+          px: 1.5, py: 0.75, minWidth: 0, borderRadius: 'var(--radius-md)',
+          fontSize: 13, fontFamily: 'var(--font-text)', letterSpacing: 0,
+          textTransform: 'none', whiteSpace: 'nowrap',
+          color: isActive || open ? '#818cf8' : '#5e6ad2',
+          bgcolor: isActive || open ? 'var(--color-surface-2)' : 'transparent',
+          fontWeight: isActive ? 500 : 400,
+          '&:hover': { bgcolor: 'var(--color-surface-2)' },
+        }}
+      >
+        ⚙ Admin {open ? '▲' : '▼'}
+      </Button>
+
+      {open && (
+        <Box sx={{
+          position: 'absolute', top: 'calc(100% + 6px)', right: 0,
+          minWidth: 160, bgcolor: 'var(--color-surface-1)',
+          border: '1px solid var(--color-hairline)',
+          borderRadius: 'var(--radius-md)',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+          zIndex: 200, overflow: 'hidden',
+          py: 0.5,
+        }}>
+          {items.map(({ path, label }) => (
+            <Box
+              key={path}
+              component={NavLink}
+              to={path}
+              onClick={() => setOpen(false)}
+              sx={{
+                display: 'block', px: 2, py: '8px',
+                fontSize: 13, fontFamily: 'var(--font-text)',
+                color: location.pathname === path ? '#818cf8' : 'var(--color-ink-subtle)',
+                fontWeight: location.pathname === path ? 600 : 400,
+                bgcolor: location.pathname === path ? 'rgba(99,102,241,0.08)' : 'transparent',
+                textDecoration: 'none',
+                '&:hover': { bgcolor: 'var(--color-surface-2)', color: 'var(--color-ink)' },
+              }}
+            >
+              {label}
+            </Box>
+          ))}
+        </Box>
+      )}
+    </Box>
+  )
 }
 
 function NavButton({ path, label, admin }: { path: string; label: string; admin?: boolean }) {
@@ -126,6 +194,7 @@ const NAV_ICONS: Record<string, ComponentType<{ sx?: object }>> = {
   '/tasks': AssignmentOutlinedIcon,
   '/inventory': StorageOutlinedIcon,
   '/logs': BarChartOutlinedIcon,
+  '/reports': BarChartOutlinedIcon,
   '/admin': SettingsOutlinedIcon,
 }
 
@@ -149,6 +218,7 @@ function MobileShell({ profile, demoMode, onExitDemo }: { profile: Profile | nul
     hasPermission('view_tasks')          && { path: '/tasks',         label: t.nav.tasks },
     hasPermission('view_inventory')      && { path: '/inventory',     label: t.nav.inventory },
     hasPermission('view_logs')           && { path: '/logs',          label: t.nav.logs, admin: true },
+    hasPermission('view_reports')        && { path: '/reports',       label: 'Reports', admin: true },
     hasPermission('manage_users')        && { path: '/admin',         label: t.nav.admin, admin: true },
   ].filter(Boolean) as { path: string; label: string; admin?: boolean }[]
 
@@ -311,11 +381,12 @@ function AppNav({ profile, demoMode, onExitDemo }: { profile: Profile | null; de
         {navItems.map(({ path, label }) => (
           <NavButton key={path} path={path} label={label} />
         ))}
-        {hasPermission('view_logs') && (
-          <NavButton path="/logs" label={t.nav.logs} admin />
-        )}
-        {hasPermission('manage_users') && (
-          <NavButton path="/admin" label={t.nav.admin} admin />
+        {(hasPermission('view_logs') || hasPermission('view_reports') || hasPermission('manage_users')) && (
+          <AdminDropdown items={[
+            ...(hasPermission('view_logs')     ? [{ path: '/logs',    label: t.nav.logs }]      : []),
+            ...(hasPermission('view_reports')  ? [{ path: '/reports', label: 'Reports' }]        : []),
+            ...(hasPermission('manage_users')  ? [{ path: '/admin',   label: t.nav.admin }]     : []),
+          ]} />
         )}
       </Stack>
 
@@ -406,6 +477,7 @@ function AppShell({ session, profile, demoMode, onExitDemo }: { session: Session
             <Route path="/tasks"         element={<PermGuard perm="view_tasks"><TaskBoard userId={profile?.id ?? null} /></PermGuard>} />
             <Route path="/inventory"     element={<PermGuard perm="view_inventory"><Inventory userId={profile?.id ?? null} /></PermGuard>} />
             <Route path="/logs"          element={<PermGuard perm="view_logs"><LogsPage /></PermGuard>} />
+            <Route path="/reports"       element={<PermGuard perm="view_reports"><ReportsPage /></PermGuard>} />
             <Route path="/admin"         element={<PermGuard perm="manage_users"><Admin /></PermGuard>} />
             <Route path="*"             element={<Navigate to="/" replace />} />
           </Routes>

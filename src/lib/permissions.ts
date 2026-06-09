@@ -12,6 +12,7 @@ export type PermissionKey =
   | 'view_inventory' | 'edit_inventory'
   | 'manage_users' | 'manage_roles'
   | 'view_logs' | 'delete_logs'
+  | 'view_reports'
 
 export const ROLE_DEFAULTS: Record<string, PermissionKey[]> = {
   admin: [
@@ -23,6 +24,7 @@ export const ROLE_DEFAULTS: Record<string, PermissionKey[]> = {
     'view_inventory','edit_inventory',
     'manage_users','manage_roles',
     'view_logs','delete_logs',
+    'view_reports',
   ],
   production: [
     'view_dashboard','view_projects','edit_projects',
