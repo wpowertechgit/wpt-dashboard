@@ -377,20 +377,20 @@ function AppNav({ profile, demoMode, onExitDemo }: { profile: Profile | null; de
         <Box component="img" src="/wpt symbol-02.png" alt="Waste Powertech" sx={{ height: 'clamp(28px, 2.5vw, 38px)', width: 'auto', display: 'block' }} />
       </Box>
 
-      <Stack direction="row" alignItems="center" gap={0.25} sx={{ flex: 1, overflowX: 'auto' }}>
+      <Stack direction="row" alignItems="center" gap={0.25} sx={{ flex: 1, overflow: 'hidden' }}>
         {navItems.map(({ path, label }) => (
           <NavButton key={path} path={path} label={label} />
         ))}
-        {(hasPermission('view_logs') || hasPermission('view_reports') || hasPermission('manage_users')) && (
-          <AdminDropdown items={[
-            ...(hasPermission('view_logs')     ? [{ path: '/logs',    label: t.nav.logs }]      : []),
-            ...(hasPermission('view_reports')  ? [{ path: '/reports', label: 'Reports' }]        : []),
-            ...(hasPermission('manage_users')  ? [{ path: '/admin',   label: t.nav.admin }]     : []),
-          ]} />
-        )}
       </Stack>
 
       <Stack direction="row" alignItems="center" gap={1.25} sx={{ flexShrink: 0 }}>
+        {(hasPermission('view_logs') || hasPermission('view_reports') || hasPermission('manage_users')) && (
+          <AdminDropdown items={[
+            ...(hasPermission('view_logs')     ? [{ path: '/logs',    label: t.nav.logs }]   : []),
+            ...(hasPermission('view_reports')  ? [{ path: '/reports', label: 'Reports' }]     : []),
+            ...(hasPermission('manage_users')  ? [{ path: '/admin',   label: t.nav.admin }]  : []),
+          ]} />
+        )}
         {demoMode ? (
           <>
             <StatusPill demo label="DEMO MODE" />
@@ -399,7 +399,6 @@ function AppNav({ profile, demoMode, onExitDemo }: { profile: Profile | null; de
           </>
         ) : (
           <>
-            <StatusPill label={t.status.active} />
             <SmallButton onClick={toggle}><LanguageFlag code={lang === 'ro' ? 'en' : 'ro'} /></SmallButton>
             <NotificationBell userId={profile?.id ?? null} />
             <Stack direction="row" alignItems="center" gap={1} sx={{ borderLeft: '1px solid var(--color-hairline)', pl: 1.25 }}>

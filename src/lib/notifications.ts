@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from './supabase'
 
 export interface AppNotification {
@@ -33,6 +33,7 @@ async function loadNotifications(userId: string): Promise<AppNotification[]> {
 
 export function useNotifications(userId: string | null) {
   const [notifications, setNotifications] = useState<AppNotification[]>([])
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
 
   useEffect(() => {
     if (!userId) return
@@ -42,8 +43,15 @@ export function useNotifications(userId: string | null) {
       .then(data => { if (active) setNotifications(data) })
       .catch(() => {})
 
+    // Tear down any existing channel first — handles both StrictMode double-invoke
+    // and React's reconnectPassiveEffects which re-runs setup without calling cleanup
+    if (channelRef.current) {
+      supabase.removeChannel(channelRef.current)
+      channelRef.current = null
+    }
+
     const channel = supabase
-      .channel(`notifications:${userId}:${Date.now()}`)
+      .channel(`notifications:${userId}:${Math.random().toString(36).slice(2)}`)
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
@@ -54,9 +62,12 @@ export function useNotifications(userId: string | null) {
       })
       .subscribe()
 
+    channelRef.current = channel
+
     return () => {
       active = false
       supabase.removeChannel(channel)
+      channelRef.current = null
     }
   }, [userId])
 

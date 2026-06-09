@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { ActionButton, Box, Card, DataTable, Eyebrow, PageTitle, Stack, TableCell, TableRow, Typography } from './Ui'
 import { ErrorBanner } from './StateViews'
@@ -29,6 +29,256 @@ function fmtDate(iso: string): string {
   return new Date(iso).toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
+function buildPrintHtml(report: ReportData, logoUrl: string): string {
+  const cacheRate = report.totals.bytes > 0
+    ? ((report.totals.cachedBytes / report.totals.bytes) * 100).toFixed(0) + '%'
+    : '—'
+
+  const cards = [
+    { label: 'Unique Visitors',  value: fmtNum(report.totals.visitors) },
+    { label: 'Page Views',       value: fmtNum(report.totals.pageViews) },
+    { label: 'Total Requests',   value: fmtNum(report.totals.requests) },
+    { label: 'Bandwidth',        value: fmtBytes(report.totals.bytes), sub: `${fmtBytes(report.totals.cachedBytes)} cached` },
+    { label: 'Threats Blocked',  value: fmtNum(report.totals.threats) },
+    { label: 'Cache Rate',       value: cacheRate },
+  ]
+
+  const dayRows = report.days.map(d => `
+    <tr>
+      <td>${fmtDate(d.date)}</td>
+      <td class="num">${fmtNum(d.visitors)}</td>
+      <td class="num">${fmtNum(d.requests)}</td>
+      <td class="num">${fmtNum(d.pageViews)}</td>
+      <td class="num">${fmtBytes(d.bytes)}</td>
+      <td class="num${d.threats > 0 ? ' threat' : ''}">${d.threats}</td>
+    </tr>`).join('')
+
+  const countryRows = report.countries.map((c, i) => {
+    const pct = report.totals.requests > 0
+      ? ((c.requests / report.totals.requests) * 100).toFixed(1)
+      : '0.0'
+    const barW = Math.round(parseFloat(pct) * 1.2)
+    return `<tr>
+      <td class="rank">${i + 1}</td>
+      <td>${c.name}</td>
+      <td class="num">${fmtNum(c.requests)}</td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div style="width:${barW}px;height:3px;background:#F6821F;border-radius:2px;min-width:3px"></div><span class="pct">${pct}%</span></div></td>
+    </tr>`
+  }).join('')
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Website Analytics Report — ${fmtDate(report.from)} to ${fmtDate(report.to)}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 12px;
+      color: #1D1D1D;
+      background: #fff;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 28px 48px 24px;
+      border-bottom: 3px solid #F6821F;
+    }
+    .header img { height: 36px; width: auto; display: block; }
+    .header-right { text-align: right; }
+    .report-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1D1D1D;
+      letter-spacing: -0.01em;
+      line-height: 1.2;
+    }
+    .report-period {
+      font-size: 11px;
+      color: #6B7280;
+      margin-top: 3px;
+    }
+
+    /* ── Body ── */
+    .body { padding: 32px 48px 48px; }
+
+    /* ── Stat grid ── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 36px;
+    }
+    .card {
+      background: #F8F8F8;
+      border: 1px solid #E2E2E2;
+      border-radius: 6px;
+      padding: 16px 18px;
+    }
+    .card-label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: #6B7280;
+      margin-bottom: 8px;
+    }
+    .card-value {
+      font-size: 26px;
+      font-weight: 700;
+      color: #F6821F;
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+    .card-sub {
+      font-size: 10px;
+      color: #9CA3AF;
+      margin-top: 5px;
+    }
+
+    /* ── Section ── */
+    .section { margin-bottom: 32px; page-break-inside: avoid; }
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .section-header::before {
+      content: '';
+      display: block;
+      width: 3px;
+      height: 14px;
+      background: #F6821F;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: #1D1D1D;
+    }
+
+    /* ── Tables ── */
+    table { width: 100%; border-collapse: collapse; }
+    th {
+      text-align: left;
+      padding: 8px 10px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: #6B7280;
+      border-bottom: 2px solid #E2E2E2;
+    }
+    td {
+      padding: 7px 10px;
+      border-bottom: 1px solid #F0F0F0;
+      color: #1D1D1D;
+      font-size: 12px;
+    }
+    tr:last-child td { border-bottom: none; }
+    .num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 500; }
+    .rank { color: #9CA3AF; font-weight: 500; width: 28px; }
+    .pct { font-size: 11px; color: #6B7280; min-width: 36px; }
+    .threat { color: #FF4040; font-weight: 600; }
+
+    /* ── Footer ── */
+    .footer {
+      margin-top: 48px;
+      padding-top: 16px;
+      border-top: 1px solid #E2E2E2;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .footer-left { font-size: 10px; color: #9CA3AF; }
+    .footer-right { font-size: 10px; color: #9CA3AF; }
+    .cf-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      color: #6B7280;
+      font-weight: 500;
+    }
+    .cf-dot { width: 6px; height: 6px; border-radius: 50%; background: #F6821F; display: inline-block; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <img src="${logoUrl}" alt="WastePowerTech" />
+    <div class="header-right">
+      <div class="report-title">Website Analytics Report</div>
+      <div class="report-period">${fmtDate(report.from)} &ndash; ${fmtDate(report.to)}</div>
+    </div>
+  </div>
+
+  <div class="body">
+
+    <div class="grid">
+      ${cards.map(c => `
+      <div class="card">
+        <div class="card-label">${c.label}</div>
+        <div class="card-value">${c.value}</div>
+        ${c.sub ? `<div class="card-sub">${c.sub}</div>` : ''}
+      </div>`).join('')}
+    </div>
+
+    <div class="section">
+      <div class="section-header"><span class="section-title">Daily Breakdown</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th style="text-align:right">Visitors</th>
+            <th style="text-align:right">Requests</th>
+            <th style="text-align:right">Page Views</th>
+            <th style="text-align:right">Bandwidth</th>
+            <th style="text-align:right">Threats</th>
+          </tr>
+        </thead>
+        <tbody>${dayRows}</tbody>
+      </table>
+    </div>
+
+    ${report.countries.length > 0 ? `
+    <div class="section">
+      <div class="section-header"><span class="section-title">Top Countries by Requests</span></div>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Country</th>
+            <th style="text-align:right">Requests</th>
+            <th>Share</th>
+          </tr>
+        </thead>
+        <tbody>${countryRows}</tbody>
+      </table>
+    </div>` : ''}
+
+    <div class="footer">
+      <div class="footer-left">Generated ${new Date().toLocaleDateString('ro-RO', { day: '2-digit', month: 'long', year: 'numeric' })} &nbsp;&middot;&nbsp; WastePowerTech OMS</div>
+      <div class="cf-badge"><span class="cf-dot"></span> Powered by Cloudflare Analytics</div>
+    </div>
+
+  </div>
+</body>
+</html>`
+}
+
 function SummaryCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <Card sx={{ p: '20px 24px', flex: 1, minWidth: 160 }}>
@@ -53,7 +303,7 @@ function inputStyle(): React.CSSProperties {
 }
 
 function toLocalIso(d: Date) {
-  return d.toLocaleDateString('sv') // sv locale gives YYYY-MM-DD
+  return d.toLocaleDateString('sv')
 }
 
 function defaultRange(days: number) {
@@ -65,11 +315,10 @@ function defaultRange(days: number) {
 
 export default function ReportsPage() {
   const [from, setFrom] = useState(() => defaultRange(7).from)
-  const [to, setTo] = useState(() => defaultRange(7).to)
+  const [to, setTo]     = useState(() => defaultRange(7).to)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [report, setReport] = useState<ReportData | null>(null)
-  const printRef = useRef<HTMLDivElement>(null)
+  const [error, setError]     = useState<string | null>(null)
+  const [report, setReport]   = useState<ReportData | null>(null)
 
   function setPreset(days: number) {
     const r = defaultRange(days)
@@ -96,39 +345,27 @@ export default function ReportsPage() {
   }
 
   function downloadPdf() {
-    const style = document.createElement('style')
-    style.id = '__report-print'
-    style.textContent = `
-      @media print {
-        body > * { display: none !important; }
-        #report-printable { display: block !important; }
-        #report-printable { position: fixed; inset: 0; overflow: auto; background: #fff; color: #111; padding: 32px; font-family: -apple-system, sans-serif; }
-        .rp-card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px 20px; margin-bottom: 16px; break-inside: avoid; }
-        .rp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
-        .rp-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #6b7280; margin-bottom: 4px; }
-        .rp-val { font-size: 24px; font-weight: 700; color: #111; }
-        .rp-sub { font-size: 11px; color: #9ca3af; margin-top: 4px; }
-        table { width: 100%; border-collapse: collapse; font-size: 12px; }
-        th { text-align: left; padding: 6px 8px; border-bottom: 2px solid #e5e7eb; font-weight: 600; color: #374151; }
-        td { padding: 5px 8px; border-bottom: 1px solid #f3f4f6; color: #374151; }
-        h1 { font-size: 22px; font-weight: 700; margin: 0 0 4px; }
-        h2 { font-size: 14px; font-weight: 600; margin: 0 0 12px; color: #374151; }
-        .rp-period { font-size: 13px; color: #6b7280; margin-bottom: 24px; }
-        .rp-header { margin-bottom: 28px; }
-        .rp-section { margin-bottom: 24px; }
-      }
-    `
-    document.head.appendChild(style)
+    if (!report) return
+    const logoUrl = `${window.location.origin}/wpt%20logo-01.png`
+    const html = buildPrintHtml(report, logoUrl)
 
-    const el = document.getElementById('report-printable')
-    if (el) el.style.display = 'block'
+    // Write into a hidden iframe so the print dialog gets a clean standalone
+    // document instead of the whole React app — avoids the parent-hidden CSS trap
+    const iframe = document.createElement('iframe')
+    iframe.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:none;visibility:hidden;'
+    document.body.appendChild(iframe)
 
-    window.print()
+    const doc = iframe.contentDocument!
+    doc.open()
+    doc.write(html)
+    doc.close()
 
+    // Small delay lets the iframe finish rendering before the print dialog opens
     setTimeout(() => {
-      document.head.removeChild(style)
-      if (el) el.style.display = 'none'
-    }, 500)
+      iframe.contentWindow!.focus()
+      iframe.contentWindow!.print()
+      setTimeout(() => document.body.removeChild(iframe), 1000)
+    }, 200)
   }
 
   return (
@@ -149,12 +386,12 @@ export default function ReportsPage() {
       {/* Controls */}
       <Card sx={{ p: '14px 20px' }}>
         <Stack direction="row" gap={1.5} flexWrap="wrap" alignItems="center">
-          <ActionButton variant="outlined" onClick={() => setPreset(7)} sx={{ fontSize: 12 }}>Last 7 days</ActionButton>
+          <ActionButton variant="outlined" onClick={() => setPreset(7)}  sx={{ fontSize: 12 }}>Last 7 days</ActionButton>
           <ActionButton variant="outlined" onClick={() => setPreset(30)} sx={{ fontSize: 12 }}>Last 30 days</ActionButton>
           <Box sx={{ width: 1, height: 20, bgcolor: 'var(--color-hairline)', mx: 0.5 }} />
           <input type="date" value={from} onChange={e => setFrom(e.target.value)} style={inputStyle()} />
           <Typography sx={{ fontSize: 12, color: 'var(--color-ink-subtle)' }}>to</Typography>
-          <input type="date" value={to} onChange={e => setTo(e.target.value)} style={inputStyle()} />
+          <input type="date" value={to}   onChange={e => setTo(e.target.value)}   style={inputStyle()} />
           <ActionButton onClick={generate} disabled={loading || !from || !to} sx={{ fontSize: 12, ml: 0.5 }}>
             {loading ? 'Generating…' : 'Generate Report'}
           </ActionButton>
@@ -163,16 +400,14 @@ export default function ReportsPage() {
 
       {report && (
         <>
-          {/* Summary cards */}
           <Stack direction="row" gap={2} flexWrap="wrap">
-            <SummaryCard label="Unique Visitors" value={fmtNum(report.totals.visitors)} />
-            <SummaryCard label="Page Views" value={fmtNum(report.totals.pageViews)} />
-            <SummaryCard label="Total Requests" value={fmtNum(report.totals.requests)} />
-            <SummaryCard label="Bandwidth" value={fmtBytes(report.totals.bytes)} sub={`${fmtBytes(report.totals.cachedBytes)} cached`} />
-            <SummaryCard label="Threats Blocked" value={fmtNum(report.totals.threats)} />
+            <SummaryCard label="Unique Visitors"  value={fmtNum(report.totals.visitors)} />
+            <SummaryCard label="Page Views"        value={fmtNum(report.totals.pageViews)} />
+            <SummaryCard label="Total Requests"    value={fmtNum(report.totals.requests)} />
+            <SummaryCard label="Bandwidth"         value={fmtBytes(report.totals.bytes)} sub={`${fmtBytes(report.totals.cachedBytes)} cached`} />
+            <SummaryCard label="Threats Blocked"   value={fmtNum(report.totals.threats)} />
           </Stack>
 
-          {/* Daily breakdown */}
           <Card sx={{ p: 0, overflow: 'hidden' }}>
             <Stack direction="row" alignItems="center" sx={{ p: '16px 24px', borderBottom: '1px solid var(--color-hairline)' }}>
               <Eyebrow>Daily Breakdown — {fmtDate(report.from)} → {fmtDate(report.to)}</Eyebrow>
@@ -200,7 +435,6 @@ export default function ReportsPage() {
             </DataTable>
           </Card>
 
-          {/* Top countries */}
           {report.countries.length > 0 && (
             <Card sx={{ p: 0, overflow: 'hidden' }}>
               <Stack direction="row" alignItems="center" sx={{ p: '16px 24px', borderBottom: '1px solid var(--color-hairline)' }}>
@@ -234,82 +468,6 @@ export default function ReportsPage() {
             </Card>
           )}
         </>
-      )}
-
-      {/* Print-only version */}
-      {report && (
-        <div id="report-printable" ref={printRef} style={{ display: 'none' }}>
-          <div className="rp-header">
-            <h1>Cloudflare Analytics Report</h1>
-            <p className="rp-period">{fmtDate(report.from)} — {fmtDate(report.to)} &nbsp;·&nbsp; Generated {new Date().toLocaleDateString('ro-RO')}</p>
-          </div>
-
-          <div className="rp-grid">
-            {[
-              { label: 'Unique Visitors', value: fmtNum(report.totals.visitors) },
-              { label: 'Page Views', value: fmtNum(report.totals.pageViews) },
-              { label: 'Total Requests', value: fmtNum(report.totals.requests) },
-              { label: 'Bandwidth', value: fmtBytes(report.totals.bytes), sub: `${fmtBytes(report.totals.cachedBytes)} cached` },
-              { label: 'Threats Blocked', value: fmtNum(report.totals.threats) },
-              { label: 'Cache Rate', value: report.totals.bytes > 0 ? ((report.totals.cachedBytes / report.totals.bytes) * 100).toFixed(0) + '%' : '—' },
-            ].map(({ label, value, sub }) => (
-              <div key={label} className="rp-card">
-                <div className="rp-label">{label}</div>
-                <div className="rp-val">{value}</div>
-                {sub && <div className="rp-sub">{sub}</div>}
-              </div>
-            ))}
-          </div>
-
-          <div className="rp-section">
-            <h2>Daily Breakdown</h2>
-            <table>
-              <thead>
-                <tr>
-                  <th>Date</th><th>Visitors</th><th>Requests</th><th>Page Views</th><th>Bandwidth</th><th>Threats</th>
-                </tr>
-              </thead>
-              <tbody>
-                {report.days.map(d => (
-                  <tr key={d.date}>
-                    <td>{fmtDate(d.date)}</td>
-                    <td>{fmtNum(d.visitors)}</td>
-                    <td>{fmtNum(d.requests)}</td>
-                    <td>{fmtNum(d.pageViews)}</td>
-                    <td>{fmtBytes(d.bytes)}</td>
-                    <td>{d.threats}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {report.countries.length > 0 && (
-            <div className="rp-section">
-              <h2>Top Countries by Requests</h2>
-              <table>
-                <thead>
-                  <tr><th>#</th><th>Country</th><th>Requests</th><th>Share</th></tr>
-                </thead>
-                <tbody>
-                  {report.countries.map((c, i) => {
-                    const pct = report.totals.requests > 0
-                      ? ((c.requests / report.totals.requests) * 100).toFixed(1)
-                      : '0.0'
-                    return (
-                      <tr key={c.name}>
-                        <td>{i + 1}</td>
-                        <td>{c.name}</td>
-                        <td>{fmtNum(c.requests)}</td>
-                        <td>{pct}%</td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
       )}
     </Stack>
   )
