@@ -92,7 +92,7 @@ function buildPrintHtml(report: ReportData, logoUrl: string): string {
       padding: 28px 48px 24px;
       border-bottom: 3px solid #F6821F;
     }
-    .header img { height: 36px; width: auto; display: block; }
+    .header img { height: 80px; width: auto; display: block; margin-left: -12px; }
     .header-right { text-align: right; }
     .report-title {
       font-size: 18px;
