@@ -70,8 +70,12 @@ export async function getSignedUrl(storagePath: string, expiresIn = 3600): Promi
 }
 
 export async function deleteReport(storagePath: string): Promise<void> {
-  const { error } = await supabase.storage.from(BUCKET).remove([storagePath])
+  const { data, error } = await supabase.storage.from(BUCKET).remove([storagePath])
   if (error) throw error
+  // Supabase returns an empty array (no error) when RLS blocks deletion
+  if (!data || data.length === 0) {
+    throw new Error('Stergere esuata — verifica politicile RLS pentru bucket-ul "Excel reports" (DELETE policy lipsa)')
+  }
 }
 
 export function fmtBytes(bytes: number): string {

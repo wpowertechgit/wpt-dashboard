@@ -106,7 +106,6 @@ async function addLogoHeader(
   title: string,
   subtitle: string,
 ) {
-  // 4-row header area
   for (let r = 1; r <= 4; r++) {
     ws.getRow(r).height = 17
     ws.getRow(r).eachCell({ includeEmpty: true }, cell => {
@@ -120,13 +119,15 @@ async function addLogoHeader(
     ws.addImage(imgId, { tl: { col: 0, row: 0 } as any, ext: { width: 200, height: 64 } })
   }
 
-  // Title in column E (to the right of logo)
+  // Merge title across columns F-M so long titles are never clipped
+  try { ws.mergeCells('F1:M2') } catch { /* already merged */ }
+  try { ws.mergeCells('F3:M3') } catch { /* already merged */ }
+  try { ws.mergeCells('F4:M4') } catch { /* already merged */ }
+
   const titleCell = ws.getCell('F1')
   titleCell.value = title
   titleCell.font = { bold: true, size: 14, name: FONT, color: { argb: C.titleFg } }
-  titleCell.alignment = { vertical: 'middle', horizontal: 'left' }
-
-  ws.mergeCells('F1:F2')
+  titleCell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: false }
 
   const subCell = ws.getCell('F3')
   subCell.value = subtitle
@@ -139,13 +140,15 @@ async function addLogoHeader(
   genCell.alignment = { vertical: 'middle', horizontal: 'left' }
 }
 
-async function embedChart(wb: ExcelJS.Workbook, ws: ExcelJS.Worksheet, base64: string, startRow: number, colSpan = 10) {
+async function embedChart(wb: ExcelJS.Workbook, ws: ExcelJS.Worksheet, base64: string, startRow: number, displayW = 600, displayH = 300) {
   if (!base64) return
   const id = wb.addImage({ base64, extension: 'png' })
+  // Use ext (fixed pixels) not br (cell range) — br distorts aspect ratio
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ws.addImage(id, { tl: { col: 0, row: startRow } as any, br: { col: colSpan, row: startRow + 14 } as any })
-  for (let r = startRow + 1; r <= startRow + 14; r++) {
-    ws.getRow(r).height = 17
+  ws.addImage(id, { tl: { col: 0, row: startRow } as any, ext: { width: displayW, height: displayH } })
+  const rows = Math.ceil(displayH / 20) + 2
+  for (let r = startRow + 1; r <= startRow + rows; r++) {
+    ws.getRow(r).height = 20
   }
 }
 
@@ -235,52 +238,75 @@ async function addOverviewSheet(
       title: { display: true, text: `Progres Subansambluri — ${pct}%`, font: { family: 'Calibri', size: 13 }, color: '#1565C0' },
     },
     cutout: '60%',
-  } as Record<string, unknown>, 560, 280)
+  } as Record<string, unknown>, 960, 480)
 
-  await embedChart(wb, ws, donutBase64, ws.rowCount, 10)
+  await embedChart(wb, ws, donutBase64, ws.rowCount, 480, 240)
 }
 
-async function addSubansambuluriSheet(wb: ExcelJS.Workbook, ws: ExcelJS.Worksheet, saList: Subansamblu[], logoBase64: string) {
-  ws.columns = [
-    { key: 'nr', width: 5 }, { key: 'nume', width: 28 }, { key: 'status', width: 20 },
-    { key: 'progres', width: 10 }, { key: 'blocat', width: 8 }, { key: 'intarziat', width: 10 },
-    { key: 'proiectare', width: 14 }, { key: 'laser', width: 12 }, { key: 'rulat', width: 12 },
-    { key: 'sudat', width: 12 }, { key: 'asamblat', width: 13 }, { key: 'vopsit', width: 12 },
-    { key: 'start', width: 12 }, { key: 'termen', width: 12 }, { key: 'finalizat', width: 12 },
-    { key: 'comentarii', width: 32 },
-  ]
+async function addSubansambuluriSheet(wb: ExcelJS.Workbook, ws: ExcelJS.Worksheet, saList: Subansamblu[], logoBase64: string, showProject = false) {
+  if (showProject) {
+    ws.columns = [
+      { key: 'proiect', width: 16 }, { key: 'nr', width: 5 }, { key: 'nume', width: 28 }, { key: 'status', width: 22 },
+      { key: 'progres', width: 10 }, { key: 'blocat', width: 8 }, { key: 'intarziat', width: 10 },
+      { key: 'proiectare', width: 14 }, { key: 'laser', width: 12 }, { key: 'rulat', width: 12 },
+      { key: 'sudat', width: 12 }, { key: 'asamblat', width: 13 }, { key: 'vopsit', width: 12 },
+      { key: 'start', width: 12 }, { key: 'termen', width: 12 }, { key: 'finalizat', width: 12 },
+      { key: 'comentarii', width: 32 },
+    ]
+  } else {
+    ws.columns = [
+      { key: 'nr', width: 5 }, { key: 'nume', width: 28 }, { key: 'status', width: 22 },
+      { key: 'progres', width: 10 }, { key: 'blocat', width: 8 }, { key: 'intarziat', width: 10 },
+      { key: 'proiectare', width: 14 }, { key: 'laser', width: 12 }, { key: 'rulat', width: 12 },
+      { key: 'sudat', width: 12 }, { key: 'asamblat', width: 13 }, { key: 'vopsit', width: 12 },
+      { key: 'start', width: 12 }, { key: 'termen', width: 12 }, { key: 'finalizat', width: 12 },
+      { key: 'comentarii', width: 32 },
+    ]
+  }
 
   await addLogoHeader(wb, ws, logoBase64, 'Subansambluri', `${saList.length} subansambluri`)
 
   ws.getRow(ws.rowCount + 1).height = 6
 
-  const headers = ['Nr', 'Nume', 'Status Global', 'Progres', 'Blocat', 'Intarziat',
-    'Proiectare', 'Laser', 'Rulat', 'Sudat', 'Asamblat', 'Vopsit',
-    'Start', 'Termen', 'Finalizat', 'Comentarii']
+  const headers = showProject
+    ? ['Proiect', 'Nr', 'Nume', 'Status Global', 'Progres', 'Blocat', 'Intarziat',
+        'Proiectare', 'Laser', 'Rulat', 'Sudat', 'Asamblat', 'Vopsit',
+        'Start', 'Termen', 'Finalizat', 'Comentarii']
+    : ['Nr', 'Nume', 'Status Global', 'Progres', 'Blocat', 'Intarziat',
+        'Proiectare', 'Laser', 'Rulat', 'Sudat', 'Asamblat', 'Vopsit',
+        'Start', 'Termen', 'Finalizat', 'Comentarii']
   const hRow = ws.addRow(headers)
   styleHeader(hRow)
 
   const frozenAt = ws.rowCount
   ws.views = [{ state: 'frozen', ySplit: frozenAt }]
 
+  const statusCol = showProject ? 4 : 3
+  const blocatCol = showProject ? 6 : 5
+  const intarziatCol = showProject ? 7 : 6
+
   saList.forEach((sa, i) => {
-    const row = ws.addRow([
-      sa.nr, sa.nume, sa.status_global, sa.progres,
-      sa.blocat ? 'DA' : 'Nu', sa.intarziat ? 'DA' : 'Nu',
-      sa.proiectare, sa.laser, sa.rolat, sa.sudat, sa.asamblat, sa.vopsit,
-      fmtDate(sa.data_start), fmtDate(sa.data_due), fmtDate(sa.data_done),
-      sa.comentarii ?? '',
-    ])
+    const row = showProject
+      ? ws.addRow([
+          sa.proiect, sa.nr, sa.nume, sa.status_global, sa.progres,
+          sa.blocat ? 'DA' : 'Nu', sa.intarziat ? 'DA' : 'Nu',
+          sa.proiectare, sa.laser, sa.rolat, sa.sudat, sa.asamblat, sa.vopsit,
+          fmtDate(sa.data_start), fmtDate(sa.data_due), fmtDate(sa.data_done),
+          sa.comentarii ?? '',
+        ])
+      : ws.addRow([
+          sa.nr, sa.nume, sa.status_global, sa.progres,
+          sa.blocat ? 'DA' : 'Nu', sa.intarziat ? 'DA' : 'Nu',
+          sa.proiectare, sa.laser, sa.rolat, sa.sudat, sa.asamblat, sa.vopsit,
+          fmtDate(sa.data_start), fmtDate(sa.data_due), fmtDate(sa.data_done),
+          sa.comentarii ?? '',
+        ])
     styleData(row, i % 2 === 0)
     const sc = statusColor(sa.status_global)
-    row.getCell(3).font = { bold: true, name: FONT, size: 10, color: { argb: sc.fg } }
-    row.getCell(3).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: sc.bg } }
-    if (sa.blocat) {
-      row.getCell(5).font = { bold: true, name: FONT, size: 10, color: { argb: C.red } }
-    }
-    if (sa.intarziat) {
-      row.getCell(6).font = { bold: true, name: FONT, size: 10, color: { argb: C.amber } }
-    }
+    row.getCell(statusCol).font = { bold: true, name: FONT, size: 10, color: { argb: sc.fg } }
+    row.getCell(statusCol).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: sc.bg } }
+    if (sa.blocat) row.getCell(blocatCol).font = { bold: true, name: FONT, size: 10, color: { argb: C.red } }
+    if (sa.intarziat) row.getCell(intarziatCol).font = { bold: true, name: FONT, size: 10, color: { argb: C.amber } }
   })
 
   ws.getRow(ws.rowCount + 1).height = 12
@@ -306,9 +332,9 @@ async function addSubansambuluriSheet(wb: ExcelJS.Workbook, ws: ExcelJS.Workshee
     scales: {
       y: { beginAtZero: true, max: saList.length, ticks: { stepSize: 1 } },
     },
-  } as Record<string, unknown>, 640, 300)
+  } as Record<string, unknown>, 1600, 800)
 
-  await embedChart(wb, ws, chartBase64, ws.rowCount, 15)
+  await embedChart(wb, ws, chartBase64, ws.rowCount, 800, 400)
 }
 
 async function addBlocajeSheet(wb: ExcelJS.Workbook, ws: ExcelJS.Worksheet, blocaje: Blocaj[], logoBase64: string, dateInfo: string) {
@@ -369,9 +395,9 @@ async function addBlocajeSheet(wb: ExcelJS.Workbook, ws: ExcelJS.Worksheet, bloc
       title: { display: true, text: 'Blocaje per Departament', font: { family: 'Calibri', size: 13 }, color: '#B71C1C' },
     },
     scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
-  } as Record<string, unknown>, 640, 300)
+  } as Record<string, unknown>, 1600, 800)
 
-  await embedChart(wb, ws, chartBase64, ws.rowCount, 11)
+  await embedChart(wb, ws, chartBase64, ws.rowCount, 800, 400)
 }
 
 async function addKpiSheet(wb: ExcelJS.Workbook, ws: ExcelJS.Worksheet, kpi: KpiEchipa[], logoBase64: string, dateInfo: string) {
@@ -435,9 +461,9 @@ async function addKpiSheet(wb: ExcelJS.Workbook, ws: ExcelJS.Worksheet, kpi: Kpi
     scales: {
       y: { beginAtZero: true, max: 100, ticks: { callback: (v: unknown) => `${v}%` } },
     },
-  } as Record<string, unknown>, 640, 300)
+  } as Record<string, unknown>, 1600, 800)
 
-  await embedChart(wb, ws, chartBase64, ws.rowCount, 8)
+  await embedChart(wb, ws, chartBase64, ws.rowCount, 800, 400)
 }
 
 async function addFluxSheet(wb: ExcelJS.Workbook, ws: ExcelJS.Worksheet, flux: FluxZilnic[], logoBase64: string, dateInfo: string) {
@@ -486,9 +512,9 @@ async function addFluxSheet(wb: ExcelJS.Workbook, ws: ExcelJS.Worksheet, flux: F
       title: { display: true, text: 'Flux Zilnic — Intrari per Departament', font: { family: 'Calibri', size: 13 }, color: '#1565C0' },
     },
     scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
-  } as Record<string, unknown>, 640, 300)
+  } as Record<string, unknown>, 1600, 800)
 
-  await embedChart(wb, ws, chartBase64, ws.rowCount, 7)
+  await embedChart(wb, ws, chartBase64, ws.rowCount, 800, 400)
 }
 
 // ── Public API ─────────────────────────────────────────────────────────────────
@@ -533,6 +559,14 @@ export async function buildPerProjectExcel(
   uploadReport(path, buffer as ArrayBuffer).catch(e => console.warn('Report upload failed:', e))
 }
 
+function statusToColor(status: string): string {
+  const u = (status ?? '').toUpperCase()
+  if (u.includes('FINALIZAT') || u.includes('LIVRAT')) return '#1B5E20'
+  if (u.includes('BLOCAJ') || u.includes('BLOCAT')) return '#B71C1C'
+  if (u.includes('LUCRU') || u.includes('PROGRESS') || u.includes('ACTIV')) return '#1565C0'
+  return '#78909C' // grey for not started / unknown
+}
+
 export async function buildBatchExcel(
   projects: Proiect[],
   allSa: Subansamblu[],
@@ -551,8 +585,8 @@ export async function buildBatchExcel(
   // ── Sheet 1: All projects summary ──
   const wsProj = wb.addWorksheet('Proiecte')
   wsProj.columns = [
-    { width: 14 }, { width: 22 }, { width: 18 }, { width: 12 }, { width: 12 },
-    { width: 12 }, { width: 10 }, { width: 10 }, { width: 14 }, { width: 14 }, { width: 18 }, { width: 14 },
+    { width: 18 }, { width: 30 }, { width: 22 }, { width: 13 }, { width: 13 },
+    { width: 13 }, { width: 10 }, { width: 10 }, { width: 14 }, { width: 16 }, { width: 24 }, { width: 15 },
   ]
 
   await addLogoHeader(wb, wsProj, logoBase64, 'Raport Toate Proiectele', `${projects.length} proiecte · ${dateInfo}`)
@@ -576,41 +610,168 @@ export async function buildBatchExcel(
     const sc = statusColor(p.status)
     row.getCell(11).font = { bold: true, name: FONT, size: 10, color: { argb: sc.fg } }
     row.getCell(11).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: sc.bg } }
-    if (p.blocaje_active > 0) {
-      row.getCell(12).font = { bold: true, name: FONT, size: 10, color: { argb: C.red } }
-    }
+    if (p.blocaje_active > 0) row.getCell(12).font = { bold: true, name: FONT, size: 10, color: { argb: C.red } }
   })
 
   wsProj.getRow(wsProj.rowCount + 1).height = 12
 
-  // Status distribution pie
+  // Status distribution donut — colors derived from status value, not array index
   const statusCounts: Record<string, number> = {}
   projects.forEach(p => { statusCounts[p.status] = (statusCounts[p.status] ?? 0) + 1 })
+  const statusLabels = Object.keys(statusCounts)
   const pieBase64 = await renderChartToBase64('doughnut', {
-    labels: Object.keys(statusCounts),
+    labels: statusLabels,
     datasets: [{
-      data: Object.values(statusCounts),
-      backgroundColor: ['#1B5E20', '#1565C0', '#B71C1C', '#E65100'],
+      data: statusLabels.map(s => statusCounts[s]),
+      backgroundColor: statusLabels.map(statusToColor),
       borderWidth: 2,
       label: 'Status Proiecte',
     }],
   }, {
     plugins: {
-      title: { display: true, text: 'Distributie Status Proiecte', font: { family: 'Calibri', size: 13 }, color: '#1565C0' },
-      legend: { position: 'right' },
+      title: {
+        display: true,
+        text: `Distributie Status — ${projects.length} proiecte`,
+        font: { family: 'Calibri', size: 14 },
+        color: '#1565C0',
+      },
+      legend: {
+        position: 'right',
+        labels: { color: '#374151', font: { family: 'Calibri', size: 12 }, padding: 20 },
+      },
     },
     cutout: '55%',
-  } as Record<string, unknown>, 560, 280)
+  } as Record<string, unknown>, 1200, 600)
 
-  await embedChart(wb, wsProj, pieBase64, wsProj.rowCount, 11)
+  await embedChart(wb, wsProj, pieBase64, wsProj.rowCount, 600, 300)
 
-  // ── Sheet 2: Active blockages ──
+  // ── One sheet per project ──
+  for (const proj of projects) {
+    const projSa = allSa.filter(s => s.proiect === proj.id)
+    const projBlocaje = allBlocaje.filter(b =>
+      b.proiect === proj.id && inDateRange(b.data_deschidere, dateRange.from, dateRange.to)
+    )
+
+    const sheetName = proj.id.replace(/[:\\/?*[\]]/g, '-').slice(0, 31)
+    const ws = wb.addWorksheet(sheetName)
+    ws.columns = [
+      { width: 18 }, { width: 30 }, { width: 22 }, { width: 13 }, { width: 13 },
+      { width: 13 }, { width: 10 }, { width: 10 }, { width: 14 }, { width: 16 }, { width: 24 }, { width: 15 },
+    ]
+
+    await addLogoHeader(wb, ws, logoBase64, `Proiect: ${proj.id}`, proj.client)
+    ws.getRow(ws.rowCount + 1).height = 6
+
+    // Project summary row
+    const secR = ws.addRow(['', 'DETALII PROIECT'])
+    secR.height = 20
+    secR.getCell(2).font = { bold: true, size: 11, name: FONT, color: { argb: C.titleFg } }
+    secR.getCell(2).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C.sectionBg } }
+
+    const dh = ws.addRow(['', 'ID', 'Client', 'Responsabil', 'Start', 'Target', 'Finalizat', 'SA Total', 'Buget Ore', 'Prioritate', 'Status', 'Blocaje'])
+    styleHeader(dh)
+    dh.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFFFF' } }
+
+    const sc = statusColor(proj.status)
+    const projFinalized = projSa.filter(s => (s.progres ?? '').includes('100') || s.status_global?.includes('FINALIZAT')).length
+    const dr = ws.addRow([
+      '', proj.id, proj.client, proj.responsabil ?? '-',
+      fmtDate(proj.data_start), fmtDate(proj.data_target), fmtDate(proj.data_done),
+      projSa.length || proj.total_sa, proj.buget_ore, proj.prioritate, proj.status, proj.blocaje_active,
+    ])
+    styleData(dr, false)
+    dr.height = 22
+    dr.getCell(11).font = { bold: true, name: FONT, size: 10, color: { argb: sc.fg } }
+    dr.getCell(11).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: sc.bg } }
+
+    // Subansambluri table
+    if (projSa.length > 0) {
+      ws.getRow(ws.rowCount + 1).height = 8
+      const saSecR = ws.addRow(['', 'SUBANSAMBLURI'])
+      saSecR.height = 20
+      saSecR.getCell(2).font = { bold: true, size: 11, name: FONT, color: { argb: C.titleFg } }
+      saSecR.getCell(2).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C.sectionBg } }
+
+      const saH = ws.addRow(['Nr', 'Nume', 'Status', 'Progres', 'Blocat', 'Intarziat',
+        'Proiectare', 'Laser', 'Rulat', 'Sudat', 'Asamblat', 'Vopsit'])
+      styleHeader(saH)
+
+      projSa.forEach((sa, idx) => {
+        const saRow = ws.addRow([
+          sa.nr, sa.nume, sa.status_global, sa.progres,
+          sa.blocat ? 'DA' : 'Nu', sa.intarziat ? 'DA' : 'Nu',
+          sa.proiectare, sa.laser, sa.rolat, sa.sudat, sa.asamblat, sa.vopsit,
+        ])
+        styleData(saRow, idx % 2 === 0)
+        const sasc = statusColor(sa.status_global)
+        saRow.getCell(3).font = { bold: true, name: FONT, size: 10, color: { argb: sasc.fg } }
+        saRow.getCell(3).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: sasc.bg } }
+        if (sa.blocat) saRow.getCell(5).font = { bold: true, name: FONT, size: 10, color: { argb: C.red } }
+        if (sa.intarziat) saRow.getCell(6).font = { bold: true, name: FONT, size: 10, color: { argb: C.amber } }
+      })
+    }
+
+    // Blocaje table
+    if (projBlocaje.length > 0) {
+      ws.getRow(ws.rowCount + 1).height = 8
+      const blSecR = ws.addRow(['', 'BLOCAJE'])
+      blSecR.height = 20
+      blSecR.getCell(2).font = { bold: true, size: 11, name: FONT, color: { argb: C.red } }
+      blSecR.getCell(2).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFCDD2' } }
+
+      const blH = ws.addRow(['ID', 'Data', 'Subansamblu', 'Departament', 'Descriere',
+        'Responsabil', 'Impact', 'Status', 'Zile Deschis'])
+      styleHeader(blH)
+
+      projBlocaje.forEach((b, idx) => {
+        const bRow = ws.addRow([
+          b.id, fmtDate(b.data_deschidere), b.subansamblu ?? '-',
+          b.departament ?? '-', b.descriere, b.responsabil ?? '-',
+          b.impact ?? '-', b.status, b.zile_deschis ?? '-',
+        ])
+        styleData(bRow, idx % 2 === 0)
+        const bsc = statusColor(b.status)
+        bRow.getCell(8).font = { bold: true, name: FONT, size: 10, color: { argb: bsc.fg } }
+        bRow.getCell(8).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bsc.bg } }
+      })
+    }
+
+    // SA progress donut
+    if (projSa.length > 0) {
+      const blocked = projSa.filter(s => s.blocat).length
+      const inProgress = Math.max(0, projSa.length - projFinalized - blocked)
+      const pct = ((projFinalized / projSa.length) * 100).toFixed(1)
+      ws.getRow(ws.rowCount + 1).height = 12
+
+      const donutBase64 = await renderChartToBase64('doughnut', {
+        labels: ['Finalizate', 'In Lucru', 'Blocate'],
+        datasets: [{
+          data: [projFinalized, inProgress, blocked],
+          backgroundColor: ['#1B5E20', '#1565C0', '#B71C1C'],
+          borderWidth: 2,
+        }],
+      }, {
+        plugins: {
+          legend: { position: 'right', labels: { color: '#374151', font: { family: 'Calibri', size: 11 }, padding: 16 } },
+          title: { display: true, text: `Progres SA — ${pct}% finalizat`, font: { family: 'Calibri', size: 13 }, color: '#1565C0' },
+        },
+        cutout: '60%',
+      } as Record<string, unknown>, 960, 480)
+
+      await embedChart(wb, ws, donutBase64, ws.rowCount, 480, 240)
+    }
+  }
+
+  // ── Subansambluri (all, with project column) ──
+  await addSubansambuluriSheet(wb, wb.addWorksheet('Subansambluri'), allSa, logoBase64, true)
+
+  // ── Active blockages ──
   const activeBlocaje = allBlocaje.filter(b =>
     b.status !== 'Rezolvat' && inDateRange(b.data_deschidere, dateRange.from, dateRange.to)
   )
   await addBlocajeSheet(wb, wb.addWorksheet('Blocaje Active'), activeBlocaje, logoBase64, dateInfo)
 
-  // ── Sheet 3: KPI all teams ──
+  // ── KPI all teams ──
   const filteredKpi = allKpi.filter(k => inDateRange(k.saptamana, dateRange.from, dateRange.to))
   await addKpiSheet(wb, wb.addWorksheet('KPI Echipe'), filteredKpi, logoBase64, dateInfo)
 

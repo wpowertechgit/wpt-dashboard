@@ -45,6 +45,20 @@ function ProgressBar({ value }: { value: number }) {
 
 const BLANK = { id: '', client: '', responsabil: '', data_start: '', data_target: '', data_done: '', total_sa: DEFAULT_SUBASSEMBLY_NAMES.length, buget_ore: 0, prioritate: 'NORMAL', status: 'IN PRODUCTIE' }
 
+const projectHeaderButtonSx = {
+  width: 150,
+  height: 44,
+  px: 1.5,
+  py: 0,
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 0.75,
+  fontSize: 13,
+  lineHeight: 1,
+  whiteSpace: 'nowrap',
+}
+
 type FormMode = 'create' | 'edit'
 
 interface ProjectForm {
@@ -253,7 +267,7 @@ export default function Proiecte() {
               variant="outlined"
               onClick={openExportBatch}
               disabled={!data?.length}
-              sx={{ display: 'flex', alignItems: 'center', gap: 0.75, fontSize: 12, py: 0.75, px: 1.5, color: '#1D6F42', borderColor: 'rgba(29,111,66,0.4)', '&:hover': { borderColor: '#1D6F42', bgcolor: 'rgba(29,111,66,0.06)' } }}
+              sx={{ ...projectHeaderButtonSx, color: '#1D6F42', borderColor: 'rgba(29,111,66,0.4)', '&:hover': { borderColor: '#1D6F42', bgcolor: 'rgba(29,111,66,0.06)' } }}
             >
               <PiMicrosoftExcelLogoFill size={16} />
               Export Toate
@@ -262,10 +276,11 @@ export default function Proiecte() {
               projectId={null}
               canDelete={canWrite}
               refreshKey={reportRefreshKey}
-              label="Rapoarte Batch"
+              label={lang === 'ro' ? 'Rapoarte Batch' : 'Batch Reports'}
+              sx={projectHeaderButtonSx}
             />
             {canWrite && (
-              <ActionButton variant={showForm && mode === 'create' ? 'outlined' : 'contained'} onClick={() => showForm && mode === 'create' ? setShowForm(false) : openCreate()}>
+              <ActionButton variant={showForm && mode === 'create' ? 'outlined' : 'contained'} onClick={() => showForm && mode === 'create' ? setShowForm(false) : openCreate()} sx={projectHeaderButtonSx}>
                 {showForm && mode === 'create' ? `x ${t.common.cancel}` : p.newBtn}
               </ActionButton>
             )}
@@ -342,6 +357,7 @@ export default function Proiecte() {
                   projectId={proj.id}
                   canDelete={canWrite}
                   refreshKey={reportRefreshKey}
+                  label={lang === 'ro' ? 'Rapoarte' : 'Reports'}
                 />
                 {canWrite && (
                   <>
@@ -414,6 +430,7 @@ export default function Proiecte() {
                     projectId={proj.id}
                     canDelete={canWrite}
                     refreshKey={reportRefreshKey}
+                    label={lang === 'ro' ? 'Rapoarte' : 'Reports'}
                   />
                   {canWrite && (
                     <>

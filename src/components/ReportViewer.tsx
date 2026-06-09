@@ -3,6 +3,7 @@ import {
   Dialog, DialogTitle, IconButton, Box, Menu, MenuItem,
   Typography, Stack, CircularProgress, Tooltip, Divider, LinearProgress,
 } from '@mui/material'
+import type { SxProps, Theme } from '@mui/material/styles'
 import DownloadIcon from '@mui/icons-material/Download'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import OpenInNewIcon from '@mui/icons-material/OpenInNew'
@@ -47,7 +48,7 @@ export function ReportViewerDialog({ open, signedUrl, filename, onClose }: Viewe
         sx: {
           width: '95vw', height: '92vh',
           display: 'flex', flexDirection: 'column',
-          bgcolor: 'var(--color-surface-0)',
+          bgcolor: 'var(--color-surface-2)',
           border: '1px solid var(--color-hairline)',
           borderRadius: 'var(--radius-md)',
           overflow: 'hidden',
@@ -84,7 +85,7 @@ export function ReportViewerDialog({ open, signedUrl, filename, onClose }: Viewe
 
       <Box sx={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
         {!loaded && (
-          <Stack alignItems="center" justifyContent="center" sx={{ position: 'absolute', inset: 0, bgcolor: 'var(--color-surface-0)', zIndex: 1 }}>
+          <Stack alignItems="center" justifyContent="center" sx={{ position: 'absolute', inset: 0, bgcolor: 'var(--color-surface-2)', zIndex: 1 }}>
             <CircularProgress size={32} />
             <Typography variant="body2" sx={{ mt: 1.5, fontSize: 12, color: 'var(--color-ink-muted)' }}>
               Se incarca raportul...
@@ -109,6 +110,7 @@ interface ProjectReportsButtonProps {
   canDelete?: boolean
   refreshKey?: number         // increment from parent after a new export to bust the cache
   label?: string
+  sx?: SxProps<Theme>
 }
 
 export function ProjectReportsButton({
@@ -116,6 +118,7 @@ export function ProjectReportsButton({
   canDelete = false,
   refreshKey = 0,
   label,
+  sx,
 }: ProjectReportsButtonProps) {
   const [anchor, setAnchor] = useState<HTMLElement | null>(null)
   const [reports, setReports] = useState<ReportFile[] | null>(null)
@@ -202,7 +205,7 @@ export function ProjectReportsButton({
         onClick={handleOpen}
         sx={{
           display: 'inline-flex', alignItems: 'center', gap: 0.6,
-          px: '10px', py: '4px',
+          px: '10px', py: '8px',
           border: '1px solid var(--color-hairline)',
           borderRadius: 'var(--radius-sm)',
           bgcolor: open ? 'var(--color-surface-1)' : 'transparent',
@@ -211,6 +214,7 @@ export function ProjectReportsButton({
           fontWeight: 500, letterSpacing: 0,
           transition: 'all 0.15s',
           '&:hover': { borderColor: 'var(--color-primary)', color: 'var(--color-primary)' },
+          ...sx,
         }}
       >
         <FolderOpenIcon sx={{ fontSize: 13 }} />
@@ -233,7 +237,7 @@ export function ProjectReportsButton({
         PaperProps={{
           sx: {
             minWidth: 320, maxWidth: 400,
-            bgcolor: 'var(--color-surface-0)',
+            bgcolor: 'var(--color-surface-2)',
             border: '1px solid var(--color-hairline)',
             borderRadius: 'var(--radius-md)',
             boxShadow: 'var(--shadow-lg)',

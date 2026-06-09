@@ -50,7 +50,7 @@ export default function ExportDialog({ open, title, onClose, onExport }: ExportD
         onClose={handleClose}
         maxWidth="xs"
         fullWidth
-        PaperProps={{ sx: { borderRadius: 'var(--radius-md)', bgcolor: 'var(--color-surface-0)', border: '1px solid var(--color-hairline)' } }}
+        PaperProps={{ sx: { borderRadius: 'var(--radius-md)', bgcolor: 'var(--color-surface-2)', border: '1px solid var(--color-hairline)' } }}
       >
         <DialogTitle sx={{ pb: 1, display: 'flex', alignItems: 'center', gap: 1.5, borderBottom: '1px solid var(--color-hairline)' }}>
           <PiMicrosoftExcelLogoFill size={22} color="#1D6F42" />
@@ -101,14 +101,6 @@ export default function ExportDialog({ open, title, onClose, onExport }: ExportD
                 </ToggleButton>
               </ToggleButtonGroup>
             </Stack>
-
-            {format === 'xlsx' && (
-              <Box sx={{ bgcolor: 'rgba(21,101,192,0.06)', border: '1px solid rgba(21,101,192,0.18)', borderRadius: 'var(--radius-sm)', p: '8px 12px' }}>
-                <Typography variant="body2" sx={{ fontSize: 11, color: 'var(--color-ink-muted)' }}>
-                  Include: subansambluri, blocaje, KPI, flux zilnic, grafice si logo WPT
-                </Typography>
-              </Box>
-            )}
 
             {error && (
               <Box sx={{ bgcolor: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 'var(--radius-sm)', p: '8px 12px' }}>
