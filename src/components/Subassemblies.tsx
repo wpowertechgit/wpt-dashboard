@@ -106,7 +106,20 @@ export default function Subansambluri() {
       const original = data?.find(s => s.id === editId)
       const becomingBlocked = String(editRow.status_global).includes('BLOCAT') && !original?.blocat
 
-      await updateSubansamblu(editId, prepareRow(editRow))
+      const rowToSave = { ...editRow }
+      if (String(rowToSave.status_global).includes('FINALIZAT')) {
+        const today = new Date().toISOString().slice(0, 10)
+        rowToSave.progres = '100%'
+        rowToSave.blocat = false
+        rowToSave.data_done = (rowToSave.data_done as string) || today
+        for (const col of DEPT_COLS) {
+          if (rowToSave[col] !== 'N/A') rowToSave[col] = 'Finalizat'
+          const doneKey = `${col}_done` as keyof typeof rowToSave
+          rowToSave[doneKey] = (rowToSave[doneKey] as string) || today
+        }
+      }
+
+      await updateSubansamblu(editId, prepareRow(rowToSave))
 
       if (becomingBlocked && original) {
         const today = new Date().toISOString().slice(0, 10)

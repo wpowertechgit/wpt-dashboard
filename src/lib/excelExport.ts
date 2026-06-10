@@ -286,18 +286,22 @@ async function addSubansambuluriSheet(wb: ExcelJS.Workbook, ws: ExcelJS.Workshee
   const intarziatCol = showProject ? 7 : 6
 
   saList.forEach((sa, i) => {
+    const isFinalized = sa.status_global?.includes('FINALIZAT')
+    const deptCols = ['proiectare', 'laser', 'rolat', 'sudat', 'asamblat', 'vopsit'] as const
+    const deptValues = deptCols.map(d => isFinalized && sa[d] !== 'N/A' ? 'Finalizat' : sa[d])
+    const progres = isFinalized ? '100%' : sa.progres
     const row = showProject
       ? ws.addRow([
-          sa.proiect, sa.nr, sa.nume, sa.status_global, sa.progres,
+          sa.proiect, sa.nr, sa.nume, sa.status_global, progres,
           sa.blocat ? 'DA' : 'Nu', sa.intarziat ? 'DA' : 'Nu',
-          sa.proiectare, sa.laser, sa.rolat, sa.sudat, sa.asamblat, sa.vopsit,
+          ...deptValues,
           fmtDate(sa.data_start), fmtDate(sa.data_due), fmtDate(sa.data_done),
           sa.comentarii ?? '',
         ])
       : ws.addRow([
-          sa.nr, sa.nume, sa.status_global, sa.progres,
+          sa.nr, sa.nume, sa.status_global, progres,
           sa.blocat ? 'DA' : 'Nu', sa.intarziat ? 'DA' : 'Nu',
-          sa.proiectare, sa.laser, sa.rolat, sa.sudat, sa.asamblat, sa.vopsit,
+          ...deptValues,
           fmtDate(sa.data_start), fmtDate(sa.data_due), fmtDate(sa.data_done),
           sa.comentarii ?? '',
         ])
