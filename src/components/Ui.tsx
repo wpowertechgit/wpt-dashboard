@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { ReactNode } from 'react'
+import { AuroraText } from './ui/AuroraText'
 import {
   Box,
   Button,
@@ -145,8 +146,8 @@ export function PageTitle({ eyebrow, title, subtitle, action, info }: { eyebrow:
       <Box>
         <Eyebrow sx={{ mb: 0.75 }}>{eyebrow}</Eyebrow>
         <Stack direction="row" alignItems="center" gap={1}>
-          <Typography variant="h4" fontWeight={600} sx={{ color: 'var(--color-ink)', fontFamily: 'var(--font-display)', fontSize: 28, letterSpacing: 0 }}>
-            {title}
+          <Typography variant="h4" fontWeight={600} sx={{ fontFamily: 'var(--font-display)', fontSize: 28, letterSpacing: 0 }}>
+            <AuroraText>{title}</AuroraText>
           </Typography>
           {info && info.length > 0 && <InfoButton title={title} items={info} />}
         </Stack>

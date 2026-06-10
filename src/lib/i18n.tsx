@@ -79,6 +79,8 @@ const T = {
         toggleSubs: 'Subansambluri', noProjects: 'Niciun proiect cu date de planificare',
         tooltipStart: 'Start', tooltipTarget: 'Target', tooltipDone: 'Finalizat', tooltipProgress: 'Progres',
         tooltipDue: 'Scadent',
+        hideRow: 'Ascunde', hiddenItems: 'Elemente ascunse', unhide: 'Afișează',
+        filterAll: 'Toate', filterProduction: 'Producție', filterTasks: 'Sarcini',
       },
     blocaje: {
       eyebrow: 'Registru Blocaje', title: 'Blocaje',
@@ -178,7 +180,7 @@ const T = {
       clearAll: '✕ Șterge tot', confirmClear: 'Confirmare: șterge tot?',
     },
     tasks: {
-      eyebrow: 'Zona Birou · Sarcini', title: 'Sarcini',
+      eyebrow: 'Sarcini', title: 'Sarcini',
       myTasks: 'Sarcinile mele', createdByMe: 'Create de mine',
       newBtn: '+ Sarcină Nouă', formTitle: 'Sarcină Nouă',
       editTitle: 'Editează Sarcina',
@@ -293,6 +295,8 @@ const T = {
         toggleSubs: 'Subassemblies', noProjects: 'No projects with planning dates',
         tooltipStart: 'Start', tooltipTarget: 'Target', tooltipDone: 'Done', tooltipProgress: 'Progress',
         tooltipDue: 'Due',
+        hideRow: 'Hide', hiddenItems: 'Hidden items', unhide: 'Show',
+        filterAll: 'All', filterProduction: 'Production', filterTasks: 'Tasks',
       },
     blocaje: {
       eyebrow: 'Blockage Registry', title: 'Blockages',
@@ -392,7 +396,7 @@ const T = {
       clearAll: '✕ Clear all', confirmClear: 'Confirm: delete all?',
     },
     tasks: {
-      eyebrow: 'Office Zone · Tasks', title: 'Tasks',
+      eyebrow: 'Tasks', title: 'Tasks',
       myTasks: 'My Tasks', createdByMe: 'Created by Me',
       newBtn: '+ New Task', formTitle: 'New Task',
       editTitle: 'Edit Task',

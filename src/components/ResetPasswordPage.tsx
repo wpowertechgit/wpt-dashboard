@@ -1,8 +1,22 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Box, CircularProgress, Typography } from '@mui/material'
 import { supabase } from '../lib/supabase'
 import { ActionButton, AppField, Card, Stack } from './Ui'
+import { BorderBeam } from './ui/BorderBeam'
+import DotField from './ui/DotField'
+
+const authFieldSx = {
+  '& .MuiInputBase-root': { bgcolor: '#2e3033' },
+  '& .MuiInputBase-input': {
+    color: 'var(--color-ink)',
+    WebkitTextFillColor: 'var(--color-ink)',
+  },
+  '& input:-webkit-autofill': {
+    WebkitBoxShadow: '0 0 0 100px #2e3033 inset',
+    WebkitTextFillColor: 'var(--color-ink)',
+  },
+}
 
 export default function ResetPasswordPage({ onDone }: { onDone?: () => void } = {}) {
   const navigate = useNavigate()
@@ -26,47 +40,67 @@ export default function ResetPasswordPage({ onDone }: { onDone?: () => void } = 
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'var(--color-canvas)', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 2 }}>
-      <Card sx={{ width: '100%', maxWidth: 400, p: '32px 28px' }}>
-        <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5, fontFamily: 'var(--font-display)' }}>
-          Setează parolă nouă
-        </Typography>
-        <Typography variant="body2" sx={{ color: 'var(--color-ink-subtle)', mb: 3, fontSize: 13 }}>
-          Set new password
-        </Typography>
+    <Box sx={{ minHeight: '100vh', bgcolor: 'var(--color-canvas)', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 2, position: 'relative', overflow: 'hidden' }}>
+      <DotField
+        dotRadius={2.5}
+        dotSpacing={18}
+        bulgeStrength={55}
+        glowRadius={180}
+        sparkle={false}
+        waveAmplitude={0}
+        cursorRadius={400}
+        cursorForce={0.1}
+        bulgeOnly
+        gradientFrom="rgba(94, 106, 210, 0.22)"
+        gradientTo="rgba(180, 151, 207, 0.14)"
+        glowColor="#0d0b12"
+        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%', zIndex: 0 } as React.CSSProperties}
+      />
+      <Card sx={{ width: '100%', maxWidth: 400, p: '32px 28px', position: 'relative', overflow: 'hidden', zIndex: 1 }}>
+        <BorderBeam size={120} duration={10} colorFrom="#5e6ad2" colorTo="#a78bfa" borderWidth={1} reverse />
+        <Box sx={{ position: 'relative', zIndex: 2 }}>
+          <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5, fontFamily: 'var(--font-display)' }}>
+            Setează parolă nouă
+          </Typography>
+          <Typography variant="body2" sx={{ color: 'var(--color-ink-subtle)', mb: 3, fontSize: 13 }}>
+            Set new password
+          </Typography>
 
-        {done ? (
-          <Stack alignItems="center" gap={2}>
-            <Typography sx={{ color: '#4ade80', fontWeight: 600 }}>✅ Parolă actualizată! / Password updated!</Typography>
-            <CircularProgress size={18} />
-            <Typography sx={{ fontSize: 12, color: 'var(--color-ink-subtle)' }}>Redirecționare... / Redirecting...</Typography>
-          </Stack>
-        ) : (
-          <Stack component="form" onSubmit={handleSubmit} gap={2}>
-            <AppField
-              label="Parolă nouă / New password"
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              required
-            />
-            <AppField
-              label="Confirmă parola / Confirm password"
-              type="password"
-              value={confirm}
-              onChange={e => setConfirm(e.target.value)}
-              required
-            />
-            {error && (
-              <Typography sx={{ fontSize: 12, color: '#f87171', bgcolor: 'rgba(239,68,68,0.08)', p: '8px 12px', borderRadius: 'var(--radius-sm)' }}>
-                {error}
-              </Typography>
-            )}
-            <ActionButton type="submit" disabled={saving} sx={{ mt: 0.5 }}>
-              {saving ? 'Se salvează...' : 'Salvează parola / Save password'}
-            </ActionButton>
-          </Stack>
-        )}
+          {done ? (
+            <Stack alignItems="center" gap={2}>
+              <Typography sx={{ color: '#4ade80', fontWeight: 600 }}>✅ Parolă actualizată! / Password updated!</Typography>
+              <CircularProgress size={18} />
+              <Typography sx={{ fontSize: 12, color: 'var(--color-ink-subtle)' }}>Redirecționare... / Redirecting...</Typography>
+            </Stack>
+          ) : (
+            <Stack component="form" onSubmit={handleSubmit} gap={2}>
+              <AppField
+                label="Parolă nouă / New password"
+                type="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+                sx={authFieldSx}
+              />
+              <AppField
+                label="Confirmă parola / Confirm password"
+                type="password"
+                value={confirm}
+                onChange={e => setConfirm(e.target.value)}
+                required
+                sx={authFieldSx}
+              />
+              {error && (
+                <Typography sx={{ fontSize: 12, color: '#f87171', bgcolor: 'rgba(239,68,68,0.08)', p: '8px 12px', borderRadius: 'var(--radius-sm)' }}>
+                  {error}
+                </Typography>
+              )}
+              <ActionButton type="submit" disabled={saving} sx={{ mt: 0.5 }}>
+                {saving ? 'Se salvează...' : 'Salvează parola / Save password'}
+              </ActionButton>
+            </Stack>
+          )}
+        </Box>
       </Card>
     </Box>
   )

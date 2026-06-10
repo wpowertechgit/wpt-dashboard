@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from 'react'
 import { useQuery } from '../lib/useQuery'
-import { fetchLogs, deleteLog, clearAllLogs } from '../lib/api'
+import { fetchLogs, deleteLog, clearAllLogs, rollbackSubansamblu } from '../lib/api'
 import type { ActivityLog } from '../lib/api'
 import { usePermissions } from '../lib/permissionsContext'
 import { useLang } from '../lib/i18n'
@@ -11,7 +11,7 @@ const ACTION_TONE: Record<string, 'error' | 'warning' | 'success' | 'info' | und
   create: 'success', complete: 'success', resolve: 'success', login: 'success', email_sent: 'success',
   delete: 'error',
   update: 'info', update_permissions: 'info', comment: 'info', notification: 'info', report: 'info', pdf_export: 'info',
-  close: 'warning', reset_password: 'warning', transaction: 'warning', logout: 'warning',
+  close: 'warning', reset_password: 'warning', transaction: 'warning', logout: 'warning', rollback: 'warning',
 }
 
 const ENTITY_COLOR: Record<string, string> = {
@@ -76,6 +76,7 @@ export default function LogsPage() {
   const { t } = useLang()
   const { hasPermission } = usePermissions()
   const canDelete = hasPermission('delete_logs')
+  const canRollback = hasPermission('rollback_logs')
   const { data, loading, error, refetch } = useQuery(fetchLogs)
 
   const [search, setSearch] = useState('')
@@ -83,6 +84,9 @@ export default function LogsPage() {
   const [filterEntity, setFilterEntity] = useState('all')
   const [confirmClear, setConfirmClear] = useState(false)
   const [clearing, setClearing] = useState(false)
+  const [rollbackLogId, setRollbackLogId] = useState<string | null>(null)
+  const [rollingBack, setRollingBack] = useState(false)
+  const [rollbackError, setRollbackError] = useState<string | null>(null)
 
   const logs = useMemo(() => {
     let rows = data ?? []
@@ -110,6 +114,23 @@ export default function LogsPage() {
     setClearing(true)
     try { await clearAllLogs(); refetch(); setConfirmClear(false) }
     finally { setClearing(false) }
+  }
+
+  async function handleRollback(log: ActivityLog) {
+    if (!log.entity_id || !log.details?.before) return
+    setRollingBack(true)
+    setRollbackError(null)
+    try {
+      await rollbackSubansamblu(parseInt(log.entity_id), log.details.before as Record<string, unknown>)
+      refetch()
+      setRollbackLogId(null)
+    } catch (e: unknown) {
+      setRollbackError(e instanceof Error ? e.message : String(e))
+    } finally { setRollingBack(false) }
+  }
+
+  function isRollbackable(log: ActivityLog) {
+    return canRollback && log.entity_type === 'subassembly' && log.action === 'update' && !!log.details?.before
   }
 
   return (
@@ -142,6 +163,7 @@ export default function LogsPage() {
       />
 
       {error && <ErrorBanner message={error} />}
+      {rollbackError && <ErrorBanner message={rollbackError} />}
 
       {/* Filters */}
       <Card sx={{ p: '14px 20px' }}>
@@ -180,7 +202,7 @@ export default function LogsPage() {
               <TableCell>{t.logs.colAction}</TableCell>
               <TableCell>{t.logs.colEntity}</TableCell>
               <TableCell sx={{ minWidth: 240 }}>{t.logs.colLabel}</TableCell>
-              {canDelete && <TableCell />}
+              {(canDelete || canRollback) && <TableCell />}
             </TableRow>
           }>
             {loading ? (
@@ -194,9 +216,23 @@ export default function LogsPage() {
                 <TableCell><ActionBadge action={log.action} /></TableCell>
                 <TableCell><EntityBadge type={log.entity_type} /></TableCell>
                 <TableCell sx={{ fontSize: 12, color: 'var(--color-ink)', maxWidth: 320 }}>{log.entity_label ?? '—'}</TableCell>
-                {canDelete && (
+                {(canDelete || canRollback) && (
                   <TableCell>
-                    <ActionButton onClick={() => handleDelete(log)} sx={{ px: 1, py: 0.25, fontSize: 11, color: '#f87171', bgcolor: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>✕</ActionButton>
+                    <Stack direction="row" gap={0.5} alignItems="center">
+                      {isRollbackable(log) && (rollbackLogId === log.id ? (
+                        <>
+                          <ActionButton onClick={() => setRollbackLogId(null)} sx={{ px: 1, py: 0.25, fontSize: 11, color: 'var(--color-ink-muted)', bgcolor: 'transparent', border: '1px solid var(--color-hairline)' }}>✕</ActionButton>
+                          <ActionButton onClick={() => handleRollback(log)} disabled={rollingBack} sx={{ px: 1, py: 0.25, fontSize: 11, color: '#fb923c', bgcolor: 'rgba(251,146,60,0.12)', border: '1px solid rgba(251,146,60,0.3)' }}>
+                            {rollingBack ? '…' : 'Confirm'}
+                          </ActionButton>
+                        </>
+                      ) : (
+                        <ActionButton onClick={() => setRollbackLogId(log.id)} sx={{ px: 1, py: 0.25, fontSize: 11, color: '#fb923c', bgcolor: 'rgba(251,146,60,0.08)', border: '1px solid rgba(251,146,60,0.2)' }}>↩</ActionButton>
+                      ))}
+                      {canDelete && (
+                        <ActionButton onClick={() => handleDelete(log)} sx={{ px: 1, py: 0.25, fontSize: 11, color: '#f87171', bgcolor: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>✕</ActionButton>
+                      )}
+                    </Stack>
                   </TableCell>
                 )}
               </TableRow>
@@ -215,9 +251,21 @@ export default function LogsPage() {
               <Stack direction="row" alignItems="center" gap={1} sx={{ mb: 0.5 }} flexWrap="wrap">
                 <ActionBadge action={log.action} />
                 <EntityBadge type={log.entity_type} />
-                {canDelete && (
-                  <ActionButton onClick={() => handleDelete(log)} sx={{ ml: 'auto', px: 1, py: 0.25, fontSize: 11, color: '#f87171', bgcolor: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>✕</ActionButton>
-                )}
+                <Stack direction="row" gap={0.5} sx={{ ml: 'auto' }}>
+                  {isRollbackable(log) && (rollbackLogId === log.id ? (
+                    <>
+                      <ActionButton onClick={() => setRollbackLogId(null)} sx={{ px: 1, py: 0.25, fontSize: 11, color: 'var(--color-ink-muted)', bgcolor: 'transparent', border: '1px solid var(--color-hairline)' }}>✕</ActionButton>
+                      <ActionButton onClick={() => handleRollback(log)} disabled={rollingBack} sx={{ px: 1, py: 0.25, fontSize: 11, color: '#fb923c', bgcolor: 'rgba(251,146,60,0.12)', border: '1px solid rgba(251,146,60,0.3)' }}>
+                        {rollingBack ? '…' : 'Confirm'}
+                      </ActionButton>
+                    </>
+                  ) : (
+                    <ActionButton onClick={() => setRollbackLogId(log.id)} sx={{ px: 1, py: 0.25, fontSize: 11, color: '#fb923c', bgcolor: 'rgba(251,146,60,0.08)', border: '1px solid rgba(251,146,60,0.2)' }}>↩</ActionButton>
+                  ))}
+                  {canDelete && (
+                    <ActionButton onClick={() => handleDelete(log)} sx={{ px: 1, py: 0.25, fontSize: 11, color: '#f87171', bgcolor: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>✕</ActionButton>
+                  )}
+                </Stack>
               </Stack>
               <Typography sx={{ fontSize: 13, color: 'var(--color-ink)', mb: 0.25 }}>{log.entity_label ?? '—'}</Typography>
               <Stack direction="row" gap={1.5} flexWrap="wrap">

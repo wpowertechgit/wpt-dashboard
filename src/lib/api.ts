@@ -146,12 +146,19 @@ function sanitizeSaRow(row: Record<string, unknown>): Record<string, unknown> {
   )
 }
 
-export async function updateSubansamblu(id: number, row: Record<string, unknown>) {
+export async function updateSubansamblu(id: number, row: Record<string, unknown>, before?: Record<string, unknown>) {
   if (isDemoMode()) return
   const { error } = await supabase.from('subansambluri').update(sanitizeSaRow(row)).eq('id', id)
   if (error) throw friendlySupabaseError(error)
   const label = row.status_global ? `SA #${id} → ${row.status_global}` : `SA #${id}`
-  logActivity('update', 'subassembly', String(id), label)
+  logActivity('update', 'subassembly', String(id), label, before ? { before, after: row } : undefined)
+}
+
+export async function rollbackSubansamblu(subassemblyId: number, before: Record<string, unknown>) {
+  if (isDemoMode()) return
+  const { error } = await supabase.from('subansambluri').update(sanitizeSaRow(before)).eq('id', subassemblyId)
+  if (error) throw friendlySupabaseError(error)
+  logActivity('rollback', 'subassembly', String(subassemblyId), `Rollback SA #${subassemblyId}`)
 }
 
 export async function fetchBlocaje() {

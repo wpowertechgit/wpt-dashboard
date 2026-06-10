@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useLang } from '../lib/i18n'
 import { useQuery } from '../lib/useQuery'
 import { fetchSubansambluri, updateSubansamblu, insertBlocaj } from '../lib/api'
@@ -8,6 +8,8 @@ import { usePermissions } from '../lib/permissionsContext'
 import { pageInfo } from '../lib/pageInfo'
 import { ErrorBanner, EmptyState, LoadingRows } from './StateViews'
 import { ActionButton, AppField, AppSelect, Badge, Box, Card, DataTable, PageTitle, Stack, TableCell, TableRow, Typography } from './Ui'
+import { Confetti } from './ui/Confetti'
+import type { ConfettiRef } from './ui/Confetti'
 
 type FilterStatus = 'ALL' | 'FINALIZAT' | 'IN LUCRU' | 'BLOCAT'
 
@@ -73,6 +75,7 @@ export default function Subansambluri() {
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [finalizing, setFinalizing] = useState<number | null>(null)
+  const confettiRef = useRef<ConfettiRef>(null)
 
   const DATE_FIELDS = new Set(['data_start','data_due','data_done','proiectare_done','laser_done','rolat_done','sudat_done','asamblat_done','vopsit_done'])
 
@@ -119,7 +122,7 @@ export default function Subansambluri() {
         }
       }
 
-      await updateSubansamblu(editId, prepareRow(rowToSave))
+      await updateSubansamblu(editId, prepareRow(rowToSave), original as Record<string, unknown>)
 
       if (becomingBlocked && original) {
         const today = new Date().toISOString().slice(0, 10)
@@ -149,6 +152,7 @@ export default function Subansambluri() {
     setSaving(true)
     setSaveError(null)
     try {
+      const original = data?.find(s => s.id === id)
       const resetData: Record<string, unknown> = {
         status_global: '🔄 IN LUCRU',
         progres: '0%',
@@ -162,7 +166,7 @@ export default function Subansambluri() {
         vopsit_done: null,
       }
       for (const col of DEPT_COLS) resetData[col] = 'Neînceput'
-      await updateSubansamblu(id, resetData)
+      await updateSubansamblu(id, resetData, original as Record<string, unknown>)
       setEditId(null); setEditRow(null)
       refetch()
     } catch (e: unknown) {
@@ -185,7 +189,8 @@ export default function Subansambluri() {
         blocat: false,
         data_done: today,
         ...deptUpdate,
-      })
+      }, sa as Record<string, unknown>)
+      confettiRef.current?.fire({ particleCount: 60, spread: 55, startVelocity: 30, origin: { y: 0.7 } })
       refetch()
     } finally { setFinalizing(null) }
   }
@@ -291,14 +296,25 @@ export default function Subansambluri() {
   }
 
   return (
-    <Stack gap={3}>
+    <Stack gap={3} sx={{ position: 'relative' }}>
+      <Confetti ref={confettiRef} style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 9999 }} />
       <PageTitle eyebrow={s.eyebrow} title={s.title} subtitle={`${filtered.length} ${t.common.records}`} info={pageInfo(lang, 'subassemblies')} />
       {error && <ErrorBanner message={error} />}
 
       <Stack gap={1.5}>
         <AppField type="text" placeholder={s.search} value={search} onChange={e => setSearch(e.target.value)} />
-        <Stack direction="row" gap={1} flexWrap="wrap">
-          {projects.length > 1 && pills(projects, filterProiect, v => setFilterProiect(v))}
+        <Stack direction="row" gap={1} flexWrap="wrap" alignItems="center">
+          {projects.length > 1 && (
+            <AppSelect
+              value={filterProiect}
+              onChange={e => setFilterProiect(e.target.value)}
+              options={[
+                { value: 'ALL', label: s.filterAll },
+                ...projects.filter(p => p !== 'ALL').map(p => ({ value: p, label: p })),
+              ]}
+              sx={{ width: 200, minWidth: 0 }}
+            />
+          )}
           {pills([
             { value: 'ALL', label: s.filterAll },
             { value: 'FINALIZAT', label: s.filterDone },

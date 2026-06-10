@@ -41,6 +41,10 @@ const ALL_PERMISSIONS: PermDef[] = [
   { key: 'edit_inventory',     label: 'Edit Inventory',       category: 'office' },
   { key: 'manage_users',       label: 'Manage Users',         category: 'admin' },
   { key: 'manage_roles',       label: 'Manage Roles',         category: 'admin' },
+  { key: 'view_logs',          label: 'View Logs',            category: 'admin' },
+  { key: 'delete_logs',        label: 'Delete Logs',          category: 'admin' },
+  { key: 'rollback_logs',      label: 'Rollback Subassemblies', category: 'admin' },
+  { key: 'view_reports',       label: 'View Reports',         category: 'admin' },
 ]
 
 type OverrideState = Record<PermissionKey, boolean | 'role' | 'revoked'>

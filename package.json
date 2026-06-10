@@ -27,6 +27,8 @@
     "@mui/material": "^6.5.0",
     "@mui/x-date-pickers": "^8.0.0",
     "@supabase/supabase-js": "^2.105.4",
+    "@types/canvas-confetti": "^1.9.0",
+    "canvas-confetti": "^1.9.4",
     "chart.js": "^4.5.1",
     "dayjs": "^1.11.20",
     "exceljs": "^4.4.0",

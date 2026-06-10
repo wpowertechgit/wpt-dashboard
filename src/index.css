@@ -201,7 +201,36 @@ tr:hover td {
 .progress-fill-danger { background: var(--color-danger); }
 .progress-fill-primary { background: var(--color-primary); }
 
-/* White calendar icon on date inputs */
+/* ── AuroraText animation ── */
+@property --aurora-pos {
+  syntax: '<percentage>';
+  initial-value: 0%;
+  inherits: false;
+}
+
+@keyframes aurora-shift {
+  0%   { background-position: 0% center; }
+  100% { background-position: 200% center; }
+}
+
+/* ── BorderBeam animation ── */
+@property --border-beam-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes border-beam {
+  from { --border-beam-angle: 0deg; }
+  to   { --border-beam-angle: 360deg; }
+}
+
+@keyframes border-beam-reverse {
+  from { --border-beam-angle: 360deg; }
+  to   { --border-beam-angle: 0deg; }
+}
+
+/* ── White calendar icon on date inputs ── */
 input[type="date"]::-webkit-calendar-picker-indicator {
   filter: invert(1) brightness(1.5);
   cursor: pointer;

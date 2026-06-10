@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react'
 import type { ComponentType, ReactNode } from 'react'
 import { Routes, Route, NavLink, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import type { Session } from '@supabase/supabase-js'
@@ -23,23 +23,24 @@ import { PermissionsProvider, usePermissions } from './lib/permissionsContext'
 import type { AppRole } from './lib/permissions'
 import LoginPage from './components/LoginPage'
 import ResetPasswordPage from './components/ResetPasswordPage'
-import Dashboard from './components/Dashboard'
-import Subassemblies from './components/Subassemblies'
-import Blockages from './components/Blockages'
-import PDCA from './components/PDCA'
-import DailyFlow from './components/DailyFlow'
-import TeamKPI from './components/TeamKPI'
-import Projects from './components/Projects'
-import Admin from './components/Admin'
-import PlanningCalendar from './components/PlanningCalendar'
-import TaskBoard from './components/TaskBoard'
-import Inventory from './components/Inventory'
-import LogsPage from './components/Logs'
-import ReportsPage from './components/Reports'
-import ProfilePage from './components/Profile'
+const Dashboard = lazy(() => import('./components/Dashboard'))
+const Subassemblies = lazy(() => import('./components/Subassemblies'))
+const Blockages = lazy(() => import('./components/Blockages'))
+const PDCA = lazy(() => import('./components/PDCA'))
+const DailyFlow = lazy(() => import('./components/DailyFlow'))
+const TeamKPI = lazy(() => import('./components/TeamKPI'))
+const Projects = lazy(() => import('./components/Projects'))
+const Admin = lazy(() => import('./components/Admin'))
+const PlanningCalendar = lazy(() => import('./components/PlanningCalendar'))
+const TaskBoard = lazy(() => import('./components/TaskBoard'))
+const Inventory = lazy(() => import('./components/Inventory'))
+const LogsPage = lazy(() => import('./components/Logs'))
+const ReportsPage = lazy(() => import('./components/Reports'))
+const ProfilePage = lazy(() => import('./components/Profile'))
 import ActiveTasksPanel from './components/ActiveTasksPanel'
 import { LanguageFlag } from './components/Ui'
 import NotificationBell from './components/NotificationBell'
+import DotField from './components/ui/DotField'
 
 interface Profile {
   id: string
@@ -210,19 +211,19 @@ function MobileShell({ profile, demoMode, onExitDemo }: { profile: Profile | nul
   const canViewCalendar = hasPermission('view_planning') || hasPermission('view_tasks')
 
   const navItems = [
-    hasPermission('view_dashboard')      && { path: '/dashboard',     label: t.nav.dashboard },
-    hasPermission('view_projects')       && { path: '/projects',      label: t.nav.proiecte },
-    hasPermission('view_subassemblies')  && { path: '/subassemblies', label: t.nav.subansambluri },
-    canViewCalendar                      && { path: '/planning',      label: t.nav.planning },
-    hasPermission('view_blockages')      && { path: '/blockages',     label: t.nav.blocaje },
-    hasPermission('view_pdca')           && { path: '/pdca',          label: t.nav.pdca },
-    hasPermission('view_daily_flow')     && { path: '/daily-flow',    label: t.nav.flux },
-    hasPermission('view_kpi')            && { path: '/kpi',           label: t.nav.kpi },
-    hasPermission('view_tasks')          && { path: '/tasks',         label: t.nav.tasks },
-    hasPermission('view_inventory')      && { path: '/inventory',     label: t.nav.inventory },
-    hasPermission('view_logs')           && { path: '/logs',          label: t.nav.logs, admin: true },
-    hasPermission('view_reports')        && { path: '/reports',       label: 'Reports', admin: true },
-    hasPermission('manage_users')        && { path: '/admin',         label: t.nav.admin, admin: true },
+    hasPermission('view_dashboard') && { path: '/dashboard', label: t.nav.dashboard },
+    hasPermission('view_projects') && { path: '/projects', label: t.nav.proiecte },
+    hasPermission('view_subassemblies') && { path: '/subassemblies', label: t.nav.subansambluri },
+    canViewCalendar && { path: '/planning', label: t.nav.planning },
+    hasPermission('view_blockages') && { path: '/blockages', label: t.nav.blocaje },
+    hasPermission('view_pdca') && { path: '/pdca', label: t.nav.pdca },
+    hasPermission('view_daily_flow') && { path: '/daily-flow', label: t.nav.flux },
+    hasPermission('view_kpi') && { path: '/kpi', label: t.nav.kpi },
+    hasPermission('view_tasks') && { path: '/tasks', label: t.nav.tasks },
+    hasPermission('view_inventory') && { path: '/inventory', label: t.nav.inventory },
+    hasPermission('view_logs') && { path: '/logs', label: t.nav.logs, admin: true },
+    hasPermission('view_reports') && { path: '/reports', label: 'Reports', admin: true },
+    hasPermission('manage_users') && { path: '/admin', label: t.nav.admin, admin: true },
     { path: '/profile', label: 'My Profile' },
   ].filter(Boolean) as { path: string; label: string; admin?: boolean }[]
 
@@ -250,7 +251,7 @@ function MobileShell({ profile, demoMode, onExitDemo }: { profile: Profile | nul
           <MenuIcon />
         </IconButton>
         <Box component={NavLink} to={defaultPath} sx={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0, ml: 0.5 }}>
-          <Box component="img" src="/wpt symbol-02.png" alt="WPT" sx={{ height: 26, width: 'auto', display: 'block' }} />
+          <Box component="img" src="/wpt symbol-02-f.png" alt="WPT" sx={{ height: 26, width: 'auto', display: 'block' }} />
         </Box>
         <Typography sx={{ flex: 1, fontSize: 12, color: 'var(--color-ink-subtle)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', ml: 0.5 }}>
           {profile?.full_name || profile?.email || (demoMode ? 'Demo' : '')}
@@ -348,16 +349,16 @@ function AppNav({ profile, demoMode, onExitDemo }: { profile: Profile | null; de
   const canViewCalendar = hasPermission('view_planning') || hasPermission('view_tasks')
 
   const navItems = [
-    hasPermission('view_dashboard')      && { path: '/dashboard',   label: t.nav.dashboard },
-    hasPermission('view_projects')       && { path: '/projects',    label: t.nav.proiecte },
-    hasPermission('view_subassemblies')  && { path: '/subassemblies', label: t.nav.subansambluri },
-    canViewCalendar                      && { path: '/planning',    label: t.nav.planning },
-    hasPermission('view_blockages')      && { path: '/blockages',   label: t.nav.blocaje },
-    hasPermission('view_pdca')           && { path: '/pdca',        label: t.nav.pdca },
-    hasPermission('view_daily_flow')     && { path: '/daily-flow',  label: t.nav.flux },
-    hasPermission('view_kpi')            && { path: '/kpi',         label: t.nav.kpi },
-    hasPermission('view_tasks')          && { path: '/tasks',       label: t.nav.tasks },
-    hasPermission('view_inventory')      && { path: '/inventory',   label: t.nav.inventory },
+    hasPermission('view_dashboard') && { path: '/dashboard', label: t.nav.dashboard },
+    hasPermission('view_projects') && { path: '/projects', label: t.nav.proiecte },
+    hasPermission('view_subassemblies') && { path: '/subassemblies', label: t.nav.subansambluri },
+    canViewCalendar && { path: '/planning', label: t.nav.planning },
+    hasPermission('view_blockages') && { path: '/blockages', label: t.nav.blocaje },
+    hasPermission('view_pdca') && { path: '/pdca', label: t.nav.pdca },
+    hasPermission('view_daily_flow') && { path: '/daily-flow', label: t.nav.flux },
+    hasPermission('view_kpi') && { path: '/kpi', label: t.nav.kpi },
+    hasPermission('view_tasks') && { path: '/tasks', label: t.nav.tasks },
+    hasPermission('view_inventory') && { path: '/inventory', label: t.nav.inventory },
   ].filter(Boolean) as { path: string; label: string }[]
 
   const defaultPath = navItems[0]?.path ?? '/login'
@@ -378,7 +379,7 @@ function AppNav({ profile, demoMode, onExitDemo }: { profile: Profile | null; de
       }}
     >
       <Box component={NavLink} to={defaultPath} sx={{ display: 'flex', alignItems: 'center', mr: 4, flexShrink: 0, textDecoration: 'none' }}>
-        <Box component="img" src="/wpt symbol-02.png" alt="Waste Powertech" sx={{ height: 'clamp(28px, 2.5vw, 38px)', width: 'auto', display: 'block' }} />
+        <Box component="img" src="/wpt symbol-02-f.png" alt="Waste Powertech" sx={{ height: 'clamp(28px, 2.5vw, 38px)', width: 'auto', display: 'block' }} />
       </Box>
 
       <Stack direction="row" alignItems="center" gap={0.25} sx={{ flex: 1, overflow: 'hidden' }}>
@@ -390,9 +391,9 @@ function AppNav({ profile, demoMode, onExitDemo }: { profile: Profile | null; de
       <Stack direction="row" alignItems="center" gap={1.25} sx={{ flexShrink: 0 }}>
         {(hasPermission('view_logs') || hasPermission('view_reports') || hasPermission('manage_users')) && (
           <AdminDropdown items={[
-            ...(hasPermission('view_logs')     ? [{ path: '/logs',    label: t.nav.logs }]   : []),
-            ...(hasPermission('view_reports')  ? [{ path: '/reports', label: 'Reports' }]     : []),
-            ...(hasPermission('manage_users')  ? [{ path: '/admin',   label: t.nav.admin }]  : []),
+            ...(hasPermission('view_logs') ? [{ path: '/logs', label: t.nav.logs }] : []),
+            ...(hasPermission('view_reports') ? [{ path: '/reports', label: 'Reports' }] : []),
+            ...(hasPermission('manage_users') ? [{ path: '/admin', label: t.nav.admin }] : []),
           ]} />
         )}
         {demoMode ? (
@@ -435,16 +436,16 @@ function AppNav({ profile, demoMode, onExitDemo }: { profile: Profile | null; de
 }
 
 const ORDERED_ROUTES = [
-  { perm: 'view_dashboard',     path: '/dashboard' },
-  { perm: 'view_tasks',         path: '/tasks' },
-  { perm: 'view_inventory',     path: '/inventory' },
-  { perm: 'view_projects',      path: '/projects' },
+  { perm: 'view_dashboard', path: '/dashboard' },
+  { perm: 'view_tasks', path: '/tasks' },
+  { perm: 'view_inventory', path: '/inventory' },
+  { perm: 'view_projects', path: '/projects' },
   { perm: 'view_subassemblies', path: '/subassemblies' },
-  { perm: 'view_planning',      path: '/planning' },
-  { perm: 'view_blockages',     path: '/blockages' },
-  { perm: 'view_pdca',          path: '/pdca' },
-  { perm: 'view_daily_flow',    path: '/daily-flow' },
-  { perm: 'view_kpi',           path: '/kpi' },
+  { perm: 'view_planning', path: '/planning' },
+  { perm: 'view_blockages', path: '/blockages' },
+  { perm: 'view_pdca', path: '/pdca' },
+  { perm: 'view_daily_flow', path: '/daily-flow' },
+  { perm: 'view_kpi', path: '/kpi' },
 ] as const
 
 function RootRedirect() {
@@ -475,34 +476,55 @@ function AppShell({ session, profile, demoMode, onExitDemo, onProfileUpdated }: 
 
   return (
     <PermissionsProvider role={profile?.role ?? null} userId={profile?.id ?? null} demoMode={demoMode}>
-      <Stack sx={{ minHeight: '100vh', bgcolor: 'var(--color-canvas)' }}>
-        <AppNav profile={profile} demoMode={demoMode} onExitDemo={onExitDemo} />
-        <MobileShell profile={profile} demoMode={demoMode} onExitDemo={onExitDemo} />
+      <Stack sx={{ minHeight: '100vh', bgcolor: 'var(--color-canvas)', position: 'relative' }}>
+        <DotField
+          dotRadius={2.5}
+          dotSpacing={18}
+          bulgeStrength={55}
+          glowRadius={180}
+          sparkle={false}
+          waveAmplitude={0}
+          cursorRadius={400}
+          cursorForce={0.1}
+          bulgeOnly
+          gradientFrom="rgba(94, 106, 210, 0.22)"
+          gradientTo="rgba(180, 151, 207, 0.14)"
+          glowColor="#0d0b12"
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 0, pointerEvents: 'none' } as React.CSSProperties}
+        />
 
-        <Box component="main" sx={{ flex: 1, p: { xs: '16px 12px 32px', md: '20px 20px 40px', lg: '24px 24px 48px' }, maxWidth: 1400, width: '100%', mx: 'auto' }}>
-          <Routes>
-            <Route path="/" element={<RootRedirect />} />
-            <Route path="/dashboard"     element={<PermGuard perm="view_dashboard"><Dashboard userId={profile?.id} /></PermGuard>} />
-            <Route path="/projects"      element={<PermGuard perm="view_projects"><Projects /></PermGuard>} />
-            <Route path="/subassemblies" element={<PermGuard perm="view_subassemblies"><Subassemblies /></PermGuard>} />
-            <Route path="/planning"      element={<AnyPermGuard perms={['view_planning', 'view_tasks']}><PlanningCalendar userId={profile?.id ?? null} /></AnyPermGuard>} />
-            <Route path="/blockages"     element={<PermGuard perm="view_blockages"><Blockages /></PermGuard>} />
-            <Route path="/pdca"          element={<PermGuard perm="view_pdca"><PDCA /></PermGuard>} />
-            <Route path="/daily-flow"    element={<PermGuard perm="view_daily_flow"><DailyFlow /></PermGuard>} />
-            <Route path="/kpi"           element={<PermGuard perm="view_kpi"><TeamKPI /></PermGuard>} />
-            <Route path="/tasks"         element={<PermGuard perm="view_tasks"><TaskBoard userId={profile?.id ?? null} /></PermGuard>} />
-            <Route path="/inventory"     element={<PermGuard perm="view_inventory"><Inventory userId={profile?.id ?? null} /></PermGuard>} />
-            <Route path="/logs"          element={<PermGuard perm="view_logs"><LogsPage /></PermGuard>} />
-            <Route path="/reports"       element={<PermGuard perm="view_reports"><ReportsPage /></PermGuard>} />
-            <Route path="/admin"         element={<PermGuard perm="manage_users"><Admin /></PermGuard>} />
-            <Route path="/profile"       element={profile ? <ProfilePage profile={profile} onUpdated={onProfileUpdated} /> : null} />
-            <Route path="*"             element={<Navigate to="/" replace />} />
-          </Routes>
+        {/* z-index: 1 lifts all UI above the fixed DotField (z-index: 0 paints after normal flow) */}
+        <Box sx={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', flex: 1 }}>
+          <AppNav profile={profile} demoMode={demoMode} onExitDemo={onExitDemo} />
+          <MobileShell profile={profile} demoMode={demoMode} onExitDemo={onExitDemo} />
+
+          <Box component="main" sx={{ flex: 1, p: { xs: '16px 12px 32px', md: '20px 20px 40px', lg: '24px 24px 48px' }, maxWidth: 1400, width: '100%', mx: 'auto' }}>
+            <Suspense fallback={null}>
+            <Routes>
+              <Route path="/" element={<RootRedirect />} />
+              <Route path="/dashboard" element={<PermGuard perm="view_dashboard"><Dashboard userId={profile?.id} /></PermGuard>} />
+              <Route path="/projects" element={<PermGuard perm="view_projects"><Projects /></PermGuard>} />
+              <Route path="/subassemblies" element={<PermGuard perm="view_subassemblies"><Subassemblies /></PermGuard>} />
+              <Route path="/planning" element={<AnyPermGuard perms={['view_planning', 'view_tasks']}><PlanningCalendar userId={profile?.id ?? null} /></AnyPermGuard>} />
+              <Route path="/blockages" element={<PermGuard perm="view_blockages"><Blockages /></PermGuard>} />
+              <Route path="/pdca" element={<PermGuard perm="view_pdca"><PDCA /></PermGuard>} />
+              <Route path="/daily-flow" element={<PermGuard perm="view_daily_flow"><DailyFlow /></PermGuard>} />
+              <Route path="/kpi" element={<PermGuard perm="view_kpi"><TeamKPI /></PermGuard>} />
+              <Route path="/tasks" element={<PermGuard perm="view_tasks"><TaskBoard userId={profile?.id ?? null} /></PermGuard>} />
+              <Route path="/inventory" element={<PermGuard perm="view_inventory"><Inventory userId={profile?.id ?? null} /></PermGuard>} />
+              <Route path="/logs" element={<PermGuard perm="view_logs"><LogsPage /></PermGuard>} />
+              <Route path="/reports" element={<PermGuard perm="view_reports"><ReportsPage /></PermGuard>} />
+              <Route path="/admin" element={<PermGuard perm="manage_users"><Admin /></PermGuard>} />
+              <Route path="/profile" element={profile ? <ProfilePage profile={profile} onUpdated={onProfileUpdated} /> : null} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+            </Suspense>
+          </Box>
+
+          {canViewTasks && (
+            <ActiveTasksPanel userId={profile!.id} />
+          )}
         </Box>
-
-        {canViewTasks && (
-          <ActiveTasksPanel userId={profile!.id} />
-        )}
       </Stack>
     </PermissionsProvider>
   )
@@ -585,7 +607,7 @@ export default function App() {
     </Box>
   )
 
-  if (demoMode) return <AppShell session={null} profile={null} demoMode={demoMode} onExitDemo={handleExitDemo} onProfileUpdated={() => {}} />
+  if (demoMode) return <AppShell session={null} profile={null} demoMode={demoMode} onExitDemo={handleExitDemo} onProfileUpdated={() => { }} />
 
   // Still resolving initial auth state
   if (session === undefined) return spinner

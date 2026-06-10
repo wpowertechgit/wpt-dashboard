@@ -11,7 +11,7 @@ export type PermissionKey =
   | 'view_tasks' | 'create_tasks' | 'manage_tasks'
   | 'view_inventory' | 'edit_inventory'
   | 'manage_users' | 'manage_roles'
-  | 'view_logs' | 'delete_logs'
+  | 'view_logs' | 'delete_logs' | 'rollback_logs'
   | 'view_reports'
 
 export const ROLE_DEFAULTS: Record<string, PermissionKey[]> = {
@@ -23,7 +23,7 @@ export const ROLE_DEFAULTS: Record<string, PermissionKey[]> = {
     'view_tasks','create_tasks','manage_tasks',
     'view_inventory','edit_inventory',
     'manage_users','manage_roles',
-    'view_logs','delete_logs',
+    'view_logs','delete_logs','rollback_logs',
     'view_reports',
   ],
   production: [

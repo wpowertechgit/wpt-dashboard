@@ -7,6 +7,8 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import ZoomInIcon from '@mui/icons-material/ZoomIn'
 import ZoomOutIcon from '@mui/icons-material/ZoomOut'
+import { FaEye } from 'react-icons/fa'
+import { FaEyeSlash } from 'react-icons/fa6'
 import { Card, Eyebrow, PageTitle } from './Ui'
 import { useLang } from '../lib/i18n'
 import { useQuery } from '../lib/useQuery'
@@ -89,12 +91,17 @@ function SummaryCard({ title, rows, emptyLabel, tone }: {
   )
 }
 
+type SourceFilter = 'all' | 'production' | 'task'
+
 export default function PlanningCalendar({ userId }: { userId: string | null }) {
   const { t, lang } = useLang()
   const p = t.planning
   const { hasPermission } = usePermissions()
   const [today] = useState(() => dayjs())
   const [pixelsPerDay, setPixelsPerDay] = useState(DEFAULT_PIXELS_PER_DAY)
+  const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set())
+  const [showHiddenOverlay, setShowHiddenOverlay] = useState(false)
+  const [sourceFilter, setSourceFilter] = useState<SourceFilter>('all')
   const todayKey = today.format('YYYY-MM-DD')
   const scrollerRef = useRef<HTMLDivElement | null>(null)
   const includeProduction = hasPermission('view_projects') || hasPermission('view_subassemblies') || hasPermission('view_planning')
@@ -118,29 +125,42 @@ export default function PlanningCalendar({ userId }: { userId: string | null }) 
     pixelsPerDay,
   }), [assignedTasks, includeProduction, includeTasks, pixelsPerDay, projects.data, subassemblies.data, todayKey])
 
+  const visibleRows = useMemo(() => {
+    return timeline.rows.filter(row => {
+      if (hiddenIds.has(row.id)) return false
+      if (sourceFilter === 'production' && row.source !== 'production') return false
+      if (sourceFilter === 'task' && row.source !== 'task') return false
+      return true
+    })
+  }, [timeline.rows, hiddenIds, sourceFilter])
+
+  const hiddenRows = useMemo(() => {
+    return timeline.rows.filter(row => hiddenIds.has(row.id))
+  }, [timeline.rows, hiddenIds])
+
   const planning = useMemo(() => {
-    const overdue = timeline.rows
+    const overdue = visibleRows
       .filter(row => row.tone === 'danger')
       .map(row => ({ title: row.label, subtitle: row.sublabel }))
 
-    const upcoming = timeline.rows
+    const upcoming = visibleRows
       .filter(row => row.tone !== 'danger' && row.tone !== 'success')
       .sort((a, b) => a.endDate.localeCompare(b.endDate))
       .slice(0, 6)
       .map(row => ({ title: row.label, subtitle: row.sublabel }))
 
-    const completed = timeline.rows
+    const completed = visibleRows
       .filter(row => row.tone === 'success')
       .sort((a, b) => b.endDate.localeCompare(a.endDate))
       .slice(0, 6)
       .map(row => ({ title: row.label, subtitle: row.sublabel }))
 
     return { overdue, upcoming, completed }
-  }, [timeline.rows])
+  }, [visibleRows])
 
   const ROW_H = 38
   const LABEL_W = 220
-  const canvasHeight = timeline.rows.length * ROW_H + 8
+  const canvasHeight = visibleRows.length * ROW_H + 8
   const loading = tasks.loading || projects.loading || subassemblies.loading
   const error = tasks.error || projects.error || subassemblies.error
 
@@ -180,7 +200,7 @@ export default function PlanningCalendar({ userId }: { userId: string | null }) 
       <PageTitle
         eyebrow={p.eyebrow}
         title={p.title}
-        subtitle={`${timeline.rows.length} ${t.common.records}`}
+        subtitle={`${visibleRows.length} ${t.common.records}`}
         info={pageInfo(lang, 'planning')}
       />
 
@@ -189,6 +209,52 @@ export default function PlanningCalendar({ userId }: { userId: string | null }) 
       <Card sx={{ p: 0, overflow: 'hidden' }}>
         <Box sx={{ p: '16px 20px 12px', borderBottom: '1px solid var(--color-hairline)', display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
           <Eyebrow>{p.ganttTitle}</Eyebrow>
+
+          {/* Source filter */}
+          <Stack direction="row" gap={0.5}>
+            {(['all', 'production', 'task'] as SourceFilter[]).map(f => {
+              const label = f === 'all' ? p.filterAll : f === 'production' ? p.filterProduction : p.filterTasks
+              const active = sourceFilter === f
+              return (
+                <Box
+                  key={f}
+                  onClick={() => setSourceFilter(f)}
+                  sx={{
+                    px: 1.25, py: 0.375, borderRadius: 'var(--radius-sm)', fontSize: 11, fontWeight: 600,
+                    cursor: 'pointer', border: '1px solid',
+                    borderColor: active ? 'var(--color-primary)' : 'var(--color-hairline)',
+                    color: active ? 'var(--color-primary)' : 'var(--color-ink-subtle)',
+                    bgcolor: active ? 'rgba(94,106,210,0.1)' : 'transparent',
+                    '&:hover': { borderColor: 'var(--color-primary)', color: 'var(--color-primary)' },
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  {label}
+                </Box>
+              )
+            })}
+          </Stack>
+
+          {/* Hidden items button */}
+          {hiddenRows.length > 0 && (
+            <Tooltip title={p.hiddenItems} arrow>
+              <Box
+                onClick={() => setShowHiddenOverlay(v => !v)}
+                sx={{
+                  display: 'flex', alignItems: 'center', gap: 0.75, px: 1.25, py: 0.375,
+                  borderRadius: 'var(--radius-sm)', fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                  border: '1px solid', borderColor: showHiddenOverlay ? '#fbbf24' : 'var(--color-hairline)',
+                  color: showHiddenOverlay ? '#fbbf24' : 'var(--color-ink-subtle)',
+                  bgcolor: showHiddenOverlay ? 'rgba(251,191,36,0.1)' : 'transparent',
+                  '&:hover': { borderColor: '#fbbf24', color: '#fbbf24' },
+                  transition: 'all 0.15s',
+                }}
+              >
+                <FaEye size={12} />
+                {p.hiddenItems} ({hiddenRows.length})
+              </Box>
+            </Tooltip>
+          )}
 
           <Stack direction="row" gap={1} sx={{ ml: 'auto' }}>
             <IconButton size="small" onClick={() => scrollTimeline(-1)} sx={{ color: 'var(--color-ink-subtle)', border: '1px solid var(--color-hairline)', width: 28, height: 28 }}>
@@ -226,6 +292,31 @@ export default function PlanningCalendar({ userId }: { userId: string | null }) 
             ))}
           </Stack>
         </Box>
+
+        {/* Hidden items overlay */}
+        {showHiddenOverlay && hiddenRows.length > 0 && (
+          <Box sx={{ borderBottom: '1px solid var(--color-hairline)', bgcolor: 'rgba(251,191,36,0.05)', px: 2.5, py: 1.5 }}>
+            <Stack direction="row" flexWrap="wrap" gap={1}>
+              {hiddenRows.map(row => (
+                <Box
+                  key={row.id}
+                  onClick={() => setHiddenIds(prev => { const next = new Set(prev); next.delete(row.id); return next })}
+                  sx={{
+                    display: 'flex', alignItems: 'center', gap: 0.75, px: 1.25, py: 0.5,
+                    borderRadius: 'var(--radius-sm)', fontSize: 12, fontWeight: 500,
+                    border: '1px solid var(--color-hairline)', cursor: 'pointer',
+                    color: 'var(--color-ink-muted)', bgcolor: 'var(--color-surface-1)',
+                    '&:hover': { borderColor: '#4ade80', color: '#4ade80' },
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  <FaEye size={11} />
+                  {row.label}
+                </Box>
+              ))}
+            </Stack>
+          </Box>
+        )}
 
         <Box ref={scrollerRef} onWheel={handleTimelineWheel} sx={{ overflow: 'auto', maxHeight: { xs: 380, md: 620 } }}>
           <Box sx={{ width: timeline.canvasWidth + LABEL_W, minWidth: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -267,7 +358,7 @@ export default function PlanningCalendar({ userId }: { userId: string | null }) 
                 </Box>
               </Box>
 
-              {timeline.rows.map((row, i) => {
+              {visibleRows.map((row, i) => {
                 const y = i * ROW_H
                 return (
                   <Box
@@ -282,15 +373,32 @@ export default function PlanningCalendar({ userId }: { userId: string | null }) 
                       alignItems: 'center',
                       borderBottom: '1px solid var(--color-hairline)',
                       bgcolor: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)',
+                      '&:hover .row-hide-btn': { opacity: 1 },
                     }}
                   >
-                    <Box sx={{ width: LABEL_W, flexShrink: 0, px: 1.5, borderRight: '1px solid var(--color-hairline)', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', overflow: 'hidden' }}>
-                      <Typography sx={{ fontSize: 12, fontWeight: 600, color: 'var(--color-ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {row.label}
-                      </Typography>
-                      <Typography sx={{ fontSize: 10, color: 'var(--color-ink-tertiary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {row.sublabel}
-                      </Typography>
+                    <Box sx={{ width: LABEL_W, flexShrink: 0, px: 1.5, pr: 0.5, borderRight: '1px solid var(--color-hairline)', height: '100%', display: 'flex', alignItems: 'center', gap: 0.5, overflow: 'hidden' }}>
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography sx={{ fontSize: 12, fontWeight: 600, color: 'var(--color-ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {row.label}
+                        </Typography>
+                        <Typography sx={{ fontSize: 10, color: 'var(--color-ink-tertiary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {row.sublabel}
+                        </Typography>
+                      </Box>
+                      <Tooltip title={p.hideRow} placement="right" arrow>
+                        <Box
+                          className="row-hide-btn"
+                          onClick={() => setHiddenIds(prev => new Set([...prev, row.id]))}
+                          sx={{
+                            opacity: 0, flexShrink: 0, width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            borderRadius: 'var(--radius-xs)', cursor: 'pointer', color: 'var(--color-ink-tertiary)',
+                            '&:hover': { color: '#f87171', bgcolor: 'rgba(248,113,113,0.1)' },
+                            transition: 'opacity 0.15s, color 0.15s',
+                          }}
+                        >
+                          <FaEyeSlash size={11} />
+                        </Box>
+                      </Tooltip>
                     </Box>
 
                     <Box sx={{ width: timeline.canvasWidth, flexShrink: 0, position: 'relative', height: '100%', display: 'flex', alignItems: 'center' }}>
@@ -306,7 +414,7 @@ export default function PlanningCalendar({ userId }: { userId: string | null }) 
                 </Box>
               )}
 
-              {!loading && timeline.rows.length === 0 && (
+              {!loading && visibleRows.length === 0 && (
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 80 }}>
                   <Typography sx={{ fontSize: 13, color: 'var(--color-ink-tertiary)' }}>{t.tasks.noTasks}</Typography>
                 </Box>
