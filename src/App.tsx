@@ -15,6 +15,7 @@ import BarChartOutlinedIcon from '@mui/icons-material/BarChartOutlined'
 import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined'
 import StorageOutlinedIcon from '@mui/icons-material/StorageOutlined'
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined'
+import { Backlight } from '@/registry/magicui/backlight'
 import { supabase } from './lib/supabase'
 import { useLang } from './lib/i18n'
 import { isDemoMode, exitDemo } from './lib/demo'
@@ -253,7 +254,9 @@ function MobileShell({ profile, demoMode, onExitDemo }: { profile: Profile | nul
           <MenuIcon />
         </IconButton>
         <Box component={NavLink} to={defaultPath} sx={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0, ml: 0.5 }}>
-          <Box component="img" src="/wpt symbol-02-f.png" alt="WPT" sx={{ height: 26, width: 'auto', display: 'block' }} />
+          <Backlight blur={6} animationDuration={5000}>
+            <Box component="img" src="/wpt symbol-02-f.png" alt="WPT" sx={{ height: 26, width: 'auto', display: 'block' }} />
+          </Backlight>
         </Box>
         <Typography sx={{ flex: 1, fontSize: 12, color: 'var(--color-ink-subtle)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', ml: 0.5 }}>
           {profile?.full_name || profile?.email || (demoMode ? 'Demo' : '')}
@@ -285,7 +288,9 @@ function MobileShell({ profile, demoMode, onExitDemo }: { profile: Profile | nul
       >
         {/* Drawer header */}
         <Box sx={{ p: '16px 20px 12px', borderBottom: '1px solid var(--color-hairline)', display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <Box component="img" src="/wpt symbol-02.png" alt="WPT" sx={{ height: 28, width: 'auto' }} />
+          <Backlight blur={6} animationDuration={5000}>
+            <Box component="img" src="/wpt symbol-02.png" alt="WPT" sx={{ height: 28, width: 'auto' }} />
+          </Backlight>
           <Box>
             <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'var(--color-ink)' }}>
               {profile?.full_name || 'WPT Dashboard'}
@@ -381,7 +386,9 @@ function AppNav({ profile, demoMode, onExitDemo }: { profile: Profile | null; de
       }}
     >
       <Box component={NavLink} to={defaultPath} sx={{ display: 'flex', alignItems: 'center', mr: 4, flexShrink: 0, textDecoration: 'none' }}>
-        <Box component="img" src="/wpt symbol-02-f.png" alt="Waste Powertech" sx={{ height: 'clamp(28px, 2.5vw, 38px)', width: 'auto', display: 'block' }} />
+        <Backlight blur={8} animationDuration={5000}>
+          <Box component="img" src="/wpt symbol-02-f.png" alt="Waste Powertech" sx={{ height: 'clamp(28px, 2.5vw, 38px)', width: 'auto', display: 'block' }} />
+        </Backlight>
       </Box>
 
       <Stack direction="row" alignItems="center" gap={0.25} sx={{ flex: 1, overflow: 'hidden' }}>
@@ -478,28 +485,62 @@ function AppShellInner({ session, profile, demoMode, onExitDemo, onProfileUpdate
   const actualLocation = useLocation()
   const [displayLocation, setDisplayLocation] = useState(actualLocation)
   const [foldPhase, setFoldPhase] = useState<FoldPhase>('idle')
+  const [screenshot, setScreenshot] = useState<string | null>(null)
   const displayLocationRef = useRef(displayLocation)
   const foldPhaseRef = useRef(foldPhase)
+  const actualLocationRef = useRef(actualLocation)
   displayLocationRef.current = displayLocation
   foldPhaseRef.current = foldPhase
+  actualLocationRef.current = actualLocation
+
+  async function captureAndFold() {
+    try {
+      const { default: html2canvas } = await import('html2canvas')
+      const canvas = await html2canvas(document.documentElement, {
+        width: window.innerWidth,
+        height: window.innerHeight,
+        scrollX: -window.scrollX,
+        scrollY: -window.scrollY,
+        windowWidth: window.innerWidth,
+        windowHeight: window.innerHeight,
+        logging: false,
+        useCORS: true,
+        allowTaint: true,
+        scale: 1,
+      })
+      if (foldPhaseRef.current !== 'idle') return
+      setScreenshot(canvas.toDataURL('image/jpeg', 0.85))
+      setFoldPhase('cover')
+    } catch {
+      // html2canvas failed — navigate instantly without transition
+      setDisplayLocation(actualLocationRef.current)
+    }
+  }
 
   useEffect(() => {
-    if (
-      actualLocation.pathname !== displayLocationRef.current.pathname &&
-      foldPhaseRef.current === 'idle'
-    ) {
-      setFoldPhase('cover')
+    if (actualLocation.pathname === displayLocationRef.current.pathname) return
+    if (foldPhaseRef.current !== 'idle') return
+
+    const transitionsEnabled =
+      window.innerWidth >= 768 &&
+      localStorage.getItem('wpt-no-transitions') !== 'true'
+
+    if (transitionsEnabled) {
+      captureAndFold()
+    } else {
+      setDisplayLocation(actualLocation)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [actualLocation.pathname])
 
   function handleCoverDone() {
-    setDisplayLocation(actualLocation)
+    setDisplayLocation(actualLocationRef.current)
     setFoldPhase('reveal')
   }
 
   function handleRevealDone() {
     setFoldPhase('idle')
+    setScreenshot(null)
   }
 
   return (
@@ -553,7 +594,7 @@ function AppShellInner({ session, profile, demoMode, onExitDemo, onProfileUpdate
           )}
         </Box>
 
-        <FoldPanels phase={foldPhase} onCoverDone={handleCoverDone} onRevealDone={handleRevealDone} />
+        <FoldPanels phase={foldPhase} screenshot={screenshot} onCoverDone={handleCoverDone} onRevealDone={handleRevealDone} />
       </Stack>
   )
 }

@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { Box, CircularProgress, Stack } from '@mui/material'
+import { Box, CircularProgress, Stack, Switch } from '@mui/material'
 import { uploadAvatar, updateOwnProfile } from '../lib/api'
 import { useLang } from '../lib/i18n'
 import { ActionButton, AppField, Card, Eyebrow, PageTitle, Typography } from './Ui'
@@ -29,6 +29,15 @@ export default function ProfilePage({ profile, onUpdated }: Props) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
+  const [transitionsOn, setTransitionsOn] = useState(
+    () => localStorage.getItem('wpt-no-transitions') !== 'true'
+  )
+
+  function handleTransitionToggle() {
+    const next = !transitionsOn
+    setTransitionsOn(next)
+    localStorage.setItem('wpt-no-transitions', next ? 'false' : 'true')
+  }
 
   async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -148,6 +157,29 @@ export default function ProfilePage({ profile, onUpdated }: Props) {
               <Typography sx={{ fontSize: 12, color: '#4ade80' }}>Saved!</Typography>
             )}
           </Stack>
+        </Stack>
+      </Card>
+      <Card>
+        <Eyebrow sx={{ mb: 3 }}>Appearance</Eyebrow>
+        <Stack direction="row" alignItems="center" justifyContent="space-between" gap={2}>
+          <Box>
+            <Typography sx={{ fontSize: 13, fontWeight: 500, color: 'var(--color-ink)' }}>
+              Page Transitions
+            </Typography>
+            <Typography sx={{ fontSize: 12, color: 'var(--color-ink-subtle)', mt: 0.25 }}>
+              Origami fold animation when navigating between pages (desktop only)
+            </Typography>
+          </Box>
+          <Switch
+            checked={transitionsOn}
+            onChange={handleTransitionToggle}
+            size="small"
+            sx={{
+              flexShrink: 0,
+              '& .MuiSwitch-switchBase.Mui-checked': { color: '#818cf8' },
+              '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: '#4f46e5' },
+            }}
+          />
         </Stack>
       </Card>
     </Stack>

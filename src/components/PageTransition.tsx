@@ -4,26 +4,59 @@ import type { CSSProperties } from 'react'
 
 export type FoldPhase = 'idle' | 'cover' | 'reveal'
 
-// Duration per panel in seconds
-const D = 0.22
+const D  = 0.2   // per-panel animation duration (s)
+const DS = 0.07  // stagger between panels (s)
 
 const PANELS = [
-  { id: 0, clip: 'inset(0 50% 50% 0)',  origin: '100% 50%', ry: -90, delay: 0.00, shine: 'to right'  },
-  { id: 1, clip: 'inset(0 0 50% 50%)',  origin: '0% 50%',   ry:  90, delay: 0.04, shine: 'to left'   },
-  { id: 2, clip: 'inset(50% 50% 0 0)',  origin: '100% 50%', ry: -90, delay: 0.04, shine: 'to right'  },
-  { id: 3, clip: 'inset(50% 0 0 50%)',  origin: '0% 50%',   ry:  90, delay: 0.00, shine: 'to left'   },
+  {
+    id: 0,
+    clip:   'inset(0 50% 50% 0)',   // TL
+    origin: '100% 50%',              // pivot = right edge → folds right
+    rotKey: 'rotateY' as const,
+    rotVal: -90,
+    closeDelay: DS * 0,
+    openDelay:  DS * 3,              // opens last → fires onRevealDone
+  },
+  {
+    id: 1,
+    clip:   'inset(0 0 50% 50%)',    // TR
+    origin: '50% 100%',              // pivot = bottom edge → folds down
+    rotKey: 'rotateX' as const,
+    rotVal: 90,
+    closeDelay: DS * 1,
+    openDelay:  DS * 2,
+  },
+  {
+    id: 2,
+    clip:   'inset(50% 0 0 50%)',    // BR
+    origin: '0% 50%',               // pivot = left edge → folds left
+    rotKey: 'rotateY' as const,
+    rotVal: 90,
+    closeDelay: DS * 2,
+    openDelay:  DS * 1,
+  },
+  {
+    id: 3,
+    clip:   'inset(50% 50% 0 0)',    // BL
+    origin: '50% 0%',               // pivot = top edge → folds up
+    rotKey: 'rotateX' as const,
+    rotVal: -90,
+    closeDelay: DS * 3,              // closes last → fires onCoverDone
+    openDelay:  DS * 0,              // opens first ("toward the top")
+  },
 ]
 
-// Panel 1 finishes last (delay 0.04) — drives the done callback
-const LAST_PANEL_ID = 1
+// Fallback colors when no screenshot is available
+const FALLBACK = ['#1a1b1e', '#16171a', '#1c1d20', '#18191c']
 
 interface FoldPanelsProps {
   phase: FoldPhase
+  screenshot: string | null
   onCoverDone: () => void
   onRevealDone: () => void
 }
 
-export function FoldPanels({ phase, onCoverDone, onRevealDone }: FoldPanelsProps) {
+export function FoldPanels({ phase, screenshot, onCoverDone, onRevealDone }: FoldPanelsProps) {
   const phaseRef = useRef(phase)
   phaseRef.current = phase
 
@@ -31,14 +64,41 @@ export function FoldPanels({ phase, onCoverDone, onRevealDone }: FoldPanelsProps
 
   const covering = phase === 'cover'
 
-  function handleLastComplete() {
-    if (phaseRef.current === 'cover') onCoverDone()
-    else if (phaseRef.current === 'reveal') onRevealDone()
+  function makeCallback(id: number) {
+    return () => {
+      if (id === 3 && phaseRef.current === 'cover') onCoverDone()
+      else if (id === 0 && phaseRef.current === 'reveal') onRevealDone()
+    }
   }
+
+  const panelBg = (idx: number): CSSProperties =>
+    screenshot
+      ? {
+          backgroundImage: `url(${screenshot})`,
+          backgroundSize: '100vw 100vh',
+          backgroundPosition: '0 0',
+          backgroundRepeat: 'no-repeat',
+        }
+      : { background: FALLBACK[idx] }
 
   return (
     <>
-      {PANELS.map(p => (
+      {/* Blur overlay — fades in when all panels are fully closed, fades out on reveal */}
+      <motion.div
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 9997,
+          pointerEvents: 'none',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+        } as CSSProperties}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: covering ? 1 : 0 }}
+        transition={{ duration: 0.1, delay: covering ? D + DS * 3 - 0.08 : 0 }}
+      />
+
+      {PANELS.map((p, i) => (
         <div
           key={p.id}
           style={{
@@ -47,39 +107,21 @@ export function FoldPanels({ phase, onCoverDone, onRevealDone }: FoldPanelsProps
             clipPath: p.clip,
             zIndex: 9999,
             pointerEvents: 'none',
-            perspective: '1200px',
+            perspective: '600px',
           } as CSSProperties}
         >
           <motion.div
             style={{
               position: 'absolute',
               inset: 0,
-              background: 'var(--color-surface-2, #141516)',
               transformOrigin: p.origin,
+              ...panelBg(i),
             } as CSSProperties}
-            initial={{ rotateY: covering ? p.ry : 0 }}
-            animate={{ rotateY: covering ? 0 : p.ry }}
-            transition={{ duration: D, ease: [0.4, 0, 0.2, 1], delay: p.delay }}
-            onAnimationComplete={p.id === LAST_PANEL_ID ? handleLastComplete : undefined}
-          >
-            {/* Fold-edge light catch — simulates paper crease */}
-            <div style={{
-              position: 'absolute',
-              inset: 0,
-              background: `linear-gradient(${p.shine}, rgba(255,255,255,0.05) 0%, transparent 35%)`,
-              pointerEvents: 'none',
-            } as CSSProperties} />
-            {/* Center-edge accent line */}
-            <div style={{
-              position: 'absolute',
-              top: 0,
-              bottom: 0,
-              [p.ry < 0 ? 'right' : 'left']: 0,
-              width: 1,
-              background: 'rgba(94, 106, 210, 0.5)',
-              pointerEvents: 'none',
-            } as CSSProperties} />
-          </motion.div>
+            initial={{ [p.rotKey]: p.rotVal }}
+            animate={{ [p.rotKey]: covering ? 0 : p.rotVal }}
+            transition={{ duration: D, ease: [0.4, 0, 0.2, 1], delay: covering ? p.closeDelay : p.openDelay }}
+            onAnimationComplete={p.id === 3 || p.id === 0 ? makeCallback(p.id) : undefined}
+          />
         </div>
       ))}
     </>
