@@ -41,6 +41,8 @@ import ActiveTasksPanel from './components/ActiveTasksPanel'
 import { LanguageFlag } from './components/Ui'
 import NotificationBell from './components/NotificationBell'
 import DotField from './components/ui/DotField'
+import { FoldPanels } from './components/PageTransition'
+import type { FoldPhase } from './components/PageTransition'
 
 interface Profile {
   id: string
@@ -471,12 +473,37 @@ function AnyPermGuard({ perms, children }: { perms: Parameters<ReturnType<typeof
 }
 
 
-function AppShell({ session, profile, demoMode, onExitDemo, onProfileUpdated }: { session: Session | null; profile: Profile | null; demoMode: boolean; onExitDemo: () => void; onProfileUpdated: () => void }) {
+function AppShellInner({ session, profile, demoMode, onExitDemo, onProfileUpdated }: { session: Session | null; profile: Profile | null; demoMode: boolean; onExitDemo: () => void; onProfileUpdated: () => void }) {
   const canViewTasks = !demoMode && !!profile?.id
+  const actualLocation = useLocation()
+  const [displayLocation, setDisplayLocation] = useState(actualLocation)
+  const [foldPhase, setFoldPhase] = useState<FoldPhase>('idle')
+  const displayLocationRef = useRef(displayLocation)
+  const foldPhaseRef = useRef(foldPhase)
+  displayLocationRef.current = displayLocation
+  foldPhaseRef.current = foldPhase
+
+  useEffect(() => {
+    if (
+      actualLocation.pathname !== displayLocationRef.current.pathname &&
+      foldPhaseRef.current === 'idle'
+    ) {
+      setFoldPhase('cover')
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [actualLocation.pathname])
+
+  function handleCoverDone() {
+    setDisplayLocation(actualLocation)
+    setFoldPhase('reveal')
+  }
+
+  function handleRevealDone() {
+    setFoldPhase('idle')
+  }
 
   return (
-    <PermissionsProvider role={profile?.role ?? null} userId={profile?.id ?? null} demoMode={demoMode}>
-      <Stack sx={{ minHeight: '100vh', bgcolor: 'var(--color-canvas)', position: 'relative' }}>
+    <Stack sx={{ minHeight: '100vh', bgcolor: 'var(--color-canvas)', position: 'relative' }}>
         <DotField
           dotRadius={2.5}
           dotSpacing={18}
@@ -500,7 +527,7 @@ function AppShell({ session, profile, demoMode, onExitDemo, onProfileUpdated }: 
 
           <Box component="main" sx={{ flex: 1, p: { xs: '16px 12px 32px', md: '20px 20px 40px', lg: '24px 24px 48px' }, maxWidth: 1400, width: '100%', mx: 'auto' }}>
             <Suspense fallback={null}>
-            <Routes>
+            <Routes location={displayLocation}>
               <Route path="/" element={<RootRedirect />} />
               <Route path="/dashboard" element={<PermGuard perm="view_dashboard"><Dashboard userId={profile?.id} /></PermGuard>} />
               <Route path="/projects" element={<PermGuard perm="view_projects"><Projects /></PermGuard>} />
@@ -525,7 +552,16 @@ function AppShell({ session, profile, demoMode, onExitDemo, onProfileUpdated }: 
             <ActiveTasksPanel userId={profile!.id} />
           )}
         </Box>
+
+        <FoldPanels phase={foldPhase} onCoverDone={handleCoverDone} onRevealDone={handleRevealDone} />
       </Stack>
+  )
+}
+
+function AppShell({ session, profile, demoMode, onExitDemo, onProfileUpdated }: { session: Session | null; profile: Profile | null; demoMode: boolean; onExitDemo: () => void; onProfileUpdated: () => void }) {
+  return (
+    <PermissionsProvider role={profile?.role ?? null} userId={profile?.id ?? null} demoMode={demoMode}>
+      <AppShellInner session={session} profile={profile} demoMode={demoMode} onExitDemo={onExitDemo} onProfileUpdated={onProfileUpdated} />
     </PermissionsProvider>
   )
 }
