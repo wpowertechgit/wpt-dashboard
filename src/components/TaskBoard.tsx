@@ -71,6 +71,7 @@ function TaskDetail({ task, users, userId, onClose, onUpdated }: TaskDetailProps
   const [postingComment, setPostingComment] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [avatarOpen, setAvatarOpen] = useState(false)
 
   const loadComments = useCallback(async () => {
     setLoadingComments(true)
@@ -100,8 +101,10 @@ function TaskDetail({ task, users, userId, onClose, onUpdated }: TaskDetailProps
     setPostingComment(false)
   }
 
-  const assigneeName = users.find(u => u.id === task.assigned_to)?.label ?? tk.unassigned
+  const assigneeUser = users.find(u => u.id === task.assigned_to)
+  const assigneeName = assigneeUser?.label ?? tk.unassigned
   const creatorName  = users.find(u => u.id === task.created_by)?.label ?? '—'
+  const assigneeAvatar = assigneeUser?.avatar_url || '/user.png'
 
   return (
     <Dialog open onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ sx: { bgcolor: 'var(--color-surface-1)', backgroundImage: 'none', border: '1px solid var(--color-hairline)', m: { xs: 1, sm: 2 } } }}>
@@ -125,14 +128,40 @@ function TaskDetail({ task, users, userId, onClose, onUpdated }: TaskDetailProps
           )}
           <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
             <Box>
-              <Typography sx={{ fontSize: 10, color: 'var(--color-ink-tertiary)', fontWeight: 600, letterSpacing: 0.5, textTransform: 'uppercase', mb: 0.25 }}>{tk.colAssignee}</Typography>
-              <Typography sx={{ fontSize: 13, color: 'var(--color-ink-muted)' }}>{assigneeName}</Typography>
+              <Typography sx={{ fontSize: 10, color: 'var(--color-ink-tertiary)', fontWeight: 600, letterSpacing: 0.5, textTransform: 'uppercase', mb: 0.5 }}>{tk.colAssignee}</Typography>
+              {task.assigned_to ? (
+                <Stack direction="row" alignItems="center" gap={1}>
+                  <Box
+                    component="img"
+                    src={assigneeAvatar}
+                    alt={assigneeName}
+                    onError={(e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.src = '/user.png' }}
+                    onClick={() => setAvatarOpen(true)}
+                    sx={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--color-hairline)', cursor: 'zoom-in', flexShrink: 0, transition: 'opacity 0.15s', '&:hover': { opacity: 0.8 } }}
+                  />
+                  <Typography sx={{ fontSize: 13, color: 'var(--color-ink-muted)' }}>{assigneeName}</Typography>
+                </Stack>
+              ) : (
+                <Typography sx={{ fontSize: 13, color: 'var(--color-ink-muted)' }}>{tk.unassigned}</Typography>
+              )}
             </Box>
             <Box>
               <Typography sx={{ fontSize: 10, color: 'var(--color-ink-tertiary)', fontWeight: 600, letterSpacing: 0.5, textTransform: 'uppercase', mb: 0.25 }}>{tk.colCreatedBy}</Typography>
               <Typography sx={{ fontSize: 13, color: 'var(--color-ink-muted)' }}>{creatorName}</Typography>
             </Box>
           </Box>
+
+          {/* Avatar lightbox */}
+          <Dialog open={avatarOpen} onClose={() => setAvatarOpen(false)} PaperProps={{ sx: { bgcolor: 'transparent', boxShadow: 'none', m: 2 } }}>
+            <Box
+              component="img"
+              src={assigneeAvatar}
+              alt={assigneeName}
+              onError={(e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.src = '/user.png' }}
+              onClick={() => setAvatarOpen(false)}
+              sx={{ width: 220, height: 220, borderRadius: '50%', objectFit: 'cover', border: '3px solid var(--color-hairline)', cursor: 'zoom-out', display: 'block' }}
+            />
+          </Dialog>
           {(canManage || isOwner) && (
             <AppSelect label={tk.status} value={status} onChange={e => changeStatus(e.target.value as TaskStatus)}
               options={[{ value: 'TODO', label: tk.statusTodo }, { value: 'IN_PROGRESS', label: tk.statusInProgress }, { value: 'DONE', label: tk.statusDone }]} />
