@@ -272,7 +272,7 @@ export async function uploadAvatar(userId: string, file: File): Promise<string> 
   return data.publicUrl
 }
 
-export async function updateOwnProfile(userId: string, fields: { full_name?: string; departament?: string; avatar_url?: string }) {
+export async function updateOwnProfile(userId: string, fields: { full_name?: string; departament?: string; avatar_url?: string | null }) {
   if (isDemoMode()) return
   const { error } = await supabase.from('profiles').update(fields).eq('id', userId)
   if (error) throw error

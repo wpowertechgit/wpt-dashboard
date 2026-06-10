@@ -50,7 +50,13 @@ export default function ProfilePage({ profile, onUpdated }: Props) {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed')
     }
+    e.target.value = ''
     setUploading(false)
+  }
+
+  function handleRemoveAvatar() {
+    setAvatarUrl(null)
+    if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
   async function handleSave() {
@@ -61,7 +67,7 @@ export default function ProfilePage({ profile, onUpdated }: Props) {
       await updateOwnProfile(profile.id, {
         full_name: fullName.trim() || undefined,
         departament: departament.trim() || undefined,
-        ...(avatarUrl !== profile.avatar_url ? { avatar_url: avatarUrl ?? undefined } : {}),
+        ...(avatarUrl !== profile.avatar_url ? { avatar_url: avatarUrl } : {}),
       })
       setSaved(true)
       onUpdated()
@@ -115,6 +121,16 @@ export default function ProfilePage({ profile, onUpdated }: Props) {
             >
               {uploading ? 'Uploading…' : 'Upload Photo'}
             </ActionButton>
+            {avatarUrl && (
+              <ActionButton
+                variant="outlined"
+                onClick={handleRemoveAvatar}
+                disabled={uploading}
+                sx={{ fontSize: 13, color: 'var(--color-danger, #f87171)', borderColor: 'var(--color-danger, #f87171)', '&:hover': { bgcolor: 'rgba(248,113,113,0.08)' } }}
+              >
+                Remove Photo
+              </ActionButton>
+            )}
             <Typography sx={{ fontSize: 11, color: 'var(--color-ink-tertiary)' }}>
               JPG, PNG or WebP · max 5 MB
             </Typography>
