@@ -99,12 +99,22 @@ const DotField = memo(({
         const dpr = Math.min(window.devicePixelRatio || 1, 2);
         let resizeTimer: ReturnType<typeof setTimeout>;
 
+        function getResolutionScale(): number {
+            const physW = window.screen.width * window.devicePixelRatio;
+            if (physW >= 3840) return 2.0;
+            if (physW >= 2560) return 1.4;
+            return 1.0;
+        }
+
+        const scaleRef = { current: getResolutionScale() };
+
         function resize() {
             clearTimeout(resizeTimer);
             resizeTimer = setTimeout(doResize, 100);
         }
 
         function doResize() {
+            scaleRef.current = getResolutionScale();
             const rect = canvas!.parentElement!.getBoundingClientRect();
             const w = rect.width;
             const h = rect.height;
@@ -127,7 +137,8 @@ const DotField = memo(({
 
         function buildDots(w: number, h: number) {
             const p = propsRef.current;
-            const step = (p.dotRadius as number) + (p.dotSpacing as number);
+            const s = scaleRef.current;
+            const step = ((p.dotRadius as number) + (p.dotSpacing as number)) * s;
             const cols = Math.floor(w / step);
             const rows = Math.floor(h / step);
             const padX = (w % step) / 2;
@@ -197,7 +208,7 @@ const DotField = memo(({
 
             const cr = p.cursorRadius as number;
             const crSq = cr * cr;
-            const rad = (p.dotRadius as number) / 2;
+            const rad = ((p.dotRadius as number) / 2) * scaleRef.current;
             const isBulge = p.bulgeOnly as boolean;
 
             ctx!.beginPath();
