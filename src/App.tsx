@@ -496,7 +496,12 @@ function AppShellInner({ session, profile, demoMode, onExitDemo, onProfileUpdate
   async function captureAndFold() {
     try {
       const { default: html2canvas } = await import('html2canvas')
-      const canvas = await html2canvas(document.documentElement, {
+
+      // Race capture against a 150 ms deadline.
+      // scale: 0.15 → ~45× fewer pixels; stretched back to full size it looks
+      // naturally blurry — quality loss is invisible behind the fold animation.
+      const timeout = new Promise<null>(r => setTimeout(() => r(null), 600))
+      const capture = html2canvas(document.documentElement, {
         width: window.innerWidth,
         height: window.innerHeight,
         scrollX: -window.scrollX,
@@ -506,13 +511,15 @@ function AppShellInner({ session, profile, demoMode, onExitDemo, onProfileUpdate
         logging: false,
         useCORS: true,
         allowTaint: true,
-        scale: 1,
+        imageTimeout: 0,
+        scale: 0.15,
       })
+
       if (foldPhaseRef.current !== 'idle') return
-      setScreenshot(canvas.toDataURL('image/jpeg', 0.85))
+      const result = await Promise.race([capture, timeout])
+      setScreenshot(result ? result.toDataURL('image/jpeg', 0.5) : null)
       setFoldPhase('cover')
     } catch {
-      // html2canvas failed — navigate instantly without transition
       setDisplayLocation(actualLocationRef.current)
     }
   }
@@ -521,9 +528,7 @@ function AppShellInner({ session, profile, demoMode, onExitDemo, onProfileUpdate
     if (actualLocation.pathname === displayLocationRef.current.pathname) return
     if (foldPhaseRef.current !== 'idle') return
 
-    const transitionsEnabled =
-      window.innerWidth >= 768 &&
-      localStorage.getItem('wpt-no-transitions') !== 'true'
+    const transitionsEnabled = false
 
     if (transitionsEnabled) {
       captureAndFold()
