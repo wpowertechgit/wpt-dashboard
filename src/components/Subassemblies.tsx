@@ -11,7 +11,7 @@ import { ActionButton, AppField, AppSelect, Badge, Box, Card, DataTable, PageTit
 import { Confetti } from './ui/Confetti'
 import type { ConfettiRef } from './ui/Confetti'
 
-type FilterStatus = 'ALL' | 'FINALIZAT' | 'IN LUCRU' | 'BLOCAT'
+type FilterStatus = 'ALL' | 'completed' | 'inProgress' | 'blocked'
 
 // DB column key → display label (ROLAT shows as VIROLAT)
 const DEPT_COLS = ['proiectare', 'laser', 'rolat', 'sudat', 'asamblat', 'vopsit'] as const
@@ -31,10 +31,14 @@ function statusChip(s: string) {
   return <Badge>{s || 'Neînceput'}</Badge>
 }
 
-function globalChip(s: string) {
-  if (s.includes('FINALIZAT')) return <Badge tone="success">✅ Finalizat</Badge>
-  if (s.includes('BLOCAT')) return <Badge tone="error">⛔ Blocat</Badge>
-  if (s.includes('IN LUCRU')) return <Badge tone="info">🔄 În Lucru</Badge>
+type SubT = { statusNotStarted: string; statusInProgress: string; statusToVerify: string; statusCompleted: string; statusBlocked: string }
+
+function globalChip(s: string, t: SubT) {
+  if (s === 'completed') return <Badge tone="success">✅ {t.statusCompleted}</Badge>
+  if (s === 'blocked') return <Badge tone="error">⛔ {t.statusBlocked}</Badge>
+  if (s === 'inProgress') return <Badge tone="info">🔄 {t.statusInProgress}</Badge>
+  if (s === 'notStarted') return <Badge tone="default">⏳ {t.statusNotStarted}</Badge>
+  if (s === 'toVerify') return <Badge tone="warning">🔍 {t.statusToVerify}</Badge>
   return <Badge>{s}</Badge>
 }
 
@@ -117,9 +121,15 @@ function EditFormContent({ saId: _saId, saLabel, initialValues, onSave, onReset,
         <AppSelect label="Status Global" value={normalizeGlobalStatus(String(form.status_global ?? ''))}
           onChange={e => {
             const val = e.target.value
-            setForm(r => ({ ...r, status_global: val, blocat: val.includes('BLOCAT') ? true : val.includes('FINALIZAT') ? false : r.blocat }))
+            setForm(r => ({ ...r, status_global: val, blocat: val === 'blocked' ? true : val === 'completed' ? false : r.blocat }))
           }}
-          options={['✅ FINALIZAT', '🔄 IN LUCRU', '⛔ BLOCAT']} />
+          options={[
+            { value: 'notStarted', label: `⏳ ${t.subansambluri.statusNotStarted}` },
+            { value: 'inProgress', label: `🔄 ${t.subansambluri.statusInProgress}` },
+            { value: 'toVerify',   label: `🔍 ${t.subansambluri.statusToVerify}` },
+            { value: 'completed',  label: `✅ ${t.subansambluri.statusCompleted}` },
+            { value: 'blocked',    label: `⛔ ${t.subansambluri.statusBlocked}` },
+          ]} />
         <Box>
           <AppField label="Progres %" value={String(form.progres ?? '').replace('%', '')}
             onChange={e => set('progres', e.target.value ? `${e.target.value}%` : '0%')} />
@@ -188,7 +198,7 @@ export default function Subansambluri() {
   const { data, loading, error, refetch } = useQuery(fetchSubansambluri)
 
   function isBlocat(sa: { blocat: boolean; status_global: string }) {
-    return sa.blocat || sa.status_global?.includes('BLOCAT')
+    return sa.blocat || sa.status_global === 'blocked'
   }
 
   const projects = useMemo(
@@ -198,9 +208,9 @@ export default function Subansambluri() {
 
   const filtered = useMemo(() => (data ?? []).filter(sa => {
     if (filterProiect !== 'ALL' && sa.proiect !== filterProiect) return false
-    if (filterStatus === 'FINALIZAT' && !sa.status_global.includes('FINALIZAT')) return false
-    if (filterStatus === 'IN LUCRU' && !sa.status_global.includes('IN LUCRU')) return false
-    if (filterStatus === 'BLOCAT' && !isBlocat(sa)) return false
+    if (filterStatus === 'completed' && sa.status_global !== 'completed') return false
+    if (filterStatus === 'inProgress' && sa.status_global !== 'inProgress') return false
+    if (filterStatus === 'blocked' && !isBlocat(sa)) return false
     if (search && !sa.nume.toLowerCase().includes(search.toLowerCase())) return false
     return true
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -212,10 +222,10 @@ export default function Subansambluri() {
     setSaveError(null)
     try {
       const original = data?.find(s => s.id === editId)
-      const becomingBlocked = String(formValues.status_global).includes('BLOCAT') && !original?.blocat
+      const becomingBlocked = String(formValues.status_global) === 'blocked' && !original?.blocat
 
       const rowToSave = { ...formValues }
-      if (String(rowToSave.status_global).includes('FINALIZAT')) {
+      if (String(rowToSave.status_global) === 'completed') {
         const today = new Date().toISOString().slice(0, 10)
         rowToSave.progres = '100%'
         rowToSave.blocat = false
@@ -259,7 +269,7 @@ export default function Subansambluri() {
     try {
       const original = data?.find(s => s.id === id)
       const resetData: Record<string, unknown> = {
-        status_global: '🔄 IN LUCRU',
+        status_global: 'inProgress',
         progres: '0%',
         blocat: false,
         data_done: null,
@@ -289,7 +299,7 @@ export default function Subansambluri() {
         deptUpdate[`${col}_done`] = (sa[`${col}_done`] as string) || today
       }
       await updateSubansamblu(sa.id as number, {
-        status_global: '✅ FINALIZAT',
+        status_global: 'completed',
         progres: '100%',
         blocat: false,
         data_done: today,
@@ -338,9 +348,9 @@ export default function Subansambluri() {
           )}
           {pills([
             { value: 'ALL', label: s.filterAll },
-            { value: 'FINALIZAT', label: s.filterDone },
-            { value: 'IN LUCRU', label: s.filterInProgress },
-            { value: 'BLOCAT', label: s.filterBlocked },
+            { value: 'completed', label: s.filterDone },
+            { value: 'inProgress', label: s.filterInProgress },
+            { value: 'blocked', label: s.filterBlocked },
           ], filterStatus, v => setFilterStatus(v as FilterStatus))}
         </Stack>
       </Stack>
@@ -376,7 +386,7 @@ export default function Subansambluri() {
                     <Typography variant="body2" sx={{ fontWeight: 500, fontSize: 13 }}>{sa.nume}</Typography>
                     {sa.conditionat_de && <Typography variant="body2" sx={{ fontSize: 11, color: 'var(--color-primary)', mt: 0.25 }}>🔵 {sa.conditionat_de}</Typography>}
                   </TableCell>
-                  <TableCell>{globalChip(sa.status_global)}</TableCell>
+                  <TableCell>{globalChip(sa.status_global, t.subansambluri)}</TableCell>
                   <TableCell sx={{ minWidth: 90 }}>
                     <Stack direction="row" alignItems="center" gap={0.75}>
                       <Box className="progress-bar" sx={{ width: 50 }}>
@@ -400,7 +410,7 @@ export default function Subansambluri() {
                         <ActionButton variant="outlined" onClick={() => startEdit(sa as Record<string, unknown>)} sx={{ px: 1, py: 0.375, fontSize: 11 }}>
                           {t.common.edit}
                         </ActionButton>
-                        {!sa.status_global.includes('FINALIZAT') && (
+                        {sa.status_global !== 'completed' && (
                           <ActionButton onClick={() => finalizeRow(sa as Record<string, unknown>)} disabled={finalizing === sa.id}
                             sx={{ px: 1, py: 0.375, fontSize: 11, bgcolor: 'rgba(39,166,68,0.1)', color: '#4ade80', border: '1px solid rgba(39,166,68,0.2)', '&:hover': { bgcolor: 'rgba(39,166,68,0.2)' } }}>
                             {finalizing === sa.id ? '...' : '✅'}
@@ -427,7 +437,7 @@ export default function Subansambluri() {
               <EditFormContent saId={sa.id} saLabel={`${sa.proiect} #${sa.nr} · ${sa.nume}`} initialValues={buildInitialValues(sa as Record<string, unknown>)} onSave={saveEdit} onReset={() => resetRow(sa.id)} onCancel={() => { setEditId(null); setSaveError(null) }} saving={saving} saveError={saveError} />
             </Card>
           ) : (
-            <Card key={sa.id} sx={{ borderLeft: `3px solid ${isBlocat(sa) ? '#f87171' : sa.status_global?.includes('FINALIZAT') ? '#4ade80' : 'var(--color-hairline)'}` }}>
+            <Card key={sa.id} sx={{ borderLeft: `3px solid ${isBlocat(sa) ? '#f87171' : sa.status_global === 'completed' ? '#4ade80' : 'var(--color-hairline)'}` }}>
               <Stack gap={1.5}>
                 {/* Header row */}
                 <Stack direction="row" justifyContent="space-between" alignItems="flex-start" gap={1}>
@@ -438,7 +448,7 @@ export default function Subansambluri() {
                     <Typography sx={{ fontWeight: 600, fontSize: 15, color: 'var(--color-ink)', mt: 0.25, lineHeight: 1.3 }}>{sa.nume}</Typography>
                     {sa.conditionat_de && <Typography sx={{ fontSize: 11, color: 'var(--color-primary)', mt: 0.25 }}>🔵 {sa.conditionat_de}</Typography>}
                   </Box>
-                  {globalChip(sa.status_global)}
+                  {globalChip(sa.status_global, t.subansambluri)}
                 </Stack>
 
                 {/* Progress */}
@@ -491,7 +501,7 @@ export default function Subansambluri() {
                     <ActionButton variant="outlined" onClick={() => startEdit(sa as Record<string, unknown>)} sx={{ flex: 1, fontSize: 12, py: 0.75 }}>
                       ✏ {t.common.edit}
                     </ActionButton>
-                    {!sa.status_global.includes('FINALIZAT') && (
+                    {sa.status_global !== 'completed' && (
                       <ActionButton onClick={() => finalizeRow(sa as Record<string, unknown>)} disabled={finalizing === sa.id}
                         sx={{ flex: 1, fontSize: 12, py: 0.75, bgcolor: 'rgba(39,166,68,0.1)', color: '#4ade80', border: '1px solid rgba(39,166,68,0.2)', '&:hover': { bgcolor: 'rgba(39,166,68,0.2)' } }}>
                         {finalizing === sa.id ? '...' : '✅ Finalizat'}

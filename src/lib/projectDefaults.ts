@@ -44,7 +44,7 @@ export function buildDefaultSubassemblies(projectId: string) {
       proiect: projectId,
       nr: index + 1,
       nume,
-      status_global: 'Neinceput',
+      status_global: 'notStarted',
       progres: '0%',
       blocat: false,
       intarziat: false,

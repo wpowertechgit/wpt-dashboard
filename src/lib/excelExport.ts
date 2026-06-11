@@ -94,8 +94,8 @@ function setCell(ws: ExcelJS.Worksheet, addr: string, value: string, opts: Parti
 
 function statusColor(s: string): { fg: string; bg: string } {
   const v = (s ?? '').toUpperCase()
-  if (['LIVRAT', 'REZOLVAT', 'FINALIZAT', '✅ FINALIZAT'].some(x => v.includes(x))) return { fg: C.green, bg: C.greenBg }
-  if (['BLOCAJ', 'BLOCAT', 'DESCHIS', '⛔'].some(x => v.includes(x))) return { fg: C.red, bg: C.redBg }
+  if (['LIVRAT', 'REZOLVAT', 'FINALIZAT', 'COMPLETED'].some(x => v.includes(x))) return { fg: C.green, bg: C.greenBg }
+  if (['BLOCAJ', 'BLOCAT', 'BLOCKED', 'DESCHIS'].some(x => v.includes(x))) return { fg: C.red, bg: C.redBg }
   return { fg: C.amber, bg: C.amberBg }
 }
 
@@ -194,7 +194,7 @@ async function addOverviewSheet(
   statusCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: sc.bg } }
 
   // Section: Production summary
-  const finalized = saList.filter(s => (s.progres ?? '').includes('100') || s.status_global?.includes('FINALIZAT')).length
+  const finalized = saList.filter(s => (s.progres ?? '').includes('100') || s.status_global === 'completed').length
   const blocked = saList.filter(s => s.blocat).length
   const delayed = saList.filter(s => s.intarziat).length
   const inProgress = saList.length - finalized - blocked
@@ -276,7 +276,7 @@ async function addSubansambuluriSheet(wb: ExcelJS.Workbook, ws: ExcelJS.Workshee
   const intarziatCol = showProject ? 7 : 6
 
   saList.forEach((sa, i) => {
-    const isFinalized = sa.status_global?.includes('FINALIZAT')
+    const isFinalized = sa.status_global === 'completed'
     const deptCols = ['proiectare', 'laser', 'rolat', 'sudat', 'asamblat', 'vopsit'] as const
     const deptValues = deptCols.map(d => isFinalized && sa[d] !== 'N/A' ? 'Finalizat' : sa[d])
     const progres = isFinalized ? '100%' : sa.progres
@@ -546,10 +546,10 @@ export async function buildPerProjectExcel(
 
 function statusToColor(status: string): string {
   const u = (status ?? '').toUpperCase()
-  if (u.includes('FINALIZAT') || u.includes('LIVRAT')) return '#1B5E20'
-  if (u.includes('BLOCAJ') || u.includes('BLOCAT')) return '#B71C1C'
-  if (u.includes('LUCRU') || u.includes('PROGRESS') || u.includes('ACTIV')) return '#1565C0'
-  return '#78909C' // grey for not started / unknown
+  if (u.includes('FINALIZAT') || u.includes('LIVRAT') || u.includes('COMPLETED')) return '#1B5E20'
+  if (u.includes('BLOCAJ') || u.includes('BLOCAT') || u.includes('BLOCKED')) return '#B71C1C'
+  if (u.includes('LUCRU') || u.includes('INPROGRESS') || u.includes('ACTIV')) return '#1565C0'
+  return '#78909C'
 }
 
 export async function buildBatchExcel(
@@ -584,7 +584,7 @@ export async function buildBatchExcel(
 
   projects.forEach((p, i) => {
     const projSa = allSa.filter(s => s.proiect === p.id)
-    const finalized = projSa.filter(s => (s.progres ?? '').includes('100') || s.status_global?.includes('FINALIZAT')).length
+    const finalized = projSa.filter(s => (s.progres ?? '').includes('100') || s.status_global === 'completed').length
     const row = wsProj.addRow([
       p.id, p.client, p.responsabil ?? '-',
       fmtDate(p.data_start), fmtDate(p.data_target), fmtDate(p.data_done),
@@ -654,7 +654,7 @@ export async function buildBatchExcel(
     dh.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFFFF' } }
 
     const sc = statusColor(proj.status)
-    const projFinalized = projSa.filter(s => (s.progres ?? '').includes('100') || s.status_global?.includes('FINALIZAT')).length
+    const projFinalized = projSa.filter(s => (s.progres ?? '').includes('100') || s.status_global === 'completed').length
     const dr = ws.addRow([
       '', proj.id, proj.client, proj.responsabil ?? '-',
       fmtDate(proj.data_start), fmtDate(proj.data_target), fmtDate(proj.data_done),
@@ -787,7 +787,7 @@ export function exportBatchCSV(projects: Proiect[], allSa: Subansamblu[]): void 
       'SA Total', 'SA Finalizate', 'Buget Ore', 'Prioritate', 'Status', 'Blocaje Active'],
     projects.map(p => {
       const projSa = allSa.filter(s => s.proiect === p.id)
-      const finalized = projSa.filter(s => (s.progres ?? '').includes('100') || s.status_global?.includes('FINALIZAT')).length
+      const finalized = projSa.filter(s => (s.progres ?? '').includes('100') || s.status_global === 'completed').length
       return [
         p.id, p.client, p.responsabil ?? '',
         p.data_start ?? '', p.data_target ?? '', p.data_done ?? '',

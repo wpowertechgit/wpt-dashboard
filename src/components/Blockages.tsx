@@ -38,7 +38,7 @@ export default function Blocaje() {
 
   // SAs marked BLOCAT that don't already have a matching open blocaj entry
   const blocateSA = (saQuery.data ?? []).filter(s =>
-    (s.blocat || s.status_global?.includes('BLOCAT')) &&
+    (s.blocat || s.status_global === 'blocked') &&
     !open.some(bl => bl.subansamblu === s.nume && bl.proiect === s.proiect)
   )
 

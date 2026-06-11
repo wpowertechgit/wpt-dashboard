@@ -69,6 +69,8 @@ const T = {
 	      colNume: 'Subansamblu', colStatus: 'Status', colProgres: 'Progres', colTimeline: 'Calendar', colDeptDates: 'Etape',
 	      colComentarii: 'Comentarii', empty: 'Niciun subansamblu găsit',
 	      filterAll: 'Toate', filterDone: 'Finalizat', filterInProgress: 'În Lucru', filterBlocked: 'Blocat',
+	      statusNotStarted: 'Neînceput', statusInProgress: 'În Lucru', statusToVerify: 'De Verificat',
+	      statusCompleted: 'Finalizat', statusBlocked: 'Blocat',
 	    },
       planning: {
         eyebrow: 'Planificare și Lead Time', title: 'Calendar', subtitle: 'Scadențe, finalizări și elemente întârziate',
@@ -285,6 +287,8 @@ const T = {
 	      colNume: 'Subassembly', colStatus: 'Status', colProgres: 'Progress', colTimeline: 'Timeline', colDeptDates: 'Milestones',
 	      colComentarii: 'Comments', empty: 'No subassemblies found',
 	      filterAll: 'All', filterDone: 'Done', filterInProgress: 'In Progress', filterBlocked: 'Blocked',
+	      statusNotStarted: 'Not Started', statusInProgress: 'In Progress', statusToVerify: 'To Verify',
+	      statusCompleted: 'Completed', statusBlocked: 'Blocked',
 	    },
       planning: {
         eyebrow: 'Planning and Lead Time', title: 'Calendar', subtitle: 'Due dates, completions, and overdue work',

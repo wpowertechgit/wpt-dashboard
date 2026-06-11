@@ -80,13 +80,13 @@ export default function Dashboard({ userId }: { userId?: string | null }) {
   const lowStockItems = lowStock.data ?? []
 
   function saIsBlocat(s: { blocat: boolean; status_global: string }) {
-    return s.blocat || s.status_global?.includes('BLOCAT')
+    return s.blocat || s.status_global === 'blocked'
   }
 
   const blocateSA_list = sa.data?.filter(saIsBlocat) ?? []
   const totalSA = sa.data?.length ?? 0
-  const finalizateSA = sa.data?.filter(s => s.status_global.includes('FINALIZAT')).length ?? 0
-  const inLucruSA = sa.data?.filter(s => s.status_global.includes('IN LUCRU')).length ?? 0
+  const finalizateSA = sa.data?.filter(s => s.status_global === 'completed').length ?? 0
+  const inLucruSA = sa.data?.filter(s => s.status_global === 'inProgress').length ?? 0
   const blocateSA = blocateSA_list.length
   const progresGlobal = totalSA ? Math.round((finalizateSA / totalSA) * 1000) / 10 : 0
   const blocajeActive = blocaje.data?.filter(b => b.status === 'Deschis') ?? []
