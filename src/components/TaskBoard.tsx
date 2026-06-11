@@ -94,7 +94,7 @@ function TaskDetail({ task, users, userId, onClose, onUpdated }: TaskDetailProps
     if (!newComment.trim() || !userId) return
     setPostingComment(true)
     try {
-      await createTaskComment(task.id, userId, newComment.trim())
+      await createTaskComment(task.id, userId, newComment.trim(), task)
       setNewComment('')
       await loadComments()
     } catch (e: unknown) { setError(e instanceof Error ? e.message : String(e)) }

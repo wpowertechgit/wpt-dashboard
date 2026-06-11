@@ -412,7 +412,12 @@ export async function fetchTaskComments(taskId: string): Promise<TaskComment[]> 
   return data as TaskComment[]
 }
 
-export async function createTaskComment(taskId: string, authorId: string, content: string): Promise<TaskComment> {
+export async function createTaskComment(
+  taskId: string,
+  authorId: string,
+  content: string,
+  task?: { title: string; created_by: string | null; assigned_to: string | null },
+): Promise<TaskComment> {
   if (isDemoMode()) throw new Error('Not available in demo mode')
   const { data, error } = await supabase
     .from('task_comments')
@@ -421,6 +426,13 @@ export async function createTaskComment(taskId: string, authorId: string, conten
     .single()
   if (error) throw error
   logActivity('comment', 'task', taskId, `Comentariu pe task #${taskId}`)
+  if (task) {
+    const msg = `New comment on task: ${task.title}`
+    const recipients = new Set<string>()
+    if (task.created_by && task.created_by !== authorId) recipients.add(task.created_by)
+    if (task.assigned_to && task.assigned_to !== authorId) recipients.add(task.assigned_to)
+    recipients.forEach(uid => insertNotification(uid, msg, 'task_comment', taskId))
+  }
   return data as TaskComment
 }
 
