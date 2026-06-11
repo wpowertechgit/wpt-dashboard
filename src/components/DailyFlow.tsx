@@ -168,7 +168,7 @@ export default function FluxZilnic() {
       </Card>
 
       {canWrite && showForm && (
-        {FlowForm({ values: form, setVal: setF, onSubmit: submit, onCancel: () => setShowForm(false), isSaving: saving, projectOpts: projectOptions })}
+        FlowForm({ values: form, setVal: setF, onSubmit: submit, onCancel: () => setShowForm(false), isSaving: saving, projectOpts: projectOptions })
       )}
 
       {loading ? (
