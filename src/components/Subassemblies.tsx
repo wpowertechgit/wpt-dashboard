@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useMemo } from 'react'
 import { useLang } from '../lib/i18n'
 import { useQuery } from '../lib/useQuery'
 import { fetchSubansambluri, updateSubansamblu, insertBlocaj } from '../lib/api'
@@ -21,6 +21,7 @@ const DEPT_DISPLAY: Record<string, string> = {
 }
 const STATUS_OPTIONS = ['Finalizat', 'În lucru', 'Blocat', 'Neînceput', 'N/A']
 const PROGRESS_PRESETS = ['0%', '25%', '50%', '75%', '100%']
+const DATE_FIELDS = new Set(['data_start','data_due','data_done','proiectare_done','laser_done','rolat_done','sudat_done','asamblat_done','vopsit_done'])
 
 function statusChip(s: string) {
   if (s === 'Finalizat') return <Badge tone="success">Finalizat</Badge>
@@ -63,6 +64,114 @@ function getFirstBlockedDept(row: Record<string, string | boolean>): string {
   return 'GENERAL'
 }
 
+type EditFormValues = Record<string, string | boolean>
+
+function prepareRow(row: EditFormValues): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(row).map(([k, v]) => [k, DATE_FIELDS.has(k) && v === '' ? null : v])
+  )
+}
+
+function buildInitialValues(sa: Record<string, unknown>): EditFormValues {
+  const row: EditFormValues = {
+    status_global: normalizeGlobalStatus(sa.status_global as string),
+    progres: sa.progres as string,
+    blocat: sa.blocat as boolean,
+    data_start: (sa.data_start as string) ?? '',
+    data_due: (sa.data_due as string) ?? '',
+    data_done: (sa.data_done as string) ?? '',
+    proiectare_done: (sa.proiectare_done as string) ?? '',
+    laser_done: (sa.laser_done as string) ?? '',
+    rolat_done: (sa.rolat_done as string) ?? '',
+    sudat_done: (sa.sudat_done as string) ?? '',
+    asamblat_done: (sa.asamblat_done as string) ?? '',
+    vopsit_done: (sa.vopsit_done as string) ?? '',
+    comentarii: (sa.comentarii as string) ?? '',
+  }
+  for (const col of DEPT_COLS) row[col] = normalizeDepartmentStatus(sa[col] as string)
+  return row
+}
+
+interface EditFormContentProps {
+  saId: number
+  saLabel: string
+  initialValues: EditFormValues
+  onSave: (values: EditFormValues) => void
+  onReset: () => void
+  onCancel: () => void
+  saving: boolean
+  saveError: string | null
+}
+
+function EditFormContent({ saId: _saId, saLabel, initialValues, onSave, onReset, onCancel, saving, saveError }: EditFormContentProps) {
+  const { t } = useLang()
+  const s = t.subansambluri
+  const [form, setForm] = useState<EditFormValues>(initialValues)
+  const set = (k: string, v: string | boolean) => setForm(r => ({ ...r, [k]: v }))
+
+  return (
+    <Stack gap={1.5}>
+      <Typography variant="body2" sx={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--color-primary)' }}>{saLabel}</Typography>
+
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 1.25 }}>
+        <AppSelect label="Status Global" value={normalizeGlobalStatus(String(form.status_global ?? ''))}
+          onChange={e => {
+            const val = e.target.value
+            setForm(r => ({ ...r, status_global: val, blocat: val.includes('BLOCAT') ? true : val.includes('FINALIZAT') ? false : r.blocat }))
+          }}
+          options={['✅ FINALIZAT', '🔄 IN LUCRU', '⛔ BLOCAT']} />
+        <Box>
+          <AppField label="Progres %" value={String(form.progres ?? '').replace('%', '')}
+            onChange={e => set('progres', e.target.value ? `${e.target.value}%` : '0%')} />
+          <Stack direction="row" gap={0.5} sx={{ mt: 0.5, flexWrap: 'wrap' }}>
+            {PROGRESS_PRESETS.map(p => (
+              <ActionButton key={p} variant="outlined" onClick={() => set('progres', p)}
+                sx={{ px: 0.75, py: 0.25, fontSize: 10, minWidth: 0, bgcolor: form.progres === p ? 'var(--color-primary)' : 'transparent', color: form.progres === p ? '#fff' : 'var(--color-ink-subtle)', border: '1px solid var(--color-hairline)' }}>
+                {p}
+              </ActionButton>
+            ))}
+          </Stack>
+        </Box>
+        <AppField label="Start" type="date" value={String(form.data_start ?? '')} onChange={e => set('data_start', e.target.value)} />
+        <AppField label="Due" type="date" value={String(form.data_due ?? '')} onChange={e => set('data_due', e.target.value)} />
+        <AppField label="Done" type="date" value={String(form.data_done ?? '')} onChange={e => set('data_done', e.target.value)} />
+      </Box>
+
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(6, 1fr)' }, gap: 1.25 }}>
+        {DEPT_COLS.map(col => (
+          <AppSelect key={col} label={DEPT_DISPLAY[col]}
+            value={normalizeDepartmentStatus(String(form[col] ?? ''))}
+            onChange={e => set(col, e.target.value)}
+            options={STATUS_OPTIONS} />
+        ))}
+      </Box>
+
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(6, 1fr)' }, gap: 1.25 }}>
+        {DEPT_COLS.map(col => (
+          <AppField key={`${col}_done`} label={`${DEPT_DISPLAY[col]} Done`} type="date"
+            value={String(form[`${col}_done`] ?? '')}
+            onChange={e => set(`${col}_done`, e.target.value)} />
+        ))}
+      </Box>
+
+      <AppField label={s.colComentarii} value={String(form.comentarii ?? '')} onChange={e => set('comentarii', e.target.value)} />
+      {saveError && (
+        <Box sx={{ bgcolor: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 'var(--radius-sm)', p: '6px 10px' }}>
+          <Typography variant="body2" sx={{ fontSize: 11, color: '#f87171' }}>{saveError}</Typography>
+        </Box>
+      )}
+      <Stack direction="row" gap={0.75} flexWrap="wrap">
+        <ActionButton onClick={() => onSave(form)} disabled={saving} sx={{ px: 1.25, py: 0.5, fontSize: 11 }}>{saving ? '...' : t.common.save}</ActionButton>
+        <ActionButton variant="outlined" onClick={onReset} disabled={saving}
+          sx={{ px: 1.25, py: 0.5, fontSize: 11, color: '#fbbf24', borderColor: 'rgba(251,191,36,0.3)', '&:hover': { borderColor: '#fbbf24', bgcolor: 'rgba(251,191,36,0.06)' } }}>
+          ↺ Reset
+        </ActionButton>
+        <ActionButton variant="outlined" onClick={onCancel} sx={{ px: 1, py: 0.5, fontSize: 11 }}>✕</ActionButton>
+      </Stack>
+    </Stack>
+  )
+}
+
 export default function Subansambluri() {
   const { t, lang } = useLang()
   const { canWrite } = usePermissions()
@@ -71,45 +180,41 @@ export default function Subansambluri() {
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('ALL')
   const [search, setSearch] = useState('')
   const [editId, setEditId] = useState<number | null>(null)
-  const [editRow, setEditRow] = useState<Record<string, string | boolean> | null>(null)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [finalizing, setFinalizing] = useState<number | null>(null)
   const confettiRef = useRef<ConfettiRef>(null)
 
-  const DATE_FIELDS = new Set(['data_start','data_due','data_done','proiectare_done','laser_done','rolat_done','sudat_done','asamblat_done','vopsit_done'])
-
-  function prepareRow(row: Record<string, string | boolean>): Record<string, unknown> {
-    return Object.fromEntries(
-      Object.entries(row).map(([k, v]) => [k, DATE_FIELDS.has(k) && v === '' ? null : v])
-    )
-  }
-
   const { data, loading, error, refetch } = useQuery(fetchSubansambluri)
-  const projects = ['ALL', ...Array.from(new Set((data ?? []).map(sa => sa.proiect))).sort()]
 
   function isBlocat(sa: { blocat: boolean; status_global: string }) {
     return sa.blocat || sa.status_global?.includes('BLOCAT')
   }
 
-  const filtered = (data ?? []).filter(sa => {
+  const projects = useMemo(
+    () => ['ALL', ...Array.from(new Set((data ?? []).map(sa => sa.proiect))).sort()],
+    [data]
+  )
+
+  const filtered = useMemo(() => (data ?? []).filter(sa => {
     if (filterProiect !== 'ALL' && sa.proiect !== filterProiect) return false
     if (filterStatus === 'FINALIZAT' && !sa.status_global.includes('FINALIZAT')) return false
     if (filterStatus === 'IN LUCRU' && !sa.status_global.includes('IN LUCRU')) return false
     if (filterStatus === 'BLOCAT' && !isBlocat(sa)) return false
     if (search && !sa.nume.toLowerCase().includes(search.toLowerCase())) return false
     return true
-  })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [data, filterProiect, filterStatus, search])
 
-  async function saveEdit() {
-    if (!editRow || editId === null) return
+  async function saveEdit(formValues: EditFormValues) {
+    if (editId === null) return
     setSaving(true)
     setSaveError(null)
     try {
       const original = data?.find(s => s.id === editId)
-      const becomingBlocked = String(editRow.status_global).includes('BLOCAT') && !original?.blocat
+      const becomingBlocked = String(formValues.status_global).includes('BLOCAT') && !original?.blocat
 
-      const rowToSave = { ...editRow }
+      const rowToSave = { ...formValues }
       if (String(rowToSave.status_global).includes('FINALIZAT')) {
         const today = new Date().toISOString().slice(0, 10)
         rowToSave.progres = '100%'
@@ -132,8 +237,8 @@ export default function Subansambluri() {
           data_deschidere: today,
           proiect: original.proiect,
           subansamblu: original.nume,
-          departament: getFirstBlockedDept(editRow),
-          descriere: String(editRow.comentarii || original.comentarii || `Subansamblu ${original.nume} blocat`),
+          departament: getFirstBlockedDept(formValues),
+          descriere: String(formValues.comentarii || original.comentarii || `Subansamblu ${original.nume} blocat`),
           responsabil: '',
           impact: 'MEDIU',
           status: 'Deschis',
@@ -141,7 +246,7 @@ export default function Subansambluri() {
         })
       }
 
-      setEditId(null); setEditRow(null)
+      setEditId(null)
       refetch()
     } catch (e: unknown) {
       setSaveError(e instanceof Error ? e.message : String(e))
@@ -167,7 +272,7 @@ export default function Subansambluri() {
       }
       for (const col of DEPT_COLS) resetData[col] = 'Neînceput'
       await updateSubansamblu(id, resetData, original as Record<string, unknown>)
-      setEditId(null); setEditRow(null)
+      setEditId(null)
       refetch()
     } catch (e: unknown) {
       setSaveError(e instanceof Error ? e.message : String(e))
@@ -196,26 +301,7 @@ export default function Subansambluri() {
   }
 
   function startEdit(sa: Record<string, unknown>) {
-    const row: Record<string, string | boolean> = {
-      status_global: normalizeGlobalStatus(sa.status_global as string),
-      progres: sa.progres as string,
-      blocat: sa.blocat as boolean,
-      data_start: (sa.data_start as string) ?? '',
-      data_due: (sa.data_due as string) ?? '',
-      data_done: (sa.data_done as string) ?? '',
-      proiectare_done: (sa.proiectare_done as string) ?? '',
-      laser_done: (sa.laser_done as string) ?? '',
-      rolat_done: (sa.rolat_done as string) ?? '',
-      sudat_done: (sa.sudat_done as string) ?? '',
-      asamblat_done: (sa.asamblat_done as string) ?? '',
-      vopsit_done: (sa.vopsit_done as string) ?? '',
-      comentarii: (sa.comentarii as string) ?? '',
-    }
-    for (const col of DEPT_COLS) {
-      row[col] = normalizeDepartmentStatus(sa[col] as string)
-    }
     setEditId(sa.id as number)
-    setEditRow(row)
   }
 
   const pills = (opts: (string | { value: string; label: string })[], val: string, set: (v: string) => void) => (
@@ -229,71 +315,6 @@ export default function Subansambluri() {
       })}
     </Stack>
   )
-
-  // Shared edit form content — used in both desktop (table row) and mobile (card)
-  function EditFormContent({ saId, saLabel }: { saId: number; saLabel: string }) {
-    return (
-      <Stack gap={1.5}>
-        <Typography variant="body2" sx={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--color-primary)' }}>{saLabel}</Typography>
-
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 1.25 }}>
-          <AppSelect label="Status Global" value={normalizeGlobalStatus(String(editRow?.status_global ?? ''))}
-            onChange={e => {
-              const val = e.target.value
-              setEditRow(r => ({ ...r!, status_global: val, blocat: val.includes('BLOCAT') ? true : val.includes('FINALIZAT') ? false : r!.blocat }))
-            }}
-            options={['✅ FINALIZAT', '🔄 IN LUCRU', '⛔ BLOCAT']} />
-          <Box>
-            <AppField label="Progres %" value={String(editRow?.progres ?? '').replace('%', '')}
-              onChange={e => setEditRow(r => ({ ...r!, progres: e.target.value ? `${e.target.value}%` : '0%' }))} />
-            <Stack direction="row" gap={0.5} sx={{ mt: 0.5, flexWrap: 'wrap' }}>
-              {PROGRESS_PRESETS.map(p => (
-                <ActionButton key={p} variant="outlined" onClick={() => setEditRow(r => ({ ...r!, progres: p }))}
-                  sx={{ px: 0.75, py: 0.25, fontSize: 10, minWidth: 0, bgcolor: editRow?.progres === p ? 'var(--color-primary)' : 'transparent', color: editRow?.progres === p ? '#fff' : 'var(--color-ink-subtle)', border: '1px solid var(--color-hairline)' }}>
-                  {p}
-                </ActionButton>
-              ))}
-            </Stack>
-          </Box>
-          <AppField label="Start" type="date" value={String(editRow?.data_start ?? '')} onChange={e => setEditRow(r => ({ ...r!, data_start: e.target.value }))} />
-          <AppField label="Due" type="date" value={String(editRow?.data_due ?? '')} onChange={e => setEditRow(r => ({ ...r!, data_due: e.target.value }))} />
-          <AppField label="Done" type="date" value={String(editRow?.data_done ?? '')} onChange={e => setEditRow(r => ({ ...r!, data_done: e.target.value }))} />
-        </Box>
-
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(6, 1fr)' }, gap: 1.25 }}>
-          {DEPT_COLS.map(col => (
-            <AppSelect key={col} label={DEPT_DISPLAY[col]}
-              value={normalizeDepartmentStatus(String(editRow?.[col] ?? ''))}
-              onChange={e => setEditRow(r => ({ ...r!, [col]: e.target.value }))}
-              options={STATUS_OPTIONS} />
-          ))}
-        </Box>
-
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(6, 1fr)' }, gap: 1.25 }}>
-          {DEPT_COLS.map(col => (
-            <AppField key={`${col}_done`} label={`${DEPT_DISPLAY[col]} Done`} type="date"
-              value={String(editRow?.[`${col}_done`] ?? '')}
-              onChange={e => setEditRow(r => ({ ...r!, [`${col}_done`]: e.target.value }))} />
-          ))}
-        </Box>
-
-        <AppField label={s.colComentarii} value={String(editRow?.comentarii ?? '')} onChange={e => setEditRow(r => ({ ...r!, comentarii: e.target.value }))} />
-        {saveError && (
-          <Box sx={{ bgcolor: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 'var(--radius-sm)', p: '6px 10px' }}>
-            <Typography variant="body2" sx={{ fontSize: 11, color: '#f87171' }}>{saveError}</Typography>
-          </Box>
-        )}
-        <Stack direction="row" gap={0.75} flexWrap="wrap">
-          <ActionButton onClick={saveEdit} disabled={saving} sx={{ px: 1.25, py: 0.5, fontSize: 11 }}>{saving ? '...' : t.common.save}</ActionButton>
-          <ActionButton variant="outlined" onClick={() => resetRow(saId)} disabled={saving}
-            sx={{ px: 1.25, py: 0.5, fontSize: 11, color: '#fbbf24', borderColor: 'rgba(251,191,36,0.3)', '&:hover': { borderColor: '#fbbf24', bgcolor: 'rgba(251,191,36,0.06)' } }}>
-            ↺ Reset
-          </ActionButton>
-          <ActionButton variant="outlined" onClick={() => { setEditId(null); setEditRow(null); setSaveError(null) }} sx={{ px: 1, py: 0.5, fontSize: 11 }}>✕</ActionButton>
-        </Stack>
-      </Stack>
-    )
-  }
 
   return (
     <Stack gap={3} sx={{ position: 'relative' }}>
@@ -344,7 +365,7 @@ export default function Subansambluri() {
               canWrite && editId === sa.id ? (
                 <TableRow key={sa.id} sx={{ bgcolor: 'rgba(94,106,210,0.06)' }}>
                   <TableCell colSpan={14} sx={{ p: 2 }}>
-                    {EditFormContent({ saId: sa.id, saLabel: `${sa.proiect} #${sa.nr} · ${sa.nume}` })}
+                    <EditFormContent saId={sa.id} saLabel={`${sa.proiect} #${sa.nr} · ${sa.nume}`} initialValues={buildInitialValues(sa as Record<string, unknown>)} onSave={saveEdit} onReset={() => resetRow(sa.id)} onCancel={() => { setEditId(null); setSaveError(null) }} saving={saving} saveError={saveError} />
                   </TableCell>
                 </TableRow>
               ) : (
@@ -403,7 +424,7 @@ export default function Subansambluri() {
         ) : filtered.map(sa => (
           canWrite && editId === sa.id ? (
             <Card key={sa.id} sx={{ borderLeft: '3px solid var(--color-primary)' }}>
-              {EditFormContent({ saId: sa.id, saLabel: `${sa.proiect} #${sa.nr} · ${sa.nume}` })}
+              <EditFormContent saId={sa.id} saLabel={`${sa.proiect} #${sa.nr} · ${sa.nume}`} initialValues={buildInitialValues(sa as Record<string, unknown>)} onSave={saveEdit} onReset={() => resetRow(sa.id)} onCancel={() => { setEditId(null); setSaveError(null) }} saving={saving} saveError={saveError} />
             </Card>
           ) : (
             <Card key={sa.id} sx={{ borderLeft: `3px solid ${isBlocat(sa) ? '#f87171' : sa.status_global?.includes('FINALIZAT') ? '#4ade80' : 'var(--color-hairline)'}` }}>
