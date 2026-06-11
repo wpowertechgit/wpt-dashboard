@@ -344,7 +344,7 @@ export default function Subansambluri() {
               canWrite && editId === sa.id ? (
                 <TableRow key={sa.id} sx={{ bgcolor: 'rgba(94,106,210,0.06)' }}>
                   <TableCell colSpan={14} sx={{ p: 2 }}>
-                    <EditFormContent saId={sa.id} saLabel={`${sa.proiect} #${sa.nr} · ${sa.nume}`} />
+                    {EditFormContent({ saId: sa.id, saLabel: `${sa.proiect} #${sa.nr} · ${sa.nume}` })}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -403,7 +403,7 @@ export default function Subansambluri() {
         ) : filtered.map(sa => (
           canWrite && editId === sa.id ? (
             <Card key={sa.id} sx={{ borderLeft: '3px solid var(--color-primary)' }}>
-              <EditFormContent saId={sa.id} saLabel={`${sa.proiect} #${sa.nr} · ${sa.nume}`} />
+              {EditFormContent({ saId: sa.id, saLabel: `${sa.proiect} #${sa.nr} · ${sa.nume}` })}
             </Card>
           ) : (
             <Card key={sa.id} sx={{ borderLeft: `3px solid ${isBlocat(sa) ? '#f87171' : sa.status_global?.includes('FINALIZAT') ? '#4ade80' : 'var(--color-hairline)'}` }}>

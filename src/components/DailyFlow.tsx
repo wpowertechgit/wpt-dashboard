@@ -168,7 +168,7 @@ export default function FluxZilnic() {
       </Card>
 
       {canWrite && showForm && (
-        <FlowForm values={form} setVal={setF} onSubmit={submit} onCancel={() => setShowForm(false)} isSaving={saving} projectOpts={projectOptions} />
+        {FlowForm({ values: form, setVal: setF, onSubmit: submit, onCancel: () => setShowForm(false), isSaving: saving, projectOpts: projectOptions })}
       )}
 
       {loading ? (
@@ -201,14 +201,7 @@ export default function FluxZilnic() {
                 canWrite && editId === fl.id ? (
                   <TableRow key={fl.id ?? i} sx={{ bgcolor: 'rgba(94,106,210,0.06)' }}>
                     <TableCell colSpan={9} sx={{ p: 2 }}>
-                      <FlowForm
-                        values={editRow!}
-                        setVal={setEF}
-                        onSubmit={e => { e.preventDefault(); saveEdit() }}
-                        onCancel={() => { setEditId(null); setEditRow(null) }}
-                        isSaving={saving}
-                        projectOpts={projectOptions}
-                      />
+                      {FlowForm({ values: editRow!, setVal: setEF, onSubmit: e => { e.preventDefault(); saveEdit() }, onCancel: () => { setEditId(null); setEditRow(null) }, isSaving: saving, projectOpts: projectOptions })}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -244,14 +237,7 @@ export default function FluxZilnic() {
             {(items ?? []).map((fl, i) => (
               canWrite && editId === fl.id ? (
                 <Box key={fl.id ?? i} sx={{ p: 2 }}>
-                  <FlowForm
-                    values={editRow!}
-                    setVal={setEF}
-                    onSubmit={e => { e.preventDefault(); saveEdit() }}
-                    onCancel={() => { setEditId(null); setEditRow(null) }}
-                    isSaving={saving}
-                    projectOpts={projectOptions}
-                  />
+                  {FlowForm({ values: editRow!, setVal: setEF, onSubmit: e => { e.preventDefault(); saveEdit() }, onCancel: () => { setEditId(null); setEditRow(null) }, isSaving: saving, projectOpts: projectOptions })}
                 </Box>
               ) : (
                 <Box
