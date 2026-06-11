@@ -245,10 +245,10 @@ export function AppSelect({ options, ...props }: TextFieldProps & { options: Arr
   )
 }
 
-export function DataTable({ head, children, sx }: { head?: ReactNode; children: ReactNode; sx?: SxProps<Theme> }) {
+export function DataTable({ head, children, sx, minWidth }: { head?: ReactNode; children: ReactNode; sx?: SxProps<Theme>; minWidth?: number }) {
   return (
     <TableContainer component={Box} sx={[{ overflowX: 'auto' }, sx] as SxProps<Theme>}>
-      <Table size="small">
+      <Table size="small" sx={minWidth ? { minWidth } : undefined}>
         {head && <TableHead>{head}</TableHead>}
         <TableBody>{children}</TableBody>
       </Table>

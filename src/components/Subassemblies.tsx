@@ -22,24 +22,43 @@ const DEPT_DISPLAY: Record<string, string> = {
 const STATUS_OPTIONS = ['Finalizat', 'În lucru', 'Blocat', 'Neînceput', 'N/A']
 const PROGRESS_PRESETS = ['0%', '25%', '50%', '75%', '100%']
 const DATE_FIELDS = new Set(['data_start','data_due','data_done','proiectare_done','laser_done','rolat_done','sudat_done','asamblat_done','vopsit_done'])
+const TABLE_STATUS_CHIP_SX = {
+  maxWidth: 116,
+  minWidth: 0,
+  position: 'relative',
+  zIndex: 1,
+  transition: 'max-width 140ms ease, transform 140ms ease, box-shadow 140ms ease, background-color 140ms ease',
+  '& .MuiChip-label': {
+    px: 1,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  '&:hover': {
+    maxWidth: 190,
+    zIndex: 8,
+    transform: 'translateY(-1px)',
+    boxShadow: '0 10px 24px rgba(0,0,0,0.28)',
+  },
+}
 
 function statusChip(s: string) {
-  if (s === 'Finalizat') return <Badge tone="success">Finalizat</Badge>
-  if (s === 'În lucru') return <Badge tone="info">În lucru</Badge>
-  if (s === 'Blocat') return <Badge tone="error">Blocat</Badge>
-  if (s === 'N/A') return <Badge>N/A</Badge>
-  return <Badge>{s || 'Neînceput'}</Badge>
+  if (s === 'Finalizat') return <Badge tone="success" sx={TABLE_STATUS_CHIP_SX}>Finalizat</Badge>
+  if (s === 'În lucru') return <Badge tone="info" sx={TABLE_STATUS_CHIP_SX}>În lucru</Badge>
+  if (s === 'Blocat') return <Badge tone="error" sx={TABLE_STATUS_CHIP_SX}>Blocat</Badge>
+  if (s === 'N/A') return <Badge sx={TABLE_STATUS_CHIP_SX}>N/A</Badge>
+  return <Badge sx={TABLE_STATUS_CHIP_SX}>{s || 'Neînceput'}</Badge>
 }
 
 type SubT = { statusNotStarted: string; statusInProgress: string; statusToVerify: string; statusCompleted: string; statusBlocked: string }
 
 function globalChip(s: string, t: SubT) {
-  if (s === 'completed') return <Badge tone="success">✅ {t.statusCompleted}</Badge>
-  if (s === 'blocked') return <Badge tone="error">⛔ {t.statusBlocked}</Badge>
-  if (s === 'inProgress') return <Badge tone="info">🔄 {t.statusInProgress}</Badge>
-  if (s === 'notStarted') return <Badge tone="default">⏳ {t.statusNotStarted}</Badge>
-  if (s === 'toVerify') return <Badge tone="warning">🔍 {t.statusToVerify}</Badge>
-  return <Badge>{s}</Badge>
+  if (s === 'completed') return <Badge tone="success" sx={TABLE_STATUS_CHIP_SX}>✅ {t.statusCompleted}</Badge>
+  if (s === 'blocked') return <Badge tone="error" sx={TABLE_STATUS_CHIP_SX}>⛔ {t.statusBlocked}</Badge>
+  if (s === 'inProgress') return <Badge tone="info" sx={TABLE_STATUS_CHIP_SX}>🔄 {t.statusInProgress}</Badge>
+  if (s === 'notStarted') return <Badge tone="default" sx={TABLE_STATUS_CHIP_SX}>⏳ {t.statusNotStarted}</Badge>
+  if (s === 'toVerify') return <Badge tone="warning" sx={TABLE_STATUS_CHIP_SX}>🔍 {t.statusToVerify}</Badge>
+  return <Badge sx={TABLE_STATUS_CHIP_SX}>{s}</Badge>
 }
 
 function timelineSummary(sa: Record<string, unknown>) {
@@ -117,7 +136,7 @@ function EditFormContent({ saId: _saId, saLabel, initialValues, onSave, onReset,
     <Stack gap={1.5}>
       <Typography variant="body2" sx={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--color-primary)' }}>{saLabel}</Typography>
 
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 1.25 }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(5, 1fr)' }, gap: 1.25, alignItems: 'start', '& > *': { minWidth: 0 } }}>
         <AppSelect label="Status Global" value={normalizeGlobalStatus(String(form.status_global ?? ''))}
           onChange={e => {
             const val = e.target.value
@@ -147,7 +166,7 @@ function EditFormContent({ saId: _saId, saLabel, initialValues, onSave, onReset,
         <AppField label="Done" type="date" value={String(form.data_done ?? '')} onChange={e => set('data_done', e.target.value)} />
       </Box>
 
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(6, 1fr)' }, gap: 1.25 }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(6, 1fr)' }, gap: 1.25, '& > *': { minWidth: 0 } }}>
         {DEPT_COLS.map(col => (
           <AppSelect key={col} label={DEPT_DISPLAY[col]}
             value={normalizeDepartmentStatus(String(form[col] ?? ''))}
@@ -156,7 +175,7 @@ function EditFormContent({ saId: _saId, saLabel, initialValues, onSave, onReset,
         ))}
       </Box>
 
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(6, 1fr)' }, gap: 1.25 }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(6, 1fr)' }, gap: 1.25, '& > *': { minWidth: 0 } }}>
         {DEPT_COLS.map(col => (
           <AppField key={`${col}_done`} label={`${DEPT_DISPLAY[col]} Done`} type="date"
             value={String(form[`${col}_done`] ?? '')}
@@ -357,17 +376,25 @@ export default function Subansambluri() {
 
       {/* ── Desktop / large-tablet table (md+) ── */}
       <Card sx={{ p: 0, overflow: 'hidden', display: { xs: 'none', md: 'block' } }}>
-        <DataTable sx={{ overflowX: 'auto' }} head={
+        <DataTable
+          sx={{
+            overflowX: 'auto',
+            containerType: 'inline-size',
+            '& table': { tableLayout: 'fixed' },
+            '& th, & td': { px: 1.25 },
+          }}
+          minWidth={1350}
+          head={
           <TableRow>
-            <TableCell>{s.colProiect}</TableCell>
-            <TableCell>{s.colNr}</TableCell>
-            <TableCell>{s.colNume}</TableCell>
-            <TableCell>{s.colStatus}</TableCell>
-            <TableCell>{s.colProgres}</TableCell>
-            <TableCell>{s.colTimeline}</TableCell>
-            {DEPT_COLS.map(col => <TableCell key={col} sx={{ textAlign: 'center' }}>{DEPT_DISPLAY[col]}</TableCell>)}
-            <TableCell>{s.colComentarii}</TableCell>
-            <TableCell sx={{ position: 'sticky', right: 0, bgcolor: 'var(--color-surface-1)', zIndex: 2, borderLeft: '1px solid var(--color-hairline)' }} />
+            <TableCell sx={{ width: 82 }}>{s.colProiect}</TableCell>
+            <TableCell sx={{ width: 36 }}>{s.colNr}</TableCell>
+            <TableCell sx={{ width: 122 }}>{s.colNume}</TableCell>
+            <TableCell sx={{ width: 110 }}>{s.colStatus}</TableCell>
+            <TableCell sx={{ width: 110 }}>{s.colProgres}</TableCell>
+            <TableCell sx={{ width: 104 }}>{s.colTimeline}</TableCell>
+            {DEPT_COLS.map(col => <TableCell key={col} sx={{ width: 86, textAlign: 'center' }}>{DEPT_DISPLAY[col]}</TableCell>)}
+            <TableCell sx={{ width: 160 }}>{s.colComentarii}</TableCell>
+            <TableCell sx={{ width: 110 }} />
           </TableRow>
         }>
           {loading ? <LoadingRows cols={14} /> : filtered.length === 0 ? <EmptyState label={s.empty} /> :
@@ -375,7 +402,9 @@ export default function Subansambluri() {
               canWrite && editId === sa.id ? (
                 <TableRow key={sa.id} sx={{ bgcolor: 'rgba(94,106,210,0.06)' }}>
                   <TableCell colSpan={14} sx={{ p: 2 }}>
+                    <Box sx={{ width: 'calc(100cqw - 32px)' }}>
                     <EditFormContent saId={sa.id} saLabel={`${sa.proiect} #${sa.nr} · ${sa.nume}`} initialValues={buildInitialValues(sa as Record<string, unknown>)} onSave={saveEdit} onReset={() => resetRow(sa.id)} onCancel={() => { setEditId(null); setSaveError(null) }} saving={saving} saveError={saveError} />
+                    </Box>
                   </TableCell>
                 </TableRow>
               ) : (
@@ -386,7 +415,7 @@ export default function Subansambluri() {
                     <Typography variant="body2" sx={{ fontWeight: 500, fontSize: 13 }}>{sa.nume}</Typography>
                     {sa.conditionat_de && <Typography variant="body2" sx={{ fontSize: 11, color: 'var(--color-primary)', mt: 0.25 }}>🔵 {sa.conditionat_de}</Typography>}
                   </TableCell>
-                  <TableCell>{globalChip(sa.status_global, t.subansambluri)}</TableCell>
+                  <TableCell sx={{ overflow: 'visible', position: 'relative', zIndex: 2 }}>{globalChip(sa.status_global, t.subansambluri)}</TableCell>
                   <TableCell sx={{ minWidth: 90 }}>
                     <Stack direction="row" alignItems="center" gap={0.75}>
                       <Box className="progress-bar" sx={{ width: 50 }}>
@@ -402,17 +431,17 @@ export default function Subansambluri() {
                       ))}
                     </Stack>
                   </TableCell>
-                  {DEPT_COLS.map(col => <TableCell key={col} sx={{ textAlign: 'center' }}>{statusChip(sa[col])}</TableCell>)}
-                  <TableCell sx={{ fontSize: 12, color: isBlocat(sa) ? '#f87171' : 'var(--color-ink-muted)', maxWidth: 160 }}>{sa.comentarii}</TableCell>
-                  <TableCell sx={{ position: 'sticky', right: 0, bgcolor: isBlocat(sa) ? 'rgba(20,8,8,0.95)' : 'var(--color-surface-1)', zIndex: 1, borderLeft: '1px solid var(--color-hairline)', p: '8px 10px' }}>
+                  {DEPT_COLS.map(col => <TableCell key={col} sx={{ textAlign: 'center', overflow: 'visible', position: 'relative', zIndex: 2 }}>{statusChip(sa[col])}</TableCell>)}
+                  <TableCell sx={{ fontSize: 12, color: isBlocat(sa) ? '#f87171' : 'var(--color-ink-muted)', whiteSpace: 'normal', wordBreak: 'break-word' }}>{sa.comentarii}</TableCell>
+                  <TableCell sx={{ borderLeft: '1px solid var(--color-hairline)', p: '8px 6px' }}>
                     {canWrite && (
                       <Stack direction="row" gap={0.5}>
-                        <ActionButton variant="outlined" onClick={() => startEdit(sa as Record<string, unknown>)} sx={{ px: 1, py: 0.375, fontSize: 11 }}>
+                        <ActionButton variant="outlined" onClick={() => startEdit(sa as Record<string, unknown>)} sx={{ px: 0.75, py: 0.375, fontSize: 11, minWidth: 48 }}>
                           {t.common.edit}
                         </ActionButton>
                         {sa.status_global !== 'completed' && (
                           <ActionButton onClick={() => finalizeRow(sa as Record<string, unknown>)} disabled={finalizing === sa.id}
-                            sx={{ px: 1, py: 0.375, fontSize: 11, bgcolor: 'rgba(39,166,68,0.1)', color: '#4ade80', border: '1px solid rgba(39,166,68,0.2)', '&:hover': { bgcolor: 'rgba(39,166,68,0.2)' } }}>
+                            sx={{ px: 0.75, py: 0.375, fontSize: 11, minWidth: 34, bgcolor: 'rgba(39,166,68,0.1)', color: '#4ade80', border: '1px solid rgba(39,166,68,0.2)', '&:hover': { bgcolor: 'rgba(39,166,68,0.2)' } }}>
                             {finalizing === sa.id ? '...' : '✅'}
                           </ActionButton>
                         )}
