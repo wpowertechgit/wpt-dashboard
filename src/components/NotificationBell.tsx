@@ -1,12 +1,27 @@
 import { useState, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Box, IconButton, Popover, Stack, Typography } from '@mui/material'
 import NotificationsNoneOutlinedIcon from '@mui/icons-material/NotificationsNoneOutlined'
 import { useNotifications } from '../lib/notifications'
+import type { AppNotification } from '../lib/notifications'
+
+function resolveNotificationPath(n: AppNotification): string | null {
+  if (n.task_id || n.type.includes('task')) return '/tasks'
+  if (n.type.includes('project')) return '/projects'
+  return null
+}
 
 export default function NotificationBell({ userId }: { userId: string | null }) {
   const { notifications, unreadCount, markRead, markAllRead } = useNotifications(userId)
   const [open, setOpen] = useState(false)
   const anchorRef = useRef<HTMLButtonElement>(null)
+  const navigate = useNavigate()
+
+  function handleNotificationClick(n: AppNotification) {
+    markRead(n.id)
+    const path = resolveNotificationPath(n)
+    if (path) { setOpen(false); navigate(path) }
+  }
 
   if (!userId) return null
 
@@ -74,7 +89,7 @@ export default function NotificationBell({ userId }: { userId: string | null }) 
           ) : notifications.map(n => (
             <Box
               key={n.id}
-              onClick={() => markRead(n.id)}
+              onClick={() => handleNotificationClick(n)}
               sx={{
                 px: 2,
                 py: 1.5,
